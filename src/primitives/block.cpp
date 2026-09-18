@@ -12,11 +12,6 @@
 #include <span>
 #include <sstream>
 
-uint256 CBlockHeader::GetHash() const
-{
-    return (HashWriter{} << *this).GetHash();
-}
-
 std::string CBlock::ToString() const
 {
     std::stringstream s;

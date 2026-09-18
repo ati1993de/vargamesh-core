@@ -122,6 +122,14 @@ struct Params {
     bool fPowNoRetargeting;
     bool fPowUseASERT{false};
     int64_t nASERTHalfLife{0};
+    /** VargaMesh AuxPoW parameters. */
+    int32_t nAuxpowChainId{0};
+    int nAuxpowStartHeight{std::numeric_limits<int>::max()};
+
+    bool AuxPowActive(const int height) const
+    {
+        return height >= nAuxpowStartHeight;
+    }
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     std::chrono::seconds PowTargetSpacing() const

@@ -102,6 +102,17 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.fPowUseASERT = true;
         consensus.nASERTHalfLife = 34'560; // 9.6 hours = 288 target blocks at 120 seconds
+        // VargaMesh AuxPoW identity.
+        //
+        // Gate 7A stages these parameters only.
+        // Consensus enforcement begins in Gate 7B.
+        //
+        // IMPORTANT: 0x564D is deliberately NOT encoded into
+        // nVersion bits 16..31. That legacy scheme collides with
+        // Bitcoin Core BIP9 top bits. Post-genesis VMESH blocks
+        // will carry 0x564D in nNonce instead.
+        consensus.nAuxpowChainId = 0x564D;
+        consensus.nAuxpowStartHeight = 1;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].bit = 28;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nStartTime = Consensus::BIP9Deployment::NEVER_ACTIVE;
         consensus.vDeployments[Consensus::DEPLOYMENT_TESTDUMMY].nTimeout = Consensus::BIP9Deployment::NO_TIMEOUT;
