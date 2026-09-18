@@ -6,6 +6,7 @@
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
 #include <consensus/merkle.h>
+#include <deploymentstatus.h>
 #include <core_io.h>
 #include <hash.h>
 #include <net.h>
@@ -469,6 +470,144 @@ BOOST_AUTO_TEST_CASE(block_malleation)
         }
         BOOST_CHECK(is_mutated(block, /*check_witness_root=*/true));
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(vargamesh_mainnet_launch_activation_state)
+{
+    const auto chain_params{
+        CreateChainParams(
+            *m_node.args,
+            ChainType::MAIN
+        )
+    };
+
+    const auto& consensus{
+        chain_params->GetConsensus()
+    };
+
+    // Fresh VargaMesh chain:
+    // no historical Bitcoin block-specific exceptions.
+    BOOST_CHECK(
+        consensus.script_flag_exceptions.empty()
+    );
+
+    // All mature buried deployments are active
+    // from the first post-genesis block.
+    BOOST_CHECK_EQUAL(consensus.BIP34Height, 1);
+    BOOST_CHECK(consensus.BIP34Hash.IsNull());
+    BOOST_CHECK_EQUAL(consensus.BIP65Height, 1);
+    BOOST_CHECK_EQUAL(consensus.BIP66Height, 1);
+    BOOST_CHECK_EQUAL(consensus.CSVHeight, 1);
+    BOOST_CHECK_EQUAL(consensus.SegwitHeight, 1);
+    BOOST_CHECK_EQUAL(
+        consensus.MinBIP9WarningHeight,
+        0
+    );
+
+    const auto& testdummy{
+        consensus.vDeployments[
+            Consensus::DEPLOYMENT_TESTDUMMY
+        ]
+    };
+
+    BOOST_CHECK_EQUAL(
+        testdummy.nStartTime,
+        Consensus::BIP9Deployment::NEVER_ACTIVE
+    );
+
+    const auto& taproot{
+        consensus.vDeployments[
+            Consensus::DEPLOYMENT_TAPROOT
+        ]
+    };
+
+    BOOST_CHECK_EQUAL(taproot.bit, 2);
+
+    BOOST_CHECK_EQUAL(
+        taproot.nStartTime,
+        Consensus::BIP9Deployment::ALWAYS_ACTIVE
+    );
+
+    BOOST_CHECK_EQUAL(
+        taproot.nTimeout,
+        Consensus::BIP9Deployment::NO_TIMEOUT
+    );
+
+    BOOST_CHECK_EQUAL(
+        taproot.min_activation_height,
+        0
+    );
+
+    // Prove that the first block after genesis
+    // sees all intended launch deployments active.
+    CBlockIndex genesis_index;
+    genesis_index.nHeight = 0;
+
+    VersionBitsCache versionbits_cache;
+
+    BOOST_CHECK(
+        DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_HEIGHTINCB,
+            versionbits_cache
+        )
+    );
+
+    BOOST_CHECK(
+        DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_CLTV,
+            versionbits_cache
+        )
+    );
+
+    BOOST_CHECK(
+        DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_DERSIG,
+            versionbits_cache
+        )
+    );
+
+    BOOST_CHECK(
+        DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_CSV,
+            versionbits_cache
+        )
+    );
+
+    BOOST_CHECK(
+        DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_SEGWIT,
+            versionbits_cache
+        )
+    );
+
+    BOOST_CHECK(
+        DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_TAPROOT,
+            versionbits_cache
+        )
+    );
+
+    BOOST_CHECK(
+        !DeploymentActiveAfter(
+            &genesis_index,
+            consensus,
+            Consensus::DEPLOYMENT_TESTDUMMY,
+            versionbits_cache
+        )
+    );
 }
 
 BOOST_AUTO_TEST_SUITE_END()

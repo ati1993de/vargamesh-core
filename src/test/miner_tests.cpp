@@ -890,6 +890,118 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         ) = delete;
     };
 
+    // The inherited BLOCKINFO[] PoW vectors were also created
+    // under Bitcoin's historical deployment schedule. VargaMesh activates
+    // the mature rule set from launch, so preserve the upstream deployment
+    // environment only inside this legacy regression test.
+    struct ScopedUpstreamMinerActivationConsensus
+    {
+        Consensus::Params& consensus;
+
+        const int original_bip34_height;
+        const uint256 original_bip34_hash;
+        const int original_bip65_height;
+        const int original_bip66_height;
+        const int original_csv_height;
+        const int original_segwit_height;
+        const int original_warning_height;
+        const Consensus::BIP9Deployment original_taproot;
+
+        ScopedUpstreamMinerActivationConsensus()
+            : consensus{
+                const_cast<Consensus::Params&>(
+                    Params().GetConsensus()
+                )
+            },
+              original_bip34_height{
+                  consensus.BIP34Height
+              },
+              original_bip34_hash{
+                  consensus.BIP34Hash
+              },
+              original_bip65_height{
+                  consensus.BIP65Height
+              },
+              original_bip66_height{
+                  consensus.BIP66Height
+              },
+              original_csv_height{
+                  consensus.CSVHeight
+              },
+              original_segwit_height{
+                  consensus.SegwitHeight
+              },
+              original_warning_height{
+                  consensus.MinBIP9WarningHeight
+              },
+              original_taproot{
+                  consensus.vDeployments[
+                      Consensus::DEPLOYMENT_TAPROOT
+                  ]
+              }
+        {
+            consensus.BIP34Height = 227931;
+            consensus.BIP34Hash = uint256{
+                "000000000000024b89b42a942fe0d9fea3bb44ab7bd1b19115dd6a759c0808b8"
+            };
+
+            consensus.BIP65Height = 388381;
+            consensus.BIP66Height = 363725;
+            consensus.CSVHeight = 419328;
+            consensus.SegwitHeight = 481824;
+            consensus.MinBIP9WarningHeight = 483840;
+
+            auto& taproot{
+                consensus.vDeployments[
+                    Consensus::DEPLOYMENT_TAPROOT
+                ]
+            };
+
+            taproot.nStartTime = 1619222400;
+            taproot.nTimeout = 1628640000;
+            taproot.min_activation_height = 709632;
+        }
+
+        ~ScopedUpstreamMinerActivationConsensus()
+        {
+            consensus.BIP34Height =
+                original_bip34_height;
+
+            consensus.BIP34Hash =
+                original_bip34_hash;
+
+            consensus.BIP65Height =
+                original_bip65_height;
+
+            consensus.BIP66Height =
+                original_bip66_height;
+
+            consensus.CSVHeight =
+                original_csv_height;
+
+            consensus.SegwitHeight =
+                original_segwit_height;
+
+            consensus.MinBIP9WarningHeight =
+                original_warning_height;
+
+            consensus.vDeployments[
+                Consensus::DEPLOYMENT_TAPROOT
+            ] = original_taproot;
+        }
+
+        ScopedUpstreamMinerActivationConsensus(
+            const ScopedUpstreamMinerActivationConsensus&
+        ) = delete;
+
+        ScopedUpstreamMinerActivationConsensus& operator=(
+            const ScopedUpstreamMinerActivationConsensus&
+        ) = delete;
+    };
+
+    const ScopedUpstreamMinerActivationConsensus
+        upstream_activation_compat{};
+
     const ScopedUpstreamMinerVectorConsensus
         upstream_vector_compat{};
 
