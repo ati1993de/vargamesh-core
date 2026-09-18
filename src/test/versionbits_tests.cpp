@@ -4,6 +4,7 @@
 
 #include <chain.h>
 #include <chainparams.h>
+#include <primitives/pureheader.h>
 #include <consensus/params.h>
 #include <test/util/random.h>
 #include <test/util/common.h>
@@ -479,6 +480,132 @@ BOOST_FIXTURE_TEST_CASE(versionbits_computeblockversion, BlockVersionTest)
         const auto chainParams = CreateChainParams(args, ChainType::REGTEST);
         check_computeblockversion(vbcache, chainParams->GetConsensus(), Consensus::DEPLOYMENT_TESTDUMMY);
     }
+}
+
+
+BOOST_AUTO_TEST_CASE(auxpow_reserved_bit_not_reported_as_unknown)
+{
+    /*
+     * VERSION_AUXPOW is protocol metadata, not BIP9 signalling.
+     *
+     * Exercise the real CheckUnknownActivations() state machine with
+     * another unused bit alongside AuxPoW bit 8:
+     *
+     *   bit 7 -> must still be reported as unknown
+     *   bit 8 -> must never be reported as unknown
+     */
+    const auto chain_params =
+        CreateChainParams(*m_node.args, ChainType::REGTEST);
+
+    const auto& consensus =
+        chain_params->GetConsensus();
+
+    BOOST_REQUIRE(chain_params->IsTestChain());
+
+    /*
+     * Regtest intentionally starts unknown-versionbit warning tracking
+     * immediately.  If this changes in the future, this test should be
+     * reviewed instead of silently becoming weaker.
+     */
+    BOOST_REQUIRE_EQUAL(
+        consensus.MinBIP9WarningHeight,
+        0
+    );
+
+    const uint32_t period{
+        consensus.DifficultyAdjustmentInterval()
+    };
+
+    BOOST_REQUIRE(period > 0);
+
+    constexpr int unknown_bit{7};
+    constexpr int auxpow_bit{8};
+
+    static_assert(
+        CPureBlockHeader::VERSION_AUXPOW ==
+        (int32_t{1} << auxpow_bit)
+    );
+
+    /*
+     * Ensure our control bit is not an actual configured deployment.
+     */
+    for (
+        int i = 0;
+        i < static_cast<int>(
+            Consensus::MAX_VERSION_BITS_DEPLOYMENTS
+        );
+        ++i
+    ) {
+        const auto pos =
+            static_cast<Consensus::DeploymentPos>(i);
+
+        BOOST_REQUIRE_NE(
+            consensus.vDeployments[pos].bit,
+            unknown_bit
+        );
+
+        BOOST_REQUIRE_NE(
+            consensus.vDeployments[pos].bit,
+            auxpow_bit
+        );
+    }
+
+    const int32_t version{
+        VERSIONBITS_TOP_BITS |
+        (int32_t{1} << unknown_bit) |
+        CPureBlockHeader::VERSION_AUXPOW
+    };
+
+    VersionBitsTester chain{m_rng};
+
+    /*
+     * Multiple complete warning periods guarantee that the ordinary
+     * unknown bit reaches LOCKED_IN/ACTIVE territory.
+     */
+    const CBlockIndex* tip{
+        chain.Mine(
+            period * 6,
+            TestTime(1),
+            version
+        ).Tip()
+    };
+
+    BOOST_REQUIRE(tip != nullptr);
+
+    VersionBitsCache cache;
+
+    const auto warnings{
+        cache.CheckUnknownActivations(
+            tip,
+            *chain_params
+        )
+    };
+
+    bool saw_control_unknown{false};
+    bool saw_auxpow_unknown{false};
+
+    for (const auto& [bit, active] : warnings) {
+        (void)active;
+
+        if (bit == unknown_bit) {
+            saw_control_unknown = true;
+        }
+
+        if (bit == auxpow_bit) {
+            saw_auxpow_unknown = true;
+        }
+    }
+
+    /*
+     * The control proves the generic unknown-bit detector still works.
+     */
+    BOOST_CHECK(saw_control_unknown);
+
+    /*
+     * This is the VargaMesh regression assertion:
+     * AuxPoW bit 8 must not become an "unknown new rules" warning.
+     */
+    BOOST_CHECK(!saw_auxpow_unknown);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

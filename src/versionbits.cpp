@@ -5,6 +5,7 @@
 #include <consensus/params.h>
 #include <deploymentinfo.h>
 #include <kernel/chainparams.h>
+#include <primitives/pureheader.h>
 #include <util/check.h>
 #include <versionbits.h>
 #include <versionbits_impl.h>
@@ -335,6 +336,19 @@ std::vector<std::pair<int, bool>> VersionBitsCache::CheckUnknownActivations(cons
     LOCK(m_mutex);
     std::vector<std::pair<int, bool>> result;
     for (int bit = 0; bit < VERSIONBITS_NUM_BITS; ++bit) {
+        /*
+         * VargaMesh reserves version bit 8 as VERSION_AUXPOW.
+         *
+         * It describes the serialized block-header format and is not a
+         * BIP9/VersionBits deployment signal.  Treating it as an unknown
+         * activation would eventually raise a permanent false warning on
+         * an AuxPoW chain.
+         */
+        const uint32_t bit_mask{uint32_t{1} << bit};
+        if (bit_mask == static_cast<uint32_t>(CPureBlockHeader::VERSION_AUXPOW)) {
+            continue;
+        }
+
         WarningBitsConditionChecker checker(chainparams, m_caches, bit);
         ThresholdState state = checker.GetStateFor(pindex, m_warning_caches.at(bit));
         if (state == ACTIVE || state == LOCKED_IN) {
