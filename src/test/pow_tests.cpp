@@ -5,6 +5,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <pow.h>
+#include <uint256.h>
 #include <test/util/random.h>
 #include <test/util/common.h>
 #include <test/util/setup_common.h>
@@ -79,6 +80,194 @@ BOOST_AUTO_TEST_CASE(get_next_work_upper_limit_actual)
     // Test that increasing nbits further would not be a PermittedDifficultyTransition.
     unsigned int invalid_nbits = expected_nbits+1;
     BOOST_CHECK(!PermittedDifficultyTransition(chainParams->GetConsensus(), pindexLast.nHeight+1, pindexLast.nBits, invalid_nbits));
+}
+
+
+BOOST_AUTO_TEST_CASE(asert_reference_and_vargamesh_math)
+{
+    const auto chain_params{
+        CreateChainParams(
+            *m_node.args,
+            ChainType::MAIN
+        )
+    };
+
+    const arith_uint256 pow_limit{
+        UintToArith256(
+            chain_params->GetConsensus().powLimit
+        )
+    };
+
+    // ----------------------------------------------------
+    // Established ASERTI3-2D reference vector.
+    //
+    // Reference implementation parameters:
+    //   spacing    = 600
+    //   half-life  = 172800
+    //   time diff  = 600 parent offset + 300
+    //   height diff= 1
+    //
+    // Expected:
+    //   target =
+    //   00000000ffb1ffffffffffffffffffffffffffffffffffffffffffffffffffff
+    //   nBits = 0x1d00ffb1
+    // ----------------------------------------------------
+
+    const arith_uint256 expected_reference_target{
+        UintToArith256(
+            uint256{
+                "00000000ffb1ffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            }
+        )
+    };
+
+    const arith_uint256 reference_result{
+        CalculateASERT(
+            pow_limit,
+            600,
+            900,
+            1,
+            pow_limit,
+            172800
+        )
+    };
+
+    BOOST_CHECK_EQUAL(
+        reference_result,
+        expected_reference_target
+    );
+
+    BOOST_CHECK_EQUAL(
+        reference_result.GetCompact(),
+        0x1d00ffb1U
+    );
+
+
+    // ----------------------------------------------------
+    // VargaMesh final Gate-6 parameters.
+    //
+    // These tests verify the generic ASERT mathematics.
+    // Gate 6A deliberately does NOT activate them yet.
+    // ----------------------------------------------------
+
+    constexpr int64_t VMESH_SPACING{120};
+    constexpr int64_t VMESH_HALF_LIFE{34560};
+
+    const arith_uint256 initial{
+        pow_limit >> 4
+    };
+
+    // Exactly on schedule -> unchanged target.
+    const arith_uint256 steady{
+        CalculateASERT(
+            initial,
+            VMESH_SPACING,
+            VMESH_SPACING,
+            0,
+            pow_limit,
+            VMESH_HALF_LIFE
+        )
+    };
+
+    BOOST_CHECK_EQUAL(
+        steady,
+        initial
+    );
+
+
+    // One half-life behind schedule:
+    // target doubles, difficulty halves.
+    const arith_uint256 one_half_life_slow{
+        CalculateASERT(
+            initial,
+            VMESH_SPACING,
+            VMESH_SPACING + VMESH_HALF_LIFE,
+            0,
+            pow_limit,
+            VMESH_HALF_LIFE
+        )
+    };
+
+    BOOST_CHECK_EQUAL(
+        one_half_life_slow,
+        initial * 2
+    );
+
+
+    // One half-life ahead of schedule:
+    // target halves, difficulty doubles.
+    const arith_uint256 one_half_life_fast{
+        CalculateASERT(
+            initial,
+            VMESH_SPACING,
+            VMESH_SPACING - VMESH_HALF_LIFE,
+            0,
+            pow_limit,
+            VMESH_HALF_LIFE
+        )
+    };
+
+    BOOST_CHECK_EQUAL(
+        one_half_life_fast,
+        initial / 2
+    );
+
+
+    // Two half-lives behind schedule.
+    const arith_uint256 two_half_lives_slow{
+        CalculateASERT(
+            initial,
+            VMESH_SPACING,
+            VMESH_SPACING + 2 * VMESH_HALF_LIFE,
+            0,
+            pow_limit,
+            VMESH_HALF_LIFE
+        )
+    };
+
+    BOOST_CHECK_EQUAL(
+        two_half_lives_slow,
+        initial * 4
+    );
+
+
+    // Clamp at powLimit.
+    const arith_uint256 clamped{
+        CalculateASERT(
+            pow_limit,
+            VMESH_SPACING,
+            VMESH_SPACING + VMESH_HALF_LIFE,
+            0,
+            pow_limit,
+            VMESH_HALF_LIFE
+        )
+    };
+
+    BOOST_CHECK_EQUAL(
+        clamped,
+        pow_limit
+    );
+
+
+    // Extreme fast schedule must never underflow to zero.
+    const arith_uint256 minimum_target{
+        CalculateASERT(
+            pow_limit,
+            VMESH_SPACING,
+            0,
+            2 * (256 - 33) * 288,
+            pow_limit,
+            VMESH_HALF_LIFE
+        )
+    };
+
+    BOOST_CHECK(
+        minimum_target >= arith_uint256{1}
+    );
+
+    BOOST_CHECK(
+        minimum_target <= pow_limit
+    );
 }
 
 BOOST_AUTO_TEST_CASE(CheckProofOfWork_test_negative_target)

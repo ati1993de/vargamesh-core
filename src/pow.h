@@ -29,6 +29,23 @@ std::optional<arith_uint256> DeriveTarget(unsigned int nBits, uint256 pow_limit)
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params&);
 unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nFirstBlockTime, const Consensus::Params&);
 
+/**
+ * Absolute ASERTI3-2D target calculation.
+ *
+ * Integer/fixed-point implementation derived from the established
+ * Bitcoin Cash ASERT reference implementation (MIT licensed).
+ *
+ * This function is consensus-capable mathematics only.
+ * Gate 6A does NOT activate ASERT on VargaMesh mainnet.
+ */
+arith_uint256 CalculateASERT(
+    const arith_uint256& ref_target,
+    int64_t target_spacing,
+    int64_t time_diff,
+    int64_t height_diff,
+    const arith_uint256& pow_limit,
+    int64_t half_life) noexcept;
+
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Params&);

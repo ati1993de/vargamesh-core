@@ -10,6 +10,123 @@
 #include <primitives/block.h>
 #include <uint256.h>
 #include <util/check.h>
+#include <cstdlib>
+
+/**
+ * Absolute ASERTI3-2D target calculation.
+ *
+ * Ported from the established Bitcoin Cash integer ASERT reference
+ * implementation. The algorithm intentionally uses fixed-point integer
+ * arithmetic so consensus results do not depend on floating-point behavior.
+ *
+ * Formula approximated:
+ *
+ *   new_target =
+ *       ref_target *
+ *       2^((time_diff - target_spacing * (height_diff + 1))
+ *           / half_life)
+ *
+ * The approximation polynomial and rounding constants below are part of the
+ * established ASERTI3-2D implementation and therefore consensus-sensitive.
+ */
+arith_uint256 CalculateASERT(
+    const arith_uint256& ref_target,
+    const int64_t target_spacing,
+    const int64_t time_diff,
+    const int64_t height_diff,
+    const arith_uint256& pow_limit,
+    const int64_t half_life) noexcept
+{
+    assert(ref_target > 0);
+    assert(ref_target <= pow_limit);
+    assert((pow_limit >> 224) == 0);
+    assert(height_diff >= 0);
+    assert(target_spacing > 0);
+    assert(half_life > 0);
+
+    // Keep the fixed-point numerator inside signed 64-bit range.
+    assert(
+        llabs(
+            time_diff -
+            target_spacing * height_diff
+        ) < (1LL << (63 - 16))
+    );
+
+    const int64_t exponent{
+        (
+            (
+                time_diff -
+                target_spacing * (height_diff + 1)
+            ) * 65536
+        ) / half_life
+    };
+
+    // C++20 guarantees arithmetic right shift for signed integers.
+    static_assert(
+        (int64_t{-1} >> 1) == int64_t{-1},
+        "ASERT requires arithmetic right shift"
+    );
+
+    int64_t shifts{exponent >> 16};
+    const auto frac{uint16_t(exponent)};
+
+    assert(
+        exponent ==
+        shifts * 65536 + frac
+    );
+
+    // Approximate 2^x for x in [0,1):
+    //
+    // 1 + 0.695502049*x
+    //   + 0.2262698*x^2
+    //   + 0.0782318*x^3
+    //
+    // Maximum approximation error is below ~0.013%.
+    const uint32_t factor{
+        static_cast<uint32_t>(
+            65536 +
+            (
+                (
+                    +195766423245049ULL * frac
+                    + 971821376ULL * frac * frac
+                    + 5127ULL * frac * frac * frac
+                    + (1ULL << 47)
+                ) >> 48
+            )
+        )
+    };
+
+    arith_uint256 next_target{
+        ref_target * factor
+    };
+
+    // factor contains an implicit 16-bit fixed-point scale.
+    shifts -= 16;
+
+    if (shifts <= 0) {
+        next_target >>= -shifts;
+    } else {
+        const auto shifted{
+            next_target << shifts
+        };
+
+        // Detect 256-bit overflow.
+        if ((shifted >> shifts) != next_target) {
+            next_target = pow_limit;
+        } else {
+            next_target = shifted;
+        }
+    }
+
+    if (next_target == 0) {
+        // Zero is not a valid PoW target.
+        next_target = arith_uint256{1};
+    } else if (next_target > pow_limit) {
+        next_target = pow_limit;
+    }
+
+    return next_target;
+}
 
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
