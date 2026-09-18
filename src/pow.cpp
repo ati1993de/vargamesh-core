@@ -193,10 +193,11 @@ uint32_t GetNextASERTWorkRequired(
 
     // Block 1 is the dynamic VargaMesh ASERT anchor.
     //
-    // Its target is inherited from genesis. This deliberately avoids
-    // hardcoding the final genesis hash/time before Gate 9.
+    // Its target is an explicit consensus parameter. Genesis PoW
+    // difficulty therefore does not define launch mining difficulty.
     if (pindex_last->nHeight == 0) {
-        return pindex_last->nBits;
+        assert(params.nASERTInitialBits != 0);
+        return params.nASERTInitialBits;
     }
 
     const CBlockIndex* anchor{

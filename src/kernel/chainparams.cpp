@@ -102,6 +102,10 @@ public:
         consensus.fPowNoRetargeting = false;
         consensus.fPowUseASERT = true;
         consensus.nASERTHalfLife = 34'560; // 9.6 hours = 288 target blocks at 120 seconds
+
+        // Explicit VMESH Block-1 launch target.
+        // Difficulty ~349246; approximately 120 seconds at 12.5 TH/s.
+        consensus.nASERTInitialBits = 0x1a3009a4;
         // VargaMesh AuxPoW identity.
         //
         // Gate 7A stages these parameters only.

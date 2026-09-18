@@ -290,14 +290,12 @@ BOOST_AUTO_TEST_CASE(vargamesh_asert_transition_validation)
     );
 
     const uint32_t initial_nbits{
-        UintToArith256(
-            asert_params.powLimit
-        ).GetCompact()
+        asert_params.nASERTInitialBits
     };
 
     BOOST_REQUIRE_EQUAL(
         initial_nbits,
-        0x1d00ffffU
+        0x1a3009a4U
     );
 
 
@@ -319,7 +317,14 @@ BOOST_AUTO_TEST_CASE(vargamesh_asert_transition_validation)
         1'700'000'000;
 
     synthetic_genesis_header.nBits =
-        initial_nbits;
+        UintToArith256(
+            asert_params.powLimit
+        ).GetCompact();
+
+    BOOST_REQUIRE_NE(
+        synthetic_genesis_header.nBits,
+        initial_nbits
+    );
 
     synthetic_genesis_header.nNonce = 0;
 
@@ -351,7 +356,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_asert_transition_validation)
     // BLOCK 1
     //
     // Dynamic ASERT anchor.
-    // It MUST inherit genesis nBits exactly.
+    // Block 1 MUST use the explicit VMESH initial target.
     // --------------------------------------------------
 
     CBlockHeader block1;
@@ -413,7 +418,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_asert_transition_validation)
 
     BOOST_REQUIRE_EQUAL(
         block2.nBits,
-        0x1d00ffb1U
+        0x1a2ffb01U
     );
 
     BOOST_REQUIRE_NE(

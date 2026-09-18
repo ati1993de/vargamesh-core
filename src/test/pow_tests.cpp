@@ -319,6 +319,11 @@ BOOST_AUTO_TEST_CASE(vargamesh_mainnet_asert_activation)
         34'560
     );
 
+    BOOST_CHECK_EQUAL(
+        consensus.nASERTInitialBits,
+        0x1a3009a4U
+    );
+
     CBlockIndex genesis;
     genesis.nHeight = 0;
     genesis.nTime = 1'700'000'000;
@@ -338,7 +343,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_mainnet_asert_activation)
     // BLOCK 1
     //
     // Dynamic anchor:
-    // block 1 inherits genesis difficulty.
+    // block 1 uses the explicit VMESH launch difficulty.
     // --------------------------------------------------
 
     CBlockHeader block1_header;
@@ -352,7 +357,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_mainnet_asert_activation)
             &block1_header,
             consensus
         ),
-        genesis.nBits
+        consensus.nASERTInitialBits
     );
 
 
@@ -361,7 +366,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_mainnet_asert_activation)
     block1.pprev = &genesis;
     block1.nHeight = 1;
     block1.nTime = block1_header.nTime;
-    block1.nBits = genesis.nBits;
+    block1.nBits = consensus.nASERTInitialBits;
 
 
     // --------------------------------------------------
@@ -395,7 +400,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_mainnet_asert_activation)
 
     BOOST_CHECK_EQUAL(
         expected,
-        0x1d00ffb1U
+        0x1a2ffb01U
     );
 
     BOOST_CHECK_EQUAL(

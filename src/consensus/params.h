@@ -122,6 +122,9 @@ struct Params {
     bool fPowNoRetargeting;
     bool fPowUseASERT{false};
     int64_t nASERTHalfLife{0};
+
+    /** Explicit target for the first post-genesis ASERT block. */
+    uint32_t nASERTInitialBits{0};
     /** VargaMesh AuxPoW parameters. */
     int32_t nAuxpowChainId{0};
     int nAuxpowStartHeight{std::numeric_limits<int>::max()};

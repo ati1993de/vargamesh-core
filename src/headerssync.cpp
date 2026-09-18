@@ -248,11 +248,19 @@ bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& curren
     // work chain if they compress the work into as few blocks as possible,
     // so don't let anyone give a chain that would violate the difficulty
     // adjustment maximum.
-    if (!ValidateDifficultyTransitionForSync(
-            m_last_header_received.nBits,
-            m_last_header_received.nTime,
-            m_current_height,
-            current.nBits)) {
+    // Genesis -> Block 1 uses the explicit VMESH launch target.
+    // Starting with Block 2, HeaderSync has ASERT anchor context.
+    const bool valid_difficulty_transition{
+        m_consensus_params.fPowUseASERT && next_height == 1
+            ? current.nBits == m_consensus_params.nASERTInitialBits
+            : ValidateDifficultyTransitionForSync(
+                  m_last_header_received.nBits,
+                  m_last_header_received.nTime,
+                  m_current_height,
+                  current.nBits)
+    };
+
+    if (!valid_difficulty_transition) {
         LogDebug(BCLog::NET, "Initial headers sync aborted with peer=%d: invalid difficulty transition at height=%i (presync phase)\n", m_id, next_height);
         return false;
     }
@@ -313,11 +321,19 @@ bool HeadersSyncState::ValidateAndStoreRedownloadedHeader(const CBlockHeader& he
         previous_nTime = m_chain_start.nTime;
     }
 
-    if (!ValidateDifficultyTransitionForSync(
-            previous_nBits,
-            previous_nTime,
-            next_height - 1,
-            header.nBits)) {
+    // Redownload validates Genesis -> Block 1 independently
+    // from PRESYNC, so apply the same explicit VMESH launch target.
+    const bool valid_redownload_difficulty_transition{
+        m_consensus_params.fPowUseASERT && next_height == 1
+            ? header.nBits == m_consensus_params.nASERTInitialBits
+            : ValidateDifficultyTransitionForSync(
+                  previous_nBits,
+                  previous_nTime,
+                  next_height - 1,
+                  header.nBits)
+    };
+
+    if (!valid_redownload_difficulty_transition) {
         LogDebug(BCLog::NET, "Initial headers sync aborted with peer=%d: invalid difficulty transition at height=%i (redownload phase)\n", m_id, next_height);
         return false;
     }
