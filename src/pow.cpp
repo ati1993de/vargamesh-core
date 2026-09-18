@@ -128,10 +128,107 @@ arith_uint256 CalculateASERT(
     return next_target;
 }
 
+
+uint32_t CalculateASERTWorkRequired(
+    const uint32_t anchor_nbits,
+    const int64_t anchor_parent_time,
+    const int64_t anchor_height,
+    const uint32_t previous_time,
+    const int64_t previous_height,
+    const Consensus::Params& params) noexcept
+{
+    assert(params.fPowUseASERT);
+    assert(params.nPowTargetSpacing > 0);
+    assert(params.nASERTHalfLife > 0);
+    assert(previous_height >= anchor_height);
+
+    const arith_uint256 pow_limit{
+        UintToArith256(params.powLimit)
+    };
+
+    bool negative{false};
+    bool overflow{false};
+
+    arith_uint256 anchor_target;
+
+    anchor_target.SetCompact(
+        anchor_nbits,
+        &negative,
+        &overflow
+    );
+
+    assert(!negative);
+    assert(!overflow);
+    assert(anchor_target > 0);
+    assert(anchor_target <= pow_limit);
+
+    const int64_t time_diff{
+        static_cast<int64_t>(previous_time) -
+        anchor_parent_time
+    };
+
+    const int64_t height_diff{
+        previous_height -
+        anchor_height
+    };
+
+    return CalculateASERT(
+        anchor_target,
+        params.nPowTargetSpacing,
+        time_diff,
+        height_diff,
+        pow_limit,
+        params.nASERTHalfLife
+    ).GetCompact();
+}
+
+
+uint32_t GetNextASERTWorkRequired(
+    const CBlockIndex* pindex_last,
+    const CBlockHeader*,
+    const Consensus::Params& params) noexcept
+{
+    assert(pindex_last != nullptr);
+    assert(params.fPowUseASERT);
+
+    // Block 1 is the dynamic VargaMesh ASERT anchor.
+    //
+    // Its target is inherited from genesis. This deliberately avoids
+    // hardcoding the final genesis hash/time before Gate 9.
+    if (pindex_last->nHeight == 0) {
+        return pindex_last->nBits;
+    }
+
+    const CBlockIndex* anchor{
+        pindex_last->GetAncestor(1)
+    };
+
+    assert(anchor != nullptr);
+    assert(anchor->nHeight == 1);
+    assert(anchor->pprev != nullptr);
+
+    return CalculateASERTWorkRequired(
+        anchor->nBits,
+        anchor->pprev->GetBlockTime(),
+        anchor->nHeight,
+        pindex_last->GetBlockTime(),
+        pindex_last->nHeight,
+        params
+    );
+}
+
 unsigned int GetNextWorkRequired(const CBlockIndex* pindexLast, const CBlockHeader *pblock, const Consensus::Params& params)
 {
     assert(pindexLast != nullptr);
     unsigned int nProofOfWorkLimit = UintToArith256(params.powLimit).GetCompact();
+
+    if (params.fPowUseASERT) {
+        return GetNextASERTWorkRequired(
+            pindexLast,
+            pblock,
+            params
+        );
+    }
 
     // Only change once per difficulty adjustment interval
     if ((pindexLast->nHeight+1) % params.DifficultyAdjustmentInterval() != 0)

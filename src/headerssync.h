@@ -201,6 +201,13 @@ private:
 
     /** In PRESYNC, process and update state for a single header */
     bool ValidateAndProcessSingleHeader(const CBlockHeader& current);
+    /** Validate the claimed difficulty target during low-work headers sync.
+     *  For ASERT networks this reproduces the exact dynamic anchor schedule. */
+    bool ValidateDifficultyTransitionForSync(
+        uint32_t previous_nbits,
+        uint32_t previous_time,
+        int64_t previous_height,
+        uint32_t new_nbits) const;
 
     /** In REDOWNLOAD, check a header's commitment (if applicable) and add to
      * buffer for later processing */
@@ -246,6 +253,16 @@ private:
 
     /** Height of m_last_header_received */
     int64_t m_current_height{0};
+
+    /** VargaMesh ASERT anchor state used during headers presynchronization.
+     *
+     *  For a chain starting at genesis, block 1 is learned from the peer and
+     *  becomes the anchor after its target is verified against genesis nBits.
+     *  For a chain_start at height >= 1, the known block-1 ancestor is used.
+     */
+    bool m_asert_anchor_initialized{false};
+    uint32_t m_asert_anchor_nbits{0};
+    int64_t m_asert_anchor_parent_time{0};
 
     /** During phase 2 (REDOWNLOAD), we buffer redownloaded headers in memory
      *  until enough commitments have been verified; those are stored in

@@ -30,6 +30,23 @@ HeadersSyncState::HeadersSyncState(NodeId id,
       m_last_header_received(m_chain_start.GetBlockHeader()),
       m_current_height(chain_start.nHeight)
 {
+    if (
+        m_consensus_params.fPowUseASERT &&
+        m_chain_start.nHeight >= 1
+    ) {
+        const CBlockIndex* anchor{
+            m_chain_start.GetAncestor(1)
+        };
+
+        assert(anchor != nullptr);
+        assert(anchor->pprev != nullptr);
+
+        m_asert_anchor_initialized = true;
+        m_asert_anchor_nbits = anchor->nBits;
+        m_asert_anchor_parent_time =
+            anchor->pprev->GetBlockTime();
+    }
+
     // Estimate the number of blocks that could possibly exist on the peer's
     // chain *right now* using 6 blocks/second (fastest blockrate given the MTP
     // rule) times the number of seconds from the last allowed block until
@@ -174,6 +191,49 @@ bool HeadersSyncState::ValidateAndStoreHeadersCommitments(std::span<const CBlock
     return true;
 }
 
+bool HeadersSyncState::ValidateDifficultyTransitionForSync(
+    const uint32_t previous_nbits,
+    const uint32_t previous_time,
+    const int64_t previous_height,
+    const uint32_t new_nbits) const
+{
+    const int64_t next_height{
+        previous_height + 1
+    };
+
+    if (!m_consensus_params.fPowUseASERT) {
+        return PermittedDifficultyTransition(
+            m_consensus_params,
+            next_height,
+            previous_nbits,
+            new_nbits
+        );
+    }
+
+    // VargaMesh block 1 is the ASERT anchor.
+    // It inherits genesis nBits exactly.
+    if (next_height == 1) {
+        return new_nbits == previous_nbits;
+    }
+
+    if (!m_asert_anchor_initialized) {
+        return false;
+    }
+
+    const uint32_t expected{
+        CalculateASERTWorkRequired(
+            m_asert_anchor_nbits,
+            m_asert_anchor_parent_time,
+            /*anchor_height=*/1,
+            previous_time,
+            previous_height,
+            m_consensus_params
+        )
+    };
+
+    return new_nbits == expected;
+}
+
 bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& current)
 {
     Assume(m_download_state == State::PRESYNC);
@@ -186,10 +246,24 @@ bool HeadersSyncState::ValidateAndProcessSingleHeader(const CBlockHeader& curren
     // work chain if they compress the work into as few blocks as possible,
     // so don't let anyone give a chain that would violate the difficulty
     // adjustment maximum.
-    if (!PermittedDifficultyTransition(m_consensus_params, next_height,
-                m_last_header_received.nBits, current.nBits)) {
+    if (!ValidateDifficultyTransitionForSync(
+            m_last_header_received.nBits,
+            m_last_header_received.nTime,
+            m_current_height,
+            current.nBits)) {
         LogDebug(BCLog::NET, "Initial headers sync aborted with peer=%d: invalid difficulty transition at height=%i (presync phase)\n", m_id, next_height);
         return false;
+    }
+
+    if (
+        m_consensus_params.fPowUseASERT &&
+        next_height == 1 &&
+        !m_asert_anchor_initialized
+    ) {
+        m_asert_anchor_initialized = true;
+        m_asert_anchor_nbits = current.nBits;
+        m_asert_anchor_parent_time =
+            m_last_header_received.nTime;
     }
 
     if (next_height % m_params.commitment_period == m_commit_offset) {
@@ -228,14 +302,20 @@ bool HeadersSyncState::ValidateAndStoreRedownloadedHeader(const CBlockHeader& he
 
     // Check that the difficulty adjustments are within our tolerance:
     uint32_t previous_nBits{0};
+    uint32_t previous_nTime{0};
     if (!m_redownloaded_headers.empty()) {
         previous_nBits = m_redownloaded_headers.back().nBits;
+        previous_nTime = m_redownloaded_headers.back().nTime;
     } else {
         previous_nBits = m_chain_start.nBits;
+        previous_nTime = m_chain_start.nTime;
     }
 
-    if (!PermittedDifficultyTransition(m_consensus_params, next_height,
-                previous_nBits, header.nBits)) {
+    if (!ValidateDifficultyTransitionForSync(
+            previous_nBits,
+            previous_nTime,
+            next_height - 1,
+            header.nBits)) {
         LogDebug(BCLog::NET, "Initial headers sync aborted with peer=%d: invalid difficulty transition at height=%i (redownload phase)\n", m_id, next_height);
         return false;
     }

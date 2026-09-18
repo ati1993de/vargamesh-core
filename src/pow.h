@@ -46,6 +46,20 @@ arith_uint256 CalculateASERT(
     const arith_uint256& pow_limit,
     int64_t half_life) noexcept;
 
+uint32_t CalculateASERTWorkRequired(
+    uint32_t anchor_nbits,
+    int64_t anchor_parent_time,
+    int64_t anchor_height,
+    uint32_t previous_time,
+    int64_t previous_height,
+    const Consensus::Params& params) noexcept;
+
+uint32_t GetNextASERTWorkRequired(
+    const CBlockIndex* pindex_last,
+    const CBlockHeader* pblock,
+    const Consensus::Params& params) noexcept;
+
+
 /** Check whether a block hash satisfies the proof-of-work requirement specified by nBits */
 bool CheckProofOfWork(uint256 hash, unsigned int nBits, const Consensus::Params&);
 bool CheckProofOfWorkImpl(uint256 hash, unsigned int nBits, const Consensus::Params&);

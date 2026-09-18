@@ -252,4 +252,409 @@ BOOST_AUTO_TEST_CASE(too_little_work)
         /*exp_locator_hash=*/std::nullopt);
 }
 
+
+BOOST_AUTO_TEST_CASE(vargamesh_asert_transition_validation)
+{
+    // Use the actual VMESH MAINNET PoW parameters.
+    //
+    // The surrounding fixture is RegTestingSetup, whose powLimit
+    // intentionally uses 0x207fffff. That very-large target is
+    // incompatible with the established ASERTI3-2D overflow bound.
+    //
+    // Therefore construct a synthetic chain-start index with the
+    // VMESH mainnet target instead of altering ASERT itself.
+    const auto main_params{
+        CreateChainParams(
+            *m_node.args,
+            ChainType::MAIN
+        )
+    };
+
+    const Consensus::Params asert_params{
+        main_params->GetConsensus()
+    };
+
+    BOOST_REQUIRE(
+        asert_params.fPowUseASERT
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        asert_params.nPowTargetSpacing,
+        120
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        asert_params.nASERTHalfLife,
+        34'560
+    );
+
+    const uint32_t initial_nbits{
+        UintToArith256(
+            asert_params.powLimit
+        ).GetCompact()
+    };
+
+    BOOST_REQUIRE_EQUAL(
+        initial_nbits,
+        0x1d00ffffU
+    );
+
+
+    // --------------------------------------------------
+    // SYNTHETIC GENESIS / CHAIN START
+    //
+    // No final VargaMesh genesis is created here.
+    // This object exists only inside the unit test.
+    // --------------------------------------------------
+
+    CBlockHeader synthetic_genesis_header;
+
+    synthetic_genesis_header.nVersion = 1;
+    synthetic_genesis_header.hashPrevBlock.SetNull();
+    synthetic_genesis_header.hashMerkleRoot =
+        uint256::ZERO;
+
+    synthetic_genesis_header.nTime =
+        1'700'000'000;
+
+    synthetic_genesis_header.nBits =
+        initial_nbits;
+
+    synthetic_genesis_header.nNonce = 0;
+
+
+    const uint256 synthetic_genesis_hash{
+        synthetic_genesis_header.GetHash()
+    };
+
+
+    CBlockIndex asert_chain_start{
+        synthetic_genesis_header
+    };
+
+    asert_chain_start.phashBlock =
+        &synthetic_genesis_hash;
+
+    asert_chain_start.nHeight = 0;
+
+    asert_chain_start.nChainWork =
+        GetBlockProof(
+            asert_chain_start
+        );
+
+    asert_chain_start.nTimeMax =
+        asert_chain_start.nTime;
+
+
+    // --------------------------------------------------
+    // BLOCK 1
+    //
+    // Dynamic ASERT anchor.
+    // It MUST inherit genesis nBits exactly.
+    // --------------------------------------------------
+
+    CBlockHeader block1;
+
+    block1.nVersion = 1;
+
+    block1.hashPrevBlock =
+        synthetic_genesis_hash;
+
+    block1.hashMerkleRoot =
+        uint256::ONE;
+
+    // 60 seconds instead of target 120 seconds.
+    block1.nTime =
+        synthetic_genesis_header.nTime + 60;
+
+    block1.nBits =
+        initial_nbits;
+
+    block1.nNonce = 1;
+
+
+    // --------------------------------------------------
+    // BLOCK 2
+    //
+    // Because block 1 was 60 seconds faster than target,
+    // ASERT must make block 2 harder.
+    //
+    // -60 / 34,560 equals -300 / 172,800,
+    // matching the already validated ASERT reference
+    // exponent ratio.
+    // --------------------------------------------------
+
+    CBlockHeader block2;
+
+    block2.nVersion = 1;
+
+    block2.hashPrevBlock =
+        block1.GetHash();
+
+    block2.hashMerkleRoot =
+        uint256::ONE;
+
+    block2.nTime =
+        block1.nTime + 120;
+
+    block2.nBits =
+        CalculateASERTWorkRequired(
+            block1.nBits,
+            synthetic_genesis_header.GetBlockTime(),
+            /*anchor_height=*/1,
+            block1.GetBlockTime(),
+            /*previous_height=*/1,
+            asert_params
+        );
+
+    block2.nNonce = 2;
+
+
+    BOOST_REQUIRE_EQUAL(
+        block2.nBits,
+        0x1d00ffb1U
+    );
+
+    BOOST_REQUIRE_NE(
+        block2.nBits,
+        block1.nBits
+    );
+
+
+    // --------------------------------------------------
+    // HEADERSSYNC IMPORTANT:
+    //
+    // HeadersSync's PRESYNC/REDOWNLOAD stage verifies
+    // target transitions and accumulated chainwork.
+    //
+    // It does not require us to brute-force these
+    // synthetic headers to 0x1d00ffff in this unit test.
+    // Full block/header validation performs actual PoW
+    // checks elsewhere in Bitcoin Core.
+    // --------------------------------------------------
+
+
+    const HeadersSyncParams sync_params{
+        .commitment_period = COMMITMENT_PERIOD,
+        .redownload_buffer_size =
+            REDOWNLOAD_BUFFER_SIZE,
+    };
+
+
+    arith_uint256 required_work{
+        asert_chain_start.nChainWork
+    };
+
+    required_work +=
+        GetBlockProof(block1);
+
+    required_work +=
+        GetBlockProof(block2);
+
+
+    const std::vector<CBlockHeader> pair{
+        block1,
+        block2,
+    };
+
+    const std::vector<CBlockHeader> first{
+        block1,
+    };
+
+    const std::vector<CBlockHeader> second{
+        block2,
+    };
+
+
+    // ==================================================
+    // TEST 1:
+    // VALID ASERT
+    //
+    // PRESYNC -> REDOWNLOAD -> FINAL
+    // ==================================================
+
+    HeadersSyncState good{
+        /*id=*/100,
+        asert_params,
+        sync_params,
+        asert_chain_start,
+        required_work
+    };
+
+
+    auto result{
+        good.ProcessNextHeaders(
+            pair,
+            /*full_headers_message=*/true
+        )
+    };
+
+    BOOST_REQUIRE(
+        result.success
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        good.GetState(),
+        State::REDOWNLOAD
+    );
+
+
+    result =
+        good.ProcessNextHeaders(
+            first,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_REQUIRE(
+        result.success
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        good.GetState(),
+        State::REDOWNLOAD
+    );
+
+
+    result =
+        good.ProcessNextHeaders(
+            second,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_REQUIRE(
+        result.success
+    );
+
+    BOOST_CHECK_EQUAL(
+        good.GetState(),
+        State::FINAL
+    );
+
+    BOOST_CHECK_EQUAL(
+        result.pow_validated_headers.size(),
+        2U
+    );
+
+
+    // ==================================================
+    // TEST 2:
+    // INVALID ASERT nBits DURING PRESYNC
+    // ==================================================
+
+    CBlockHeader invalid_block2{
+        block2
+    };
+
+    invalid_block2.nBits ^= 1U;
+
+
+    const std::vector<CBlockHeader>
+        invalid_second{
+            invalid_block2,
+        };
+
+
+    HeadersSyncState bad_presync{
+        /*id=*/101,
+        asert_params,
+        sync_params,
+        asert_chain_start,
+        required_work
+    };
+
+
+    result =
+        bad_presync.ProcessNextHeaders(
+            first,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_REQUIRE(
+        result.success
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        bad_presync.GetState(),
+        State::PRESYNC
+    );
+
+
+    result =
+        bad_presync.ProcessNextHeaders(
+            invalid_second,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_CHECK(
+        !result.success
+    );
+
+    BOOST_CHECK_EQUAL(
+        bad_presync.GetState(),
+        State::FINAL
+    );
+
+
+    // ==================================================
+    // TEST 3:
+    // INVALID ASERT nBits DURING REDOWNLOAD
+    // ==================================================
+
+    HeadersSyncState bad_redownload{
+        /*id=*/102,
+        asert_params,
+        sync_params,
+        asert_chain_start,
+        required_work
+    };
+
+
+    result =
+        bad_redownload.ProcessNextHeaders(
+            pair,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_REQUIRE(
+        result.success
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        bad_redownload.GetState(),
+        State::REDOWNLOAD
+    );
+
+
+    result =
+        bad_redownload.ProcessNextHeaders(
+            first,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_REQUIRE(
+        result.success
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        bad_redownload.GetState(),
+        State::REDOWNLOAD
+    );
+
+
+    result =
+        bad_redownload.ProcessNextHeaders(
+            invalid_second,
+            /*full_headers_message=*/true
+        );
+
+    BOOST_CHECK(
+        !result.success
+    );
+
+    BOOST_CHECK_EQUAL(
+        bad_redownload.GetState(),
+        State::FINAL
+    );
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -153,7 +153,32 @@ BOOST_FIXTURE_TEST_CASE(stale_tip_peer_management, OutboundTest)
 
     const auto time_init{GetTime<std::chrono::seconds>()};
     SetMockTime(time_init);
-    const auto time_later{time_init + 3 * std::chrono::seconds{m_node.chainman->GetConsensus().nPowTargetSpacing} + 1s};
+    // TipMayBeStale() becomes true after three target block intervals,
+    // but CheckForStaleTipAndEvictPeers() evaluates stale-tip state only
+    // once per 10-minute STALE_CHECK_INTERVAL in Bitcoin Core 31.1.
+    //
+    // Bitcoin's 600-second spacing made 3 * spacing (30 minutes)
+    // automatically exceed that interval. VMESH uses 120 seconds,
+    // making 3 * spacing only 6 minutes. Advance beyond BOTH gates.
+    const auto stale_threshold{
+        3 * std::chrono::seconds{
+            m_node.chainman->GetConsensus().nPowTargetSpacing
+        }
+    };
+
+    const auto stale_check_interval{
+        std::chrono::minutes{10}
+    };
+
+    const auto time_later{
+        time_init +
+        (
+            stale_threshold > stale_check_interval
+                ? stale_threshold
+                : stale_check_interval
+        ) +
+        1s
+    };
     connman->Init(options);
     std::vector<CNode *> vNodes;
 

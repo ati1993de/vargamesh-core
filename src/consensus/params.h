@@ -120,6 +120,8 @@ struct Params {
       */
     bool enforce_BIP94;
     bool fPowNoRetargeting;
+    bool fPowUseASERT{false};
+    int64_t nASERTHalfLife{0};
     int64_t nPowTargetSpacing;
     int64_t nPowTargetTimespan;
     std::chrono::seconds PowTargetSpacing() const

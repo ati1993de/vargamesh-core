@@ -999,6 +999,63 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         ) = delete;
     };
 
+    struct ScopedUpstreamMinerPowConsensus
+    {
+        Consensus::Params& consensus;
+
+        const bool original_use_asert;
+        const int64_t original_spacing;
+        const int64_t original_half_life;
+
+        ScopedUpstreamMinerPowConsensus()
+            : consensus{
+                const_cast<Consensus::Params&>(
+                    Params().GetConsensus()
+                )
+            },
+              original_use_asert{
+                  consensus.fPowUseASERT
+              },
+              original_spacing{
+                  consensus.nPowTargetSpacing
+              },
+              original_half_life{
+                  consensus.nASERTHalfLife
+              }
+        {
+            // TEST ONLY:
+            // BLOCKINFO[] contains historic Bitcoin
+            // 600-second / legacy-DAA PoW vectors.
+            consensus.fPowUseASERT = false;
+            consensus.nPowTargetSpacing =
+                10 * 60;
+            consensus.nASERTHalfLife = 0;
+        }
+
+        ~ScopedUpstreamMinerPowConsensus()
+        {
+            consensus.fPowUseASERT =
+                original_use_asert;
+
+            consensus.nPowTargetSpacing =
+                original_spacing;
+
+            consensus.nASERTHalfLife =
+                original_half_life;
+        }
+
+        ScopedUpstreamMinerPowConsensus(
+            const ScopedUpstreamMinerPowConsensus&
+        ) = delete;
+
+        ScopedUpstreamMinerPowConsensus& operator=(
+            const ScopedUpstreamMinerPowConsensus&
+        ) = delete;
+    };
+
+    const ScopedUpstreamMinerPowConsensus
+        upstream_pow_compat{};
+
     const ScopedUpstreamMinerActivationConsensus
         upstream_activation_compat{};
 
