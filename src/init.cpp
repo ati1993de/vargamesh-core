@@ -999,6 +999,22 @@ bool AppInitParameterInteraction(const ArgsManager& args)
     }
 
     if (args.GetIntArg("-prune", 0)) {
+        /*
+         * VargaMesh mainnet uses AuxPoW from block 1.
+         *
+         * Historical AuxPoW data is intentionally not duplicated in
+         * CBlockIndex. P2P headers, raw getblockheader and REST raw headers
+         * therefore require the original blk*.dat record.
+         *
+         * Until a dedicated persistent AuxPoW proof/header store exists,
+         * pruning the VargaMesh mainnet block store is unsafe.
+         */
+        if (chainparams.GetChainType() == ChainType::MAIN) {
+            return InitError(_(
+                "Prune mode is disabled on VargaMesh mainnet because complete "
+                "historical AuxPoW headers must remain available."));
+        }
+
         if (args.GetBoolArg("-txindex", DEFAULT_TXINDEX))
             return InitError(_("Prune mode is incompatible with -txindex."));
         if (args.GetBoolArg("-txospenderindex", DEFAULT_TXOSPENDERINDEX))

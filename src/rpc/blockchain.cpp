@@ -657,8 +657,25 @@ static RPCHelpMan getblockheader()
 
     if (!fVerbose)
     {
+        /*
+         * VargaMesh AuxPoW is part of the serialized block header but is not
+         * persisted in CBlockIndex. Raw getblockheader therefore needs the
+         * complete on-disk header.
+         */
+        CBlockHeader wire_header;
+        if (!chainman.m_blockman.ReadBlockHeader(wire_header, *pblockindex)) {
+            if ((pblockindex->nVersion & (1 << 8)) != 0) {
+                throw JSONRPCError(
+                    RPC_MISC_ERROR,
+                    "Complete AuxPoW block header not available on disk");
+            }
+
+            // Non-AuxPoW headers remain fully reconstructible from CBlockIndex.
+            wire_header = pblockindex->GetBlockHeader();
+        }
+
         DataStream ssBlock{};
-        ssBlock << pblockindex->GetBlockHeader();
+        ssBlock << wire_header;
         std::string strHex = HexStr(ssBlock);
         return strHex;
     }

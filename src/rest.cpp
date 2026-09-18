@@ -237,7 +237,20 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::BINARY: {
         DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            CBlockHeader wire_header;
+            if (!chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
+                if ((pindex->nVersion & (1 << 8)) != 0) {
+                    return RESTERR(
+                        req,
+                        HTTP_NOT_FOUND,
+                        "Complete AuxPoW block header not available on disk");
+                }
+
+                // Legacy/non-AuxPoW headers are complete in CBlockIndex.
+                wire_header = pindex->GetBlockHeader();
+            }
+
+            ssHeader << wire_header;
         }
 
         req->WriteHeader("Content-Type", "application/octet-stream");
@@ -248,7 +261,20 @@ static bool rest_headers(const std::any& context,
     case RESTResponseFormat::HEX: {
         DataStream ssHeader{};
         for (const CBlockIndex *pindex : headers) {
-            ssHeader << pindex->GetBlockHeader();
+            CBlockHeader wire_header;
+            if (!chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
+                if ((pindex->nVersion & (1 << 8)) != 0) {
+                    return RESTERR(
+                        req,
+                        HTTP_NOT_FOUND,
+                        "Complete AuxPoW block header not available on disk");
+                }
+
+                // Legacy/non-AuxPoW headers are complete in CBlockIndex.
+                wire_header = pindex->GetBlockHeader();
+            }
+
+            ssHeader << wire_header;
         }
 
         std::string strHex = HexStr(ssHeader) + "\n";

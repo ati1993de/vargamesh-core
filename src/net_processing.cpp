@@ -4449,7 +4449,27 @@ void PeerManagerImpl::ProcessMessage(Peer& peer, CNode& pfrom, const std::string
         LogDebug(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom.GetId());
         for (; pindex; pindex = m_chainman.ActiveChain().Next(pindex))
         {
-            vHeaders.emplace_back(pindex->GetBlockHeader());
+            CBlockHeader wire_header;
+            if (!m_chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
+                /*
+                 * VargaMesh AuxPoW headers contain consensus-critical data
+                 * which is not retained in CBlockIndex.
+                 *
+                 * Legacy/non-AuxPoW headers can safely be reconstructed from
+                 * CBlockIndex. AuxPoW wire headers must come from blk*.dat.
+                 */
+                if ((pindex->nVersion & (1 << 8)) != 0) {
+                    LogDebug(
+                        BCLog::NET,
+                        "Unable to serve AuxPoW header %s from block storage to peer=%d\n",
+                        pindex->GetBlockHash().ToString(),
+                        pfrom.GetId());
+                    return;
+                }
+                wire_header = pindex->GetBlockHeader();
+            }
+
+            vHeaders.emplace_back(wire_header);
             if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
                 break;
         }
@@ -5873,14 +5893,41 @@ bool PeerManagerImpl::SendMessages(CNode& node)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
+                        CBlockHeader wire_header;
+                        if (!m_chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
+                            if ((pindex->nVersion & (1 << 8)) != 0) {
+                                LogDebug(
+                                    BCLog::NET,
+                                    "Unable to announce AuxPoW header %s from block storage to peer=%d; reverting to inv\n",
+                                    pindex->GetBlockHash().ToString(),
+                                    node.GetId());
+                                fRevertToInv = true;
+                                break;
+                            }
+                            wire_header = pindex->GetBlockHeader();
+                        }
+                        vHeaders.emplace_back(wire_header);
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
                         // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.emplace_back(pindex->GetBlockHeader());
+
+                        CBlockHeader wire_header;
+                        if (!m_chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
+                            if ((pindex->nVersion & (1 << 8)) != 0) {
+                                LogDebug(
+                                    BCLog::NET,
+                                    "Unable to announce AuxPoW header %s from block storage to peer=%d; reverting to inv\n",
+                                    pindex->GetBlockHash().ToString(),
+                                    node.GetId());
+                                fRevertToInv = true;
+                                break;
+                            }
+                            wire_header = pindex->GetBlockHeader();
+                        }
+                        vHeaders.emplace_back(wire_header);
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.
