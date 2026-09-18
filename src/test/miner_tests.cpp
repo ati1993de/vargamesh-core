@@ -841,6 +841,53 @@ BOOST_AUTO_TEST_CASE(vargamesh_mainnet_initial_subsidy_template)
 // It does not modify production consensus parameters.
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
+    /*
+     * TEST ONLY:
+     *
+     * This inherited Bitcoin Core regression test uses historical
+     * native-PoW blocks and repeatedly changes the child nonce.
+     * Those vectors predate VMESH AuxPoW and cannot carry a
+     * Bitcoin-parent proof.
+     *
+     * Disable AuxPoW configuration only inside this one inherited
+     * regression test.  Production VMESH consensus is untouched.
+     */
+    struct ScopedUpstreamMinerAuxPowConsensus
+    {
+        Consensus::Params& consensus;
+        const int original_chain_id;
+
+        ScopedUpstreamMinerAuxPowConsensus()
+            : consensus{
+                const_cast<Consensus::Params&>(
+                    Params().GetConsensus()
+                )
+            },
+              original_chain_id{
+                  consensus.nAuxpowChainId
+              }
+        {
+            consensus.nAuxpowChainId = 0;
+        }
+
+        ~ScopedUpstreamMinerAuxPowConsensus()
+        {
+            consensus.nAuxpowChainId =
+                original_chain_id;
+        }
+
+        ScopedUpstreamMinerAuxPowConsensus(
+            const ScopedUpstreamMinerAuxPowConsensus&
+        ) = delete;
+
+        ScopedUpstreamMinerAuxPowConsensus& operator=(
+            const ScopedUpstreamMinerAuxPowConsensus&
+        ) = delete;
+    };
+
+    const ScopedUpstreamMinerAuxPowConsensus
+        upstream_auxpow_compat{};
+
     struct ScopedUpstreamMinerVectorConsensus
     {
         Consensus::Params& consensus;

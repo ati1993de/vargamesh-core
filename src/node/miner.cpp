@@ -5,6 +5,7 @@
 
 #include <node/miner.h>
 
+#include <auxpow.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <coins.h>
@@ -219,6 +220,51 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
     UpdateTime(pblock, chainparams.GetConsensus(), pindexPrev);
     pblock->nBits          = GetNextWorkRequired(pindexPrev, pblock, chainparams.GetConsensus());
     pblock->nNonce         = 0;
+
+    /*
+     * VargaMesh AuxPoW mining candidate.
+     *
+     * The VMESH child identity must be final before a Bitcoin
+     * parent miner commits to its hash.  Therefore active
+     * AuxPoW templates already carry:
+     *
+     *   - VERSION_AUXPOW in nVersion
+     *   - VMESH chain tag 0x564D in child nNonce
+     *
+     * The actual CAuxPow Bitcoin-parent proof does NOT exist
+     * yet and is intentionally attached later by submitauxblock.
+     */
+    const auto& consensus_params{
+        chainparams.GetConsensus()
+    };
+
+    if (
+        consensus_params.nAuxpowChainId != 0
+        && consensus_params.AuxPowActive(nHeight)
+    ) {
+        pblock->SetAuxpowVersion(true);
+
+        pblock->nNonce =
+            static_cast<uint32_t>(
+                consensus_params.nAuxpowChainId
+            );
+
+        /*
+         * VERSION_AUXPOW makes CAuxPow part of the serialized
+         * header.  Keep every in-memory AuxPoW candidate
+         * wire-serializable by attaching a minimal structurally
+         * valid placeholder proof immediately.
+         *
+         * The placeholder parent header is NOT required to meet
+         * the VMESH target here.  Real Bitcoin-parent PoW is
+         * supplied later via submitauxblock.
+         */
+        pblock->SetAuxpow(
+            CAuxPow::CreateMinimal(
+                *pblock
+            )
+        );
+    }
 
     if (m_options.test_block_validity) {
         // if nHeight <= 16, and include_dummy_extranonce=false this will fail due to bad-cb-length.

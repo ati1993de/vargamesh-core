@@ -5,6 +5,7 @@
 #include <chainparams.h>
 #include <kernel/cs_main.h>
 #include <node/blockstorage.h>
+#include <pow.h>
 #include <primitives/block.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
@@ -999,6 +1000,543 @@ BOOST_AUTO_TEST_CASE(auxpow_disk_header_roundtrip)
             rejected,
             position,
             uint256::ONE
+        )
+    );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(auxpow_consensus_core)
+{
+    const auto regtest_params{
+        CreateChainParams(
+            *m_node.args,
+            ChainType::REGTEST
+        )
+    };
+
+    Consensus::Params consensus{
+        regtest_params->GetConsensus()
+    };
+
+    /*
+     * Use regtest's easy target for deterministic/fast unit tests,
+     * but enable the VMESH AuxPoW identity.
+     */
+    consensus.nAuxpowChainId =
+        0x564D;
+
+    consensus.nAuxpowStartHeight =
+        1;
+
+
+    // --------------------------------------------------
+    // Native pre-activation block.
+    // --------------------------------------------------
+
+    CBlockHeader native;
+
+    native.nVersion =
+        0x20000000;
+
+    native.hashPrevBlock =
+        uint256::ONE;
+
+    native.hashMerkleRoot =
+        uint256::ZERO;
+
+    native.nTime =
+        1'800'001'000;
+
+    native.nBits =
+        0x207fffff;
+
+    native.nNonce =
+        0;
+
+
+    while (
+        !CheckProofOfWork(
+            native.GetHash(),
+            native.nBits,
+            consensus
+        )
+    ) {
+        ++native.nNonce;
+    }
+
+
+    std::string error;
+
+    BOOST_CHECK_MESSAGE(
+        CheckAuxPowProofOfWork(
+            native,
+            consensus,
+            &error
+        ),
+        error
+    );
+
+    BOOST_CHECK_MESSAGE(
+        CheckAuxPowHeightRules(
+            native,
+            0,
+            consensus,
+            &error
+        ),
+        error
+    );
+
+    BOOST_CHECK(
+        !CheckAuxPowHeightRules(
+            native,
+            1,
+            consensus,
+            &error
+        )
+    );
+
+
+    // --------------------------------------------------
+    // Valid VMESH AuxPoW block at height 1.
+    // --------------------------------------------------
+
+    CBlockHeader aux;
+
+    aux.nVersion =
+        0x20000000;
+
+    aux.hashPrevBlock =
+        native.GetHash();
+
+    aux.hashMerkleRoot =
+        uint256::ONE;
+
+    aux.nTime =
+        native.nTime + 120;
+
+    aux.nBits =
+        0x207fffff;
+
+    aux.nNonce =
+        0x0000564D;
+
+
+    /*
+     * VERSION_AUXPOW is part of the child hash, so set it
+     * before the parent coinbase commitment is built.
+     */
+    aux.SetAuxpowVersion(true);
+
+    auto proof{
+        CAuxPow::CreateMinimal(
+            aux
+        )
+    };
+
+
+    /*
+     * Mine only the Bitcoin-parent header.
+     *
+     * The VMESH child nonce remains the fixed chain tag.
+     */
+    while (
+        !CheckProofOfWork(
+            proof->GetParentBlockHash(),
+            aux.nBits,
+            consensus
+        )
+    ) {
+        ++proof->parentBlock.nNonce;
+    }
+
+
+    aux.SetAuxpow(
+        std::move(proof)
+    );
+
+
+    BOOST_REQUIRE(
+        aux.IsAuxpow()
+    );
+
+    BOOST_REQUIRE(
+        aux.auxpow
+    );
+
+    BOOST_CHECK_EQUAL(
+        aux.nNonce,
+        0x0000564DU
+    );
+
+
+    BOOST_CHECK_MESSAGE(
+        CheckAuxPowProofOfWork(
+            aux,
+            consensus,
+            &error
+        ),
+        error
+    );
+
+    BOOST_CHECK_MESSAGE(
+        CheckAuxPowHeightRules(
+            aux,
+            1,
+            consensus,
+            &error
+        ),
+        error
+    );
+
+
+    std::vector<CBlockHeader>
+        valid_headers{
+            aux
+        };
+
+    BOOST_CHECK(
+        HasValidProofOfWork(
+            valid_headers,
+            consensus
+        )
+    );
+
+
+    // --------------------------------------------------
+    // VERSION_AUXPOW with missing proof.
+    // --------------------------------------------------
+
+    {
+        CBlockHeader broken{
+            aux
+        };
+
+        broken.auxpow.reset();
+
+        BOOST_CHECK(
+            broken.IsAuxpow()
+        );
+
+        BOOST_CHECK(
+            !CheckAuxPowProofOfWork(
+                broken,
+                consensus,
+                &error
+            )
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Proof attached while VERSION_AUXPOW is absent.
+    // --------------------------------------------------
+
+    {
+        CBlockHeader broken{
+            aux
+        };
+
+        broken.SetAuxpowVersion(false);
+
+        BOOST_REQUIRE(
+            broken.auxpow
+        );
+
+        BOOST_CHECK(
+            !broken.IsAuxpow()
+        );
+
+        BOOST_CHECK(
+            !CheckAuxPowProofOfWork(
+                broken,
+                consensus,
+                &error
+            )
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Invalid Bitcoin-parent proof of work.
+    // --------------------------------------------------
+
+    {
+        CBlockHeader broken{
+            aux
+        };
+
+        broken.auxpow =
+            std::make_shared<CAuxPow>(
+                *aux.auxpow
+            );
+
+
+        /*
+         * Find a parent nonce that intentionally FAILS the
+         * easy regtest target.
+         */
+        bool found_invalid{
+            false
+        };
+
+        for (
+            uint32_t i = 0;
+            i < 100'000;
+            ++i
+        ) {
+            broken.auxpow
+                ->parentBlock
+                .nNonce = i;
+
+            if (
+                !CheckProofOfWork(
+                    broken.auxpow
+                        ->GetParentBlockHash(),
+                    broken.nBits,
+                    consensus
+                )
+            ) {
+                found_invalid =
+                    true;
+
+                break;
+            }
+        }
+
+        BOOST_REQUIRE(
+            found_invalid
+        );
+
+        BOOST_CHECK(
+            !CheckAuxPowProofOfWork(
+                broken,
+                consensus,
+                &error
+            )
+        );
+    }
+
+
+    // --------------------------------------------------
+    // Wrong post-genesis VMESH child chain tag.
+    // --------------------------------------------------
+
+    {
+        CBlockHeader broken{
+            aux
+        };
+
+        broken.nNonce =
+            0x00001234;
+
+        BOOST_CHECK(
+            !CheckAuxPowHeightRules(
+                broken,
+                1,
+                consensus,
+                &error
+            )
+        );
+    }
+
+
+    // --------------------------------------------------
+    // AuxPoW must not appear before activation.
+    // --------------------------------------------------
+
+    BOOST_CHECK(
+        !CheckAuxPowHeightRules(
+            aux,
+            0,
+            consensus,
+            &error
+        )
+    );
+
+
+    // --------------------------------------------------
+    // Networks not yet AuxPoW-configured retain inherited
+    // native Bitcoin-style behaviour until Gate 8.
+    // --------------------------------------------------
+
+    {
+        Consensus::Params inherited{
+            regtest_params
+                ->GetConsensus()
+        };
+
+        CBlockHeader legacy{
+            native
+        };
+
+        BOOST_CHECK_MESSAGE(
+            CheckAuxPowProofOfWork(
+                legacy,
+                inherited,
+                &error
+            ),
+            error
+        );
+
+        BOOST_CHECK_MESSAGE(
+            CheckAuxPowHeightRules(
+                legacy,
+                1,
+                inherited,
+                &error
+            ),
+            error
+        );
+    }
+}
+
+
+
+BOOST_AUTO_TEST_CASE(auxpow_template_with_placeholder_proof)
+{
+    const auto regtest_params{
+        CreateChainParams(
+            *m_node.args,
+            ChainType::REGTEST
+        )
+    };
+
+    Consensus::Params consensus{
+        regtest_params->GetConsensus()
+    };
+
+    consensus.nAuxpowChainId =
+        0x564D;
+
+    consensus.nAuxpowStartHeight =
+        1;
+
+
+    CBlockHeader candidate;
+
+    candidate.nVersion =
+        0x20000000;
+
+    candidate.SetAuxpowVersion(true);
+
+    candidate.hashPrevBlock =
+        uint256::ONE;
+
+    candidate.hashMerkleRoot =
+        uint256::ZERO;
+
+    candidate.nTime =
+        1'800'002'000;
+
+    candidate.nBits =
+        0x207fffff;
+
+    candidate.nNonce =
+        0x0000564D;
+
+
+    BOOST_REQUIRE(
+        candidate.IsAuxpow()
+    );
+
+    /*
+     * A VERSION_AUXPOW header must always remain
+     * wire-serializable, even while it is only a mining
+     * candidate.  Attach the same minimal proof used by
+     * BlockAssembler.
+     */
+    candidate.SetAuxpow(
+        CAuxPow::CreateMinimal(
+            candidate
+        )
+    );
+
+    BOOST_REQUIRE(
+        candidate.auxpow
+    );
+
+
+    std::string error;
+
+    BOOST_CHECK_MESSAGE(
+        candidate.auxpow->Check(
+            candidate.GetHash(),
+            0x564D,
+            &error
+        ),
+        error
+    );
+
+    BOOST_CHECK_MESSAGE(
+        CheckAuxPowHeightRules(
+            candidate,
+            1,
+            consensus,
+            &error
+        ),
+        error
+    );
+
+
+    /*
+     * Force the placeholder parent header to FAIL PoW.
+     * This proves that structural validity is distinct from
+     * final Bitcoin-parent work.
+     */
+    bool found_invalid_parent{
+        false
+    };
+
+    for (
+        uint32_t nonce = 0;
+        nonce < 100'000;
+        ++nonce
+    ) {
+        candidate.auxpow
+            ->parentBlock
+            .nNonce = nonce;
+
+        if (
+            !CheckProofOfWork(
+                candidate.auxpow
+                    ->GetParentBlockHash(),
+                candidate.nBits,
+                consensus
+            )
+        ) {
+            found_invalid_parent =
+                true;
+
+            break;
+        }
+    }
+
+    BOOST_REQUIRE(
+        found_invalid_parent
+    );
+
+    BOOST_CHECK(
+        !CheckAuxPowProofOfWork(
+            candidate,
+            consensus,
+            &error
+        )
+    );
+
+
+    /*
+     * Wrong child chain tag remains invalid even as a template.
+     */
+    candidate.nNonce =
+        0x00001234;
+
+    BOOST_CHECK(
+        !CheckAuxPowHeightRules(
+            candidate,
+            1,
+            consensus,
+            &error
         )
     );
 }

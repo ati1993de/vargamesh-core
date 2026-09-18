@@ -5,6 +5,7 @@
 #include <node/blockstorage.h>
 
 #include <arith_uint256.h>
+#include <auxpow.h>
 #include <chain.h>
 #include <consensus/params.h>
 #include <crypto/hex_base.h>
@@ -145,9 +146,86 @@ bool BlockTreeDB::LoadBlockIndexGuts(const Consensus::Params& consensusParams, s
                 pindexNew->nStatus        = diskindex.nStatus;
                 pindexNew->nTx            = diskindex.nTx;
 
-                if (!CheckProofOfWork(pindexNew->GetBlockHash(), pindexNew->nBits, consensusParams)) {
-                    LogError("%s: CheckProofOfWork failed: %s\n", __func__, pindexNew->ToString());
-                    return false;
+                /*
+                 * CBlockIndex intentionally stores only the pure child
+                 * header.  For active AuxPoW heights, the Bitcoin-parent
+                 * proof lives only in blk*.dat and cannot be revalidated
+                 * from the LevelDB block-index record.
+                 *
+                 * We still enforce the consensus-visible identity fields
+                 * available in the pure header.  Full proof validation is
+                 * performed when the block/header is received or read from
+                 * blk*.dat.
+                 */
+                const bool auxpow_configured{
+                    consensusParams.nAuxpowChainId != 0
+                };
+
+                const bool auxpow_flag{
+                    (
+                        pindexNew->nVersion
+                        & CPureBlockHeader::VERSION_AUXPOW
+                    ) != 0
+                };
+
+                if (
+                    auxpow_configured
+                    && consensusParams.AuxPowActive(
+                        pindexNew->nHeight
+                    )
+                ) {
+                    if (!auxpow_flag) {
+                        LogError(
+                            "%s: missing mandatory AuxPoW flag in block index: %s\n",
+                            __func__,
+                            pindexNew->ToString()
+                        );
+
+                        return false;
+                    }
+
+                    if (
+                        pindexNew->nNonce
+                        != static_cast<uint32_t>(
+                            consensusParams.nAuxpowChainId
+                        )
+                    ) {
+                        LogError(
+                            "%s: wrong VMESH AuxPoW chain tag in block index: %s\n",
+                            __func__,
+                            pindexNew->ToString()
+                        );
+
+                        return false;
+                    }
+
+                    // Parent proof is not present in CBlockIndex.
+                } else {
+                    if (auxpow_configured && auxpow_flag) {
+                        LogError(
+                            "%s: AuxPoW flag before activation in block index: %s\n",
+                            __func__,
+                            pindexNew->ToString()
+                        );
+
+                        return false;
+                    }
+
+                    if (
+                        !CheckProofOfWork(
+                            pindexNew->GetBlockHash(),
+                            pindexNew->nBits,
+                            consensusParams
+                        )
+                    ) {
+                        LogError(
+                            "%s: CheckProofOfWork failed: %s\n",
+                            __func__,
+                            pindexNew->ToString()
+                        );
+
+                        return false;
+                    }
                 }
 
                 pcursor->Next();
@@ -1137,9 +1215,22 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 
     const auto block_hash{block.GetHash()};
 
-    // Check the header
-    if (!CheckProofOfWork(block_hash, block.nBits, GetConsensus())) {
-        LogError("Errors in block header at %s while reading block", pos.ToString());
+    // Check native child PoW or complete Bitcoin-parent AuxPoW.
+    std::string auxpow_error;
+
+    if (
+        !CheckAuxPowProofOfWork(
+            block,
+            GetConsensus(),
+            &auxpow_error
+        )
+    ) {
+        LogError(
+            "Errors in block header at %s while reading block: %s",
+            pos.ToString(),
+            auxpow_error
+        );
+
         return false;
     }
 
@@ -1160,8 +1251,43 @@ bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::o
 
 bool BlockManager::ReadBlock(CBlock& block, const CBlockIndex& index) const
 {
-    const FlatFilePos block_pos{WITH_LOCK(cs_main, return index.GetBlockPos())};
-    return ReadBlock(block, block_pos, index.GetBlockHash());
+    const FlatFilePos block_pos{
+        WITH_LOCK(
+            cs_main,
+            return index.GetBlockPos()
+        )
+    };
+
+    if (
+        !ReadBlock(
+            block,
+            block_pos,
+            index.GetBlockHash()
+        )
+    ) {
+        return false;
+    }
+
+    std::string auxpow_error;
+
+    if (
+        !CheckAuxPowHeightRules(
+            block,
+            index.nHeight,
+            GetConsensus(),
+            &auxpow_error
+        )
+    ) {
+        LogError(
+            "AuxPoW height rules failed at height %d while reading block: %s",
+            index.nHeight,
+            auxpow_error
+        );
+
+        return false;
+    }
+
+    return true;
 }
 
 BlockManager::ReadRawBlockResult BlockManager::ReadRawBlock(const FlatFilePos& pos, std::optional<std::pair<size_t, size_t>> block_part) const

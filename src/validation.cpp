@@ -6,6 +6,7 @@
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <validation.h>
+#include <auxpow.h>
 
 #include <arith_uint256.h>
 #include <chain.h>
@@ -3875,9 +3876,29 @@ void ChainstateManager::ReceivedBlockTransactions(const CBlock& block, CBlockInd
 
 static bool CheckBlockHeader(const CBlockHeader& block, BlockValidationState& state, const Consensus::Params& consensusParams, bool fCheckPOW = true)
 {
-    // Check proof of work matches claimed amount
-    if (fCheckPOW && !CheckProofOfWork(block.GetHash(), block.nBits, consensusParams))
-        return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "high-hash", "proof of work failed");
+    // Check native child PoW or Bitcoin-parent AuxPoW.
+    if (fCheckPOW) {
+        std::string auxpow_error;
+
+        if (
+            !CheckAuxPowProofOfWork(
+                block,
+                consensusParams,
+                &auxpow_error
+            )
+        ) {
+            const bool auxpow_candidate{
+                block.IsAuxpow()
+                || static_cast<bool>(block.auxpow)
+            };
+
+            return state.Invalid(
+                BlockValidationResult::BLOCK_INVALID_HEADER,
+                auxpow_candidate ? "bad-auxpow" : "high-hash",
+                auxpow_error
+            );
+        }
+    }
 
     return true;
 }
@@ -4068,8 +4089,15 @@ void ChainstateManager::GenerateCoinbaseCommitment(CBlock& block, const CBlockIn
 
 bool HasValidProofOfWork(std::span<const CBlockHeader> headers, const Consensus::Params& consensusParams)
 {
-    return std::ranges::all_of(headers,
-                               [&](const auto& header) { return CheckProofOfWork(header.GetHash(), header.nBits, consensusParams); });
+    return std::ranges::all_of(
+        headers,
+        [&](const auto& header) {
+            return CheckAuxPowProofOfWork(
+                header,
+                consensusParams
+            );
+        }
+    );
 }
 
 bool IsBlockMutated(const CBlock& block, bool check_witness_root)
@@ -4133,6 +4161,24 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
 
     // Check proof of work
     const Consensus::Params& consensusParams = chainman.GetConsensus();
+
+    // VargaMesh AuxPoW activates at block 1.
+    std::string auxpow_error;
+
+    if (
+        !CheckAuxPowHeightRules(
+            block,
+            nHeight,
+            consensusParams,
+            &auxpow_error
+        )
+    ) {
+        return state.Invalid(
+            BlockValidationResult::BLOCK_INVALID_HEADER,
+            "bad-auxpow-height",
+            auxpow_error
+        );
+    }
     if (block.nBits != GetNextWorkRequired(pindexPrev, &block, consensusParams))
         return state.Invalid(BlockValidationResult::BLOCK_INVALID_HEADER, "bad-diffbits", "incorrect proof of work");
 

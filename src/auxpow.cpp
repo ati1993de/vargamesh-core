@@ -7,6 +7,9 @@
 
 #include <auxpow.h>
 
+#include <primitives/block.h>
+#include <pow.h>
+#include <consensus/params.h>
 #include <hash.h>
 #include <script/script.h>
 
@@ -454,4 +457,208 @@ CAuxPow::CreateMinimal(
     result->parentBlock.nNonce = 0;
 
     return result;
+}
+
+bool
+CheckAuxPowProofOfWork(
+    const CBlockHeader& block,
+    const Consensus::Params& params,
+    std::string* error)
+{
+    if (error != nullptr) {
+        error->clear();
+    }
+
+    /*
+     * Gate 8 will establish isolated AuxPoW parameters for the
+     * other VMESH networks.
+     *
+     * Until then, nAuxpowChainId == 0 means that this network is
+     * intentionally using the inherited native PoW behaviour.
+     */
+    if (params.nAuxpowChainId == 0) {
+        if (
+            !CheckProofOfWork(
+                block.GetHash(),
+                block.nBits,
+                params
+            )
+        ) {
+            return Fail(
+                error,
+                "proof of work failed"
+            );
+        }
+
+        return true;
+    }
+
+
+    /*
+     * No proof attached:
+     *
+     * This is valid context-free only when VERSION_AUXPOW is
+     * also absent.  Height-dependent activation is checked by
+     * CheckAuxPowHeightRules().
+     */
+    if (!block.auxpow) {
+        if (block.IsAuxpow()) {
+            return Fail(
+                error,
+                "auxpow version flag set but proof missing"
+            );
+        }
+
+        if (
+            !CheckProofOfWork(
+                block.GetHash(),
+                block.nBits,
+                params
+            )
+        ) {
+            return Fail(
+                error,
+                "proof of work failed"
+            );
+        }
+
+        return true;
+    }
+
+
+    /*
+     * A proof without VERSION_AUXPOW would make the wire
+     * representation and consensus interpretation ambiguous.
+     */
+    if (!block.IsAuxpow()) {
+        return Fail(
+            error,
+            "auxpow proof present without auxpow version flag"
+        );
+    }
+
+
+    /*
+     * The Bitcoin parent performs the work.
+     *
+     * IMPORTANT:
+     * parentBlock.nBits is NOT the VMESH target.
+     * The parent SHA256d hash is compared against the VMESH
+     * child's nBits.
+     */
+    if (
+        !CheckProofOfWork(
+            block.auxpow->GetParentBlockHash(),
+            block.nBits,
+            params
+        )
+    ) {
+        return Fail(
+            error,
+            "auxpow parent proof of work failed"
+        );
+    }
+
+
+    std::string proof_error;
+
+    if (
+        !block.auxpow->Check(
+            block.GetHash(),
+            params.nAuxpowChainId,
+            &proof_error
+        )
+    ) {
+        if (error != nullptr) {
+            *error =
+                "auxpow proof invalid: "
+                + proof_error;
+        }
+
+        return false;
+    }
+
+
+    return true;
+}
+
+
+bool
+CheckAuxPowHeightRules(
+    const CBlockHeader& block,
+    const int height,
+    const Consensus::Params& params,
+    std::string* error)
+{
+    if (error != nullptr) {
+        error->clear();
+    }
+
+    if (height < 0) {
+        return Fail(
+            error,
+            "negative block height"
+        );
+    }
+
+
+    /*
+     * AuxPoW is not configured yet on the inherited auxiliary
+     * VMESH test networks.  Gate 8 will isolate/configure them.
+     */
+    if (params.nAuxpowChainId == 0) {
+        return true;
+    }
+
+
+    if (!params.AuxPowActive(height)) {
+        if (block.IsAuxpow() || block.auxpow) {
+            return Fail(
+                error,
+                "auxpow is not permitted before activation"
+            );
+        }
+
+        return true;
+    }
+
+
+    if (!block.IsAuxpow()) {
+        return Fail(
+            error,
+            "auxpow is mandatory at this height"
+        );
+    }
+
+    if (!block.auxpow) {
+        return Fail(
+            error,
+            "mandatory auxpow proof is missing"
+        );
+    }
+
+
+    /*
+     * VMESH deliberately does NOT place 0x564D in nVersion
+     * high bits because that collides with Bitcoin Core BIP9.
+     *
+     * Instead every post-genesis VMESH child header carries the
+     * chain tag in nNonce.  nNonce is part of the pure 80-byte
+     * child hash and therefore part of the parent coinbase
+     * commitment.
+     */
+    if (
+        block.nNonce
+        != static_cast<uint32_t>(
+            params.nAuxpowChainId
+        )
+    ) {
+        return Fail(
+            error,
+            "wrong VMESH auxpow chain tag in child nNonce"
+        );
+    }
+
+
+    return true;
 }

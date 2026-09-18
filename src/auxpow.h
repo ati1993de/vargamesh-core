@@ -19,6 +19,13 @@
 #include <string>
 #include <vector>
 
+
+namespace Consensus {
+struct Params;
+}
+
+class CBlockHeader;
+
 /** Standard merged-mining marker: fa be 6d 6d. */
 inline constexpr std::array<unsigned char, 4>
     MERGED_MINING_HEADER{
@@ -119,5 +126,39 @@ public:
     static std::unique_ptr<CAuxPow>
     CreateMinimal(const CPureBlockHeader& child);
 };
+
+
+/**
+ * Context-free proof-of-work validation.
+ *
+ * On networks without configured AuxPoW this preserves native
+ * Bitcoin-style child-header PoW.
+ *
+ * On VMESH AuxPoW blocks:
+ * - VERSION_AUXPOW and proof presence must match.
+ * - Bitcoin parent SHA256d hash must satisfy the VMESH child nBits.
+ * - Parent coinbase / merkle / aux-chain proof must commit to
+ *   the VMESH 80-byte child hash.
+ */
+bool CheckAuxPowProofOfWork(
+    const CBlockHeader& block,
+    const Consensus::Params& params,
+    std::string* error = nullptr
+);
+
+/**
+ * Height-dependent VMESH AuxPoW identity rules.
+ *
+ * For configured VMESH:
+ * - before activation: native PoW only.
+ * - from activation height: AuxPoW is mandatory.
+ * - post-activation child nNonce is the VMESH chain tag.
+ */
+bool CheckAuxPowHeightRules(
+    const CBlockHeader& block,
+    int height,
+    const Consensus::Params& params,
+    std::string* error = nullptr
+);
 
 #endif
