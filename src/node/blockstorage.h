@@ -469,6 +469,16 @@ public:
     /** Functions for disk access for blocks */
     bool ReadBlock(CBlock& block, const FlatFilePos& pos, const std::optional<uint256>& expected_hash) const;
     bool ReadBlock(CBlock& block, const CBlockIndex& index) const;
+    bool ReadBlockHeader(
+        CBlockHeader& header,
+        const FlatFilePos& pos,
+        const std::optional<uint256>& expected_hash
+    ) const;
+
+    bool ReadBlockHeader(
+        CBlockHeader& header,
+        const CBlockIndex& index
+    ) const;
     ReadRawBlockResult ReadRawBlock(const FlatFilePos& pos, std::optional<std::pair<size_t, size_t>> block_part = std::nullopt) const;
 
     bool ReadBlockUndo(CBlockUndo& blockundo, const CBlockIndex& index) const;

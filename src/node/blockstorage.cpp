@@ -1033,6 +1033,90 @@ bool BlockManager::WriteBlockUndo(const CBlockUndo& blockundo, BlockValidationSt
     return true;
 }
 
+bool BlockManager::ReadBlockHeader(
+    CBlockHeader& header,
+    const FlatFilePos& pos,
+    const std::optional<uint256>& expected_hash) const
+{
+    header.SetNull();
+
+    /*
+     * Read the serialized block bytes, but deserialize only the
+     * CBlockHeader at their beginning.
+     *
+     * For VMESH AuxPoW blocks this reconstructs:
+     *
+     *   80-byte CPureBlockHeader
+     *   +
+     *   conditional CAuxPow payload
+     *
+     * without deserializing the transaction vector.
+     */
+    const auto block_data{
+        ReadRawBlock(pos)
+    };
+
+    if (!block_data) {
+        return false;
+    }
+
+    try {
+        SpanReader reader{
+            *block_data
+        };
+
+        reader >> header;
+    } catch (const std::exception& e) {
+        LogError(
+            "Deserialize or I/O error - %s at %s while reading block header",
+            e.what(),
+            pos.ToString()
+        );
+
+        return false;
+    }
+
+    const uint256 header_hash{
+        header.GetHash()
+    };
+
+    if (
+        expected_hash
+        && header_hash != *expected_hash
+    ) {
+        LogError(
+            "Header GetHash() doesn't match index at %s while reading block header (%s != %s)",
+            pos.ToString(),
+            header_hash.ToString(),
+            expected_hash->ToString()
+        );
+
+        return false;
+    }
+
+    return true;
+}
+
+
+bool BlockManager::ReadBlockHeader(
+    CBlockHeader& header,
+    const CBlockIndex& index) const
+{
+    const FlatFilePos block_pos{
+        WITH_LOCK(
+            cs_main,
+            return index.GetBlockPos()
+        )
+    };
+
+    return ReadBlockHeader(
+        header,
+        block_pos,
+        index.GetBlockHash()
+    );
+}
+
+
 bool BlockManager::ReadBlock(CBlock& block, const FlatFilePos& pos, const std::optional<uint256>& expected_hash) const
 {
     block.SetNull();

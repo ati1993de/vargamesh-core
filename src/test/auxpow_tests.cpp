@@ -3,16 +3,19 @@
 
 #include <auxpow.h>
 #include <chainparams.h>
+#include <kernel/cs_main.h>
+#include <node/blockstorage.h>
 #include <primitives/block.h>
 #include <streams.h>
 #include <test/util/setup_common.h>
+#include <validation.h>
 
 #include <boost/test/unit_test.hpp>
 
 #include <cstdint>
 #include <string>
 
-BOOST_FIXTURE_TEST_SUITE(auxpow_tests, BasicTestingSetup)
+BOOST_FIXTURE_TEST_SUITE(auxpow_tests, ChainTestingSetup)
 
 static CPureBlockHeader
 MakeVargaMeshChild()
@@ -824,6 +827,179 @@ BOOST_AUTO_TEST_CASE(auxpow_block_wire_roundtrip)
             &error
         ),
         error
+    );
+}
+
+
+
+BOOST_AUTO_TEST_CASE(auxpow_disk_header_roundtrip)
+{
+    CBlock block;
+
+    block.nVersion =
+        0x20000000;
+
+    block.hashPrevBlock =
+        uint256::ONE;
+
+    block.nTime =
+        1'800'000'240;
+
+    block.nBits =
+        0x1d00ffff;
+
+    block.nNonce =
+        0x0000564D;
+
+
+    CMutableTransaction coinbase;
+
+    coinbase.vin.resize(1);
+
+    coinbase.vin[0]
+        .prevout
+        .SetNull();
+
+    coinbase.vin[0]
+        .scriptSig =
+        CScript() << 1 << OP_0;
+
+    coinbase.vout.resize(1);
+
+    coinbase.vout[0]
+        .nValue = 0;
+
+    block.vtx.push_back(
+        MakeTransactionRef(
+            std::move(coinbase)
+        )
+    );
+
+    block.hashMerkleRoot =
+        block.vtx[0]
+            ->GetHash()
+            .ToUint256();
+
+
+    /*
+     * VERSION_AUXPOW is part of the pure child hash.
+     * Set it before constructing the merged-mining proof.
+     */
+    block.SetAuxpowVersion(true);
+
+    const uint256 child_hash{
+        block.GetHash()
+    };
+
+    block.SetAuxpow(
+        CAuxPow::CreateMinimal(
+            block
+        )
+    );
+
+    BOOST_REQUIRE(
+        block.IsAuxpow()
+    );
+
+    BOOST_REQUIRE(
+        block.auxpow
+    );
+
+    BOOST_REQUIRE(
+        block.GetHash()
+        == child_hash
+    );
+
+
+    node::BlockManager& blockman{
+        Assert(m_node.chainman)->m_blockman
+    };
+
+
+    FlatFilePos position;
+
+    {
+        LOCK(cs_main);
+
+        position =
+            blockman.WriteBlock(
+                block,
+                /*nHeight=*/1
+            );
+    }
+
+
+    BOOST_REQUIRE(
+        !position.IsNull()
+    );
+
+
+    CBlockHeader recovered;
+
+    BOOST_REQUIRE(
+        blockman.ReadBlockHeader(
+            recovered,
+            position,
+            child_hash
+        )
+    );
+
+
+    BOOST_REQUIRE(
+        recovered.IsAuxpow()
+    );
+
+    BOOST_REQUIRE(
+        recovered.auxpow
+    );
+
+    BOOST_CHECK(
+        recovered.GetHash()
+        == child_hash
+    );
+
+    BOOST_CHECK_EQUAL(
+        recovered.nVersion,
+        block.nVersion
+    );
+
+    BOOST_CHECK_EQUAL(
+        recovered.nNonce,
+        0x0000564DU
+    );
+
+    BOOST_CHECK(
+        recovered.auxpow
+            ->GetParentBlockHash()
+        ==
+        block.auxpow
+            ->GetParentBlockHash()
+    );
+
+
+    std::string error;
+
+    BOOST_CHECK_MESSAGE(
+        recovered.auxpow->Check(
+            recovered.GetHash(),
+            0x564D,
+            &error
+        ),
+        error
+    );
+
+
+    /*
+     * Wrong expected child hash must be rejected.
+     */
+    CBlockHeader rejected;
+
+    BOOST_CHECK(
+        !blockman.ReadBlockHeader(
+            rejected,
+            position,
+            uint256::ONE
+        )
     );
 }
 
