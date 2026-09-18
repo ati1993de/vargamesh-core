@@ -6,6 +6,7 @@
 #ifndef BITCOIN_PRIMITIVES_BLOCK_H
 #define BITCOIN_PRIMITIVES_BLOCK_H
 
+#include <auxpow.h>
 #include <primitives/pureheader.h>
 #include <primitives/transaction.h>
 #include <serialize.h>
@@ -13,6 +14,7 @@
 #include <util/time.h>
 
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
@@ -27,6 +29,15 @@
 class CBlockHeader : public CPureBlockHeader
 {
 public:
+    /**
+     * AuxPoW proof.
+     *
+     * The child block hash remains the SHA256d hash of the
+     * inherited CPureBlockHeader only.  The proof is serialized
+     * after those 80 bytes when VERSION_AUXPOW is set.
+     */
+    std::shared_ptr<CAuxPow> auxpow;
+
     CBlockHeader()
     {
         SetNull();
@@ -34,12 +45,56 @@ public:
 
     SERIALIZE_METHODS(CBlockHeader, obj)
     {
-        READWRITE(AsBase<CPureBlockHeader>(obj));
+        READWRITE(
+            AsBase<CPureBlockHeader>(obj)
+        );
+
+        if (obj.IsAuxpow()) {
+            SER_READ(
+                obj,
+                obj.auxpow =
+                    std::make_shared<CAuxPow>()
+            );
+
+            assert(
+                obj.auxpow != nullptr
+            );
+
+            READWRITE(
+                *obj.auxpow
+            );
+        } else {
+            SER_READ(
+                obj,
+                obj.auxpow.reset()
+            );
+        }
     }
 
     void SetNull()
     {
         CPureBlockHeader::SetNull();
+        auxpow.reset();
+    }
+
+    /**
+     * Set or remove the AuxPoW proof and synchronise
+     * VERSION_AUXPOW at the same time.
+     */
+    void SetAuxpow(
+        std::unique_ptr<CAuxPow> proof)
+    {
+        if (proof) {
+            auxpow =
+                std::shared_ptr<CAuxPow>(
+                    std::move(proof)
+                );
+
+            SetAuxpowVersion(true);
+        } else {
+            auxpow.reset();
+            SetAuxpowVersion(false);
+        }
     }
 };
 
