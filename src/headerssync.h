@@ -15,6 +15,7 @@
 #include <util/hasher.h>
 
 #include <deque>
+#include <memory>
 #include <vector>
 
 // A compressed CBlockHeader, which leaves out the prevhash
@@ -268,6 +269,24 @@ private:
      *  until enough commitments have been verified; those are stored in
      *  m_redownloaded_headers */
     std::deque<CompressedHeader> m_redownloaded_headers;
+
+    /**
+     * VargaMesh AuxPoW proof sidecar for m_redownloaded_headers.
+     *
+     * Bitcoin's CompressedHeader intentionally contains only the
+     * six pure header fields needed to reconstruct an 80-byte
+     * header.  VMESH AuxPoW adds a variable CAuxPow payload.
+     *
+     * On AuxPoW-configured networks we therefore retain one
+     * shared CAuxPow pointer per compressed redownload entry.
+     * The existing compressed-header anti-DoS design remains
+     * unchanged; only the otherwise-lost proof is retained.
+     *
+     * nullptr entries are permitted for pre-activation native
+     * headers, so indices always remain aligned.
+     */
+    std::deque<std::shared_ptr<CAuxPow>>
+        m_redownloaded_auxpow_proofs;
 
     /** Height of last header in m_redownloaded_headers */
     int64_t m_redownload_buffer_last_height{0};

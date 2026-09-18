@@ -2,6 +2,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <auxpow.h>
 #include <chain.h>
 #include <chainparams.h>
 #include <consensus/params.h>
@@ -656,5 +657,258 @@ BOOST_AUTO_TEST_CASE(vargamesh_asert_transition_validation)
         State::FINAL
     );
 }
+
+
+BOOST_AUTO_TEST_CASE(vargamesh_auxpow_redownload_preserves_proof)
+{
+    /*
+     * Exercise VMESH's real HeadersSync architecture:
+     *
+     * PRESYNC:
+     *   full AuxPoW headers arrive and only commitments/work are kept.
+     *
+     * REDOWNLOAD:
+     *   CompressedHeader remains the pure-header storage format,
+     *   while the CAuxPow proof is retained in its parallel sidecar.
+     *
+     * RELEASE:
+     *   reconstructed headers must still contain the exact AuxPoW
+     *   proof required by AcceptBlockHeader().
+     */
+
+    Consensus::Params consensus{
+        Params().GetConsensus()
+    };
+
+    consensus.nAuxpowChainId =
+        0x564D;
+
+    consensus.nAuxpowStartHeight =
+        1;
+
+    /*
+     * This focused REDOWNLOAD test uses regtest's fixed easy
+     * difficulty.  VMESH ASERT transition coverage remains in
+     * the dedicated Gate-6 HeadersSync test cases.
+     */
+    consensus.fPowUseASERT =
+        false;
+
+
+    auto make_aux_header =
+        [&](const uint256& prev_hash,
+            const uint32_t ntime,
+            const uint256& merkle_root) {
+            CBlockHeader header;
+
+            header.nVersion =
+                0x20000000;
+
+            header.SetAuxpowVersion(true);
+
+            header.hashPrevBlock =
+                prev_hash;
+
+            header.hashMerkleRoot =
+                merkle_root;
+
+            header.nTime =
+                ntime;
+
+            header.nBits =
+                genesis.nBits;
+
+            header.nNonce =
+                0x0000564D;
+
+            header.SetAuxpow(
+                CAuxPow::CreateMinimal(
+                    header
+                )
+            );
+
+            /*
+             * Give the synthetic parent real proof-of-work so the
+             * returned header can be checked by the complete VMESH
+             * AuxPoW verifier as well.
+             */
+            while (
+                !CheckProofOfWork(
+                    header.auxpow
+                        ->GetParentBlockHash(),
+                    header.nBits,
+                    consensus
+                )
+            ) {
+                ++header.auxpow
+                    ->parentBlock
+                    .nNonce;
+            }
+
+            return header;
+        };
+
+
+    std::vector<CBlockHeader> chain;
+
+    chain.emplace_back(
+        make_aux_header(
+            genesis.GetHash(),
+            genesis.nTime + 1,
+            uint256::ZERO
+        )
+    );
+
+    chain.emplace_back(
+        make_aux_header(
+            chain.back().GetHash(),
+            genesis.nTime + 2,
+            uint256::ONE
+        )
+    );
+
+
+    std::string error;
+
+    for (const auto& header : chain) {
+        BOOST_REQUIRE(
+            header.IsAuxpow()
+        );
+
+        BOOST_REQUIRE(
+            header.auxpow
+        );
+
+        BOOST_REQUIRE_MESSAGE(
+            CheckAuxPowProofOfWork(
+                header,
+                consensus,
+                &error
+            ),
+            error
+        );
+    }
+
+
+    const arith_uint256 minimum_work{
+        chain_start.nChainWork
+        + GetBlockProof(chain[0])
+        + GetBlockProof(chain[1])
+    };
+
+
+    HeadersSyncState hss{
+        /*id=*/0,
+        consensus,
+        HeadersSyncParams{
+            .commitment_period = 1,
+            .redownload_buffer_size = 8,
+        },
+        chain_start,
+        minimum_work
+    };
+
+
+    /*
+     * First pass: reach the work threshold and enter REDOWNLOAD.
+     */
+    const auto presync{
+        hss.ProcessNextHeaders(
+            chain,
+            /*full_headers_message=*/true
+        )
+    };
+
+    BOOST_REQUIRE(
+        presync.success
+    );
+
+    BOOST_REQUIRE(
+        presync.request_more
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        presync.pow_validated_headers.size(),
+        0U
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        hss.GetState(),
+        State::REDOWNLOAD
+    );
+
+
+    /*
+     * Second pass: same chain is verified against commitments and
+     * released.  The CAuxPow objects must survive intact.
+     */
+    const auto redownload{
+        hss.ProcessNextHeaders(
+            chain,
+            /*full_headers_message=*/false
+        )
+    };
+
+    BOOST_REQUIRE(
+        redownload.success
+    );
+
+    BOOST_CHECK(
+        !redownload.request_more
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        redownload.pow_validated_headers.size(),
+        chain.size()
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        hss.GetState(),
+        State::FINAL
+    );
+
+
+    for (
+        size_t i = 0;
+        i < chain.size();
+        ++i
+    ) {
+        const auto& recovered{
+            redownload
+                .pow_validated_headers[i]
+        };
+
+        BOOST_REQUIRE(
+            recovered.IsAuxpow()
+        );
+
+        BOOST_REQUIRE(
+            recovered.auxpow
+        );
+
+        BOOST_CHECK(
+            recovered.GetHash()
+            == chain[i].GetHash()
+        );
+
+        BOOST_CHECK(
+            recovered.auxpow
+                ->GetParentBlockHash()
+            ==
+            chain[i].auxpow
+                ->GetParentBlockHash()
+        );
+
+        BOOST_CHECK_MESSAGE(
+            CheckAuxPowProofOfWork(
+                recovered,
+                consensus,
+                &error
+            ),
+            error
+        );
+    }
+}
+
 
 BOOST_AUTO_TEST_SUITE_END()

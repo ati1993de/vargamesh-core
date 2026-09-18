@@ -71,6 +71,7 @@ void HeadersSyncState::Finalize()
     ClearShrink(m_header_commitments);
     m_last_header_received.SetNull();
     ClearShrink(m_redownloaded_headers);
+    ClearShrink(m_redownloaded_auxpow_proofs);
     m_redownload_buffer_last_hash.SetNull();
     m_redownload_buffer_first_prev_hash.SetNull();
     m_process_all_remaining_headers = false;
@@ -181,6 +182,7 @@ bool HeadersSyncState::ValidateAndStoreHeadersCommitments(std::span<const CBlock
 
     if (m_current_chain_work >= m_minimum_required_work) {
         m_redownloaded_headers.clear();
+        m_redownloaded_auxpow_proofs.clear();
         m_redownload_buffer_last_height = m_chain_start.nHeight;
         m_redownload_buffer_first_prev_hash = m_chain_start.GetBlockHash();
         m_redownload_buffer_last_hash = m_chain_start.GetBlockHash();
@@ -349,8 +351,22 @@ bool HeadersSyncState::ValidateAndStoreRedownloadedHeader(const CBlockHeader& he
         }
     }
 
-    // Store this header for later processing.
+    // Store the pure/compressed header exactly as upstream.
     m_redownloaded_headers.emplace_back(header);
+
+    /*
+     * CompressedHeader cannot represent CAuxPow.  Preserve one
+     * proof entry alongside every compressed header on an
+     * AuxPoW-configured network.  This keeps both deques aligned,
+     * including nullptr for a possible pre-activation native
+     * header.
+     */
+    if (m_consensus_params.nAuxpowChainId != 0) {
+        m_redownloaded_auxpow_proofs.emplace_back(
+            header.auxpow
+        );
+    }
+
     m_redownload_buffer_last_height = next_height;
     m_redownload_buffer_last_hash = header.GetHash();
 
@@ -366,9 +382,41 @@ std::vector<CBlockHeader> HeadersSyncState::PopHeadersReadyForAcceptance()
 
     while (m_redownloaded_headers.size() > m_params.redownload_buffer_size ||
             (m_redownloaded_headers.size() > 0 && m_process_all_remaining_headers)) {
-        ret.emplace_back(m_redownloaded_headers.front().GetFullHeader(m_redownload_buffer_first_prev_hash));
+        if (m_consensus_params.nAuxpowChainId != 0) {
+            /*
+             * Every compressed header has exactly one proof-sidecar
+             * entry on an AuxPoW-configured network.
+             */
+            Assume(
+                m_redownloaded_auxpow_proofs.size()
+                == m_redownloaded_headers.size()
+            );
+
+            if (
+                m_redownloaded_auxpow_proofs.size()
+                != m_redownloaded_headers.size()
+            ) {
+                return {};
+            }
+        }
+
+        ret.emplace_back(
+            m_redownloaded_headers.front().GetFullHeader(
+                m_redownload_buffer_first_prev_hash
+            )
+        );
+
+        if (m_consensus_params.nAuxpowChainId != 0) {
+            ret.back().auxpow =
+                m_redownloaded_auxpow_proofs.front();
+
+            m_redownloaded_auxpow_proofs.pop_front();
+        }
+
         m_redownloaded_headers.pop_front();
-        m_redownload_buffer_first_prev_hash = ret.back().GetHash();
+
+        m_redownload_buffer_first_prev_hash =
+            ret.back().GetHash();
     }
     return ret;
 }
