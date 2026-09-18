@@ -3,6 +3,7 @@
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #include <addresstype.h>
+#include <chainparams.h>
 #include <coins.h>
 #include <common/system.h>
 #include <consensus/consensus.h>
@@ -743,9 +744,165 @@ void MinerTestingSetup::TestPrioritisedMining(const CScript& scriptPubKey, const
     }
 }
 
-// NOTE: These tests rely on CreateNewBlock doing its own self-validation!
+BOOST_AUTO_TEST_CASE(vargamesh_mainnet_initial_subsidy_template)
+{
+    const auto& consensus{
+        Params().GetConsensus()
+    };
+
+    BOOST_REQUIRE_EQUAL(
+        consensus.nInitialSubsidy,
+        25 * COIN
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        consensus.nSubsidyHalvingInterval,
+        1'051'200
+    );
+
+    auto mining{MakeMining()};
+
+    BOOST_REQUIRE(mining);
+
+    BlockAssembler::Options options;
+
+    options.coinbase_output_script =
+        CScript{} << OP_TRUE;
+
+    options.include_dummy_extranonce = true;
+
+    const auto block_template{
+        mining->createNewBlock(
+            options,
+            /*cooldown=*/false
+        )
+    };
+
+    BOOST_REQUIRE(block_template);
+
+    const CBlock block{
+        block_template->getBlock()
+    };
+
+    BOOST_REQUIRE_EQUAL(
+        block.vtx.size(),
+        1U
+    );
+
+    CAmount coinbase_value{0};
+
+    for (const auto& output : block.vtx[0]->vout) {
+        coinbase_value += output.nValue;
+    }
+
+    BOOST_CHECK_EQUAL(
+        coinbase_value,
+        25 * COIN
+    );
+
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(
+            /*nHeight=*/1,
+            consensus
+        ),
+        25 * COIN
+    );
+
+    // First VMESH halving boundary.
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(
+            1'051'199,
+            consensus
+        ),
+        25 * COIN
+    );
+
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(
+            1'051'200,
+            consensus
+        ),
+        CAmount{1'250'000'000}
+    );
+}
+
+// NOTE:
+// The following inherited Bitcoin Core miner regression test
+// imports 110 pre-computed Bitcoin-mainnet proof-of-work blocks.
+// Their nonces commit to the historical 50-BTC coinbase and the
+// 210,000-block subsidy interval.
+//
+// VargaMesh has separate native subsidy tests above and in
+// validation_tests. The compatibility scope below exists ONLY
+// so the unchanged upstream mining/transaction-selection
+// regression vectors can continue to exercise their original
+// code paths.
+//
+// It does not modify production consensus parameters.
 BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
 {
+    struct ScopedUpstreamMinerVectorConsensus
+    {
+        Consensus::Params& consensus;
+        const CAmount original_subsidy;
+        const int original_halving_interval;
+
+        ScopedUpstreamMinerVectorConsensus()
+            : consensus{
+                const_cast<Consensus::Params&>(
+                    Params().GetConsensus()
+                )
+            },
+              original_subsidy{
+                  consensus.nInitialSubsidy
+              },
+              original_halving_interval{
+                  consensus.nSubsidyHalvingInterval
+              }
+        {
+            // TEST ONLY:
+            //
+            // BLOCKINFO[] below contains 110 PoW nonces
+            // precomputed for Bitcoin Core's original
+            // 50-BTC / 210,000-block monetary parameters.
+            consensus.nInitialSubsidy =
+                50 * COIN;
+
+            consensus.nSubsidyHalvingInterval =
+                210'000;
+        }
+
+        ~ScopedUpstreamMinerVectorConsensus()
+        {
+            consensus.nInitialSubsidy =
+                original_subsidy;
+
+            consensus.nSubsidyHalvingInterval =
+                original_halving_interval;
+        }
+
+        ScopedUpstreamMinerVectorConsensus(
+            const ScopedUpstreamMinerVectorConsensus&
+        ) = delete;
+
+        ScopedUpstreamMinerVectorConsensus& operator=(
+            const ScopedUpstreamMinerVectorConsensus&
+        ) = delete;
+    };
+
+    const ScopedUpstreamMinerVectorConsensus
+        upstream_vector_compat{};
+
+    BOOST_REQUIRE_EQUAL(
+        Params().GetConsensus().nInitialSubsidy,
+        50 * COIN
+    );
+
+    BOOST_REQUIRE_EQUAL(
+        Params().GetConsensus().nSubsidyHalvingInterval,
+        210'000
+    );
+
     auto mining{MakeMining()};
     BOOST_REQUIRE(mining);
 

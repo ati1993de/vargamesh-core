@@ -4,6 +4,7 @@
 
 #include <chainparams.h>
 #include <consensus/amount.h>
+#include <consensus/consensus.h>
 #include <consensus/merkle.h>
 #include <core_io.h>
 #include <hash.h>
@@ -24,7 +25,7 @@ BOOST_FIXTURE_TEST_SUITE(validation_tests, TestingSetup)
 static void TestBlockSubsidyHalvings(const Consensus::Params& consensusParams)
 {
     int maxHalvings = 64;
-    CAmount nInitialSubsidy = 50 * COIN;
+    CAmount nInitialSubsidy = consensusParams.nInitialSubsidy;
 
     CAmount nPreviousSubsidy = nInitialSubsidy * 2; // for height == 0
     BOOST_CHECK_EQUAL(nPreviousSubsidy, nInitialSubsidy * 2);
@@ -56,14 +57,124 @@ BOOST_AUTO_TEST_CASE(block_subsidy_test)
 BOOST_AUTO_TEST_CASE(subsidy_limit_test)
 {
     const auto chainParams = CreateChainParams(*m_node.args, ChainType::MAIN);
-    CAmount nSum = 0;
-    for (int nHeight = 0; nHeight < 14000000; nHeight += 1000) {
-        CAmount nSubsidy = GetBlockSubsidy(nHeight, chainParams->GetConsensus());
-        BOOST_CHECK(nSubsidy <= 50 * COIN);
-        nSum += nSubsidy * 1000;
+    const auto& consensus = chainParams->GetConsensus();
+
+    // VargaMesh mainnet monetary policy.
+    BOOST_CHECK_EQUAL(consensus.nInitialSubsidy, 25 * COIN);
+    BOOST_CHECK_EQUAL(consensus.nSubsidyHalvingInterval, 1'051'200);
+
+    // Boundary checks around the first two halvings.
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(0, consensus),
+        25 * COIN
+    );
+
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(consensus.nSubsidyHalvingInterval - 1, consensus),
+        25 * COIN
+    );
+
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(consensus.nSubsidyHalvingInterval, consensus),
+        CAmount{1'250'000'000}
+    );
+
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(2 * consensus.nSubsidyHalvingInterval, consensus),
+        CAmount{625'000'000}
+    );
+
+    // With 8 decimal places, the subsidy reaches zero after
+    // 32 halvings due to integer rounding.
+    BOOST_CHECK_EQUAL(
+        GetBlockSubsidy(32 * consensus.nSubsidyHalvingInterval, consensus),
+        0
+    );
+
+    // Exact scheduled subsidy sum in atomic units:
+    // 52,559,999.88436800 VMESH.
+    CAmount nSum{0};
+
+    for (int nHalvings = 0; nHalvings < 64; ++nHalvings) {
+        const int nHeight{
+            nHalvings * consensus.nSubsidyHalvingInterval
+        };
+
+        const CAmount nSubsidy{
+            GetBlockSubsidy(nHeight, consensus)
+        };
+
+        nSum += (
+            nSubsidy
+            * consensus.nSubsidyHalvingInterval
+        );
+
         BOOST_CHECK(MoneyRange(nSum));
     }
-    BOOST_CHECK_EQUAL(nSum, CAmount{2099999997690000});
+
+    constexpr CAmount EXPECTED_SCHEDULED_SUBSIDY{
+        5'255'999'988'436'800
+    };
+
+    BOOST_CHECK_EQUAL(
+        nSum,
+        EXPECTED_SCHEDULED_SUBSIDY
+    );
+
+    // MAX_MONEY is a consensus sanity ceiling, not an
+    // instruction to mint this exact amount.
+    BOOST_CHECK_EQUAL(
+        MAX_MONEY,
+        CAmount{52'560'000} * COIN
+    );
+
+    BOOST_CHECK(
+        nSum < MAX_MONEY
+    );
+
+    // VargaMesh launches without inherited Bitcoin trust anchors.
+    BOOST_CHECK(
+        consensus.nMinimumChainWork.IsNull()
+    );
+
+    BOOST_CHECK(
+        consensus.defaultAssumeValid.IsNull()
+    );
+
+    BOOST_CHECK(
+        chainParams->GetAvailableSnapshotHeights().empty()
+    );
+
+    BOOST_CHECK_EQUAL(
+        chainParams->AssumedBlockchainSize(),
+        0U
+    );
+
+    BOOST_CHECK_EQUAL(
+        chainParams->AssumedChainStateSize(),
+        0U
+    );
+
+    BOOST_CHECK_EQUAL(
+        chainParams->TxData().nTime,
+        0
+    );
+
+    BOOST_CHECK_EQUAL(
+        chainParams->TxData().tx_count,
+        0U
+    );
+
+    BOOST_CHECK_EQUAL(
+        chainParams->TxData().dTxRate,
+        0.0
+    );
+
+    // Already correct upstream; explicitly freeze our choice.
+    BOOST_CHECK_EQUAL(
+        COINBASE_MATURITY,
+        100
+    );
 }
 
 BOOST_AUTO_TEST_CASE(signet_parse_tests)

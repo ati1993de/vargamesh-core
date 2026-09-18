@@ -183,7 +183,14 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTe
         chainman.m_cached_is_ibd.store(cached_is_ibd, std::memory_order_relaxed);
         chainman.m_blockman.m_importing = loading_blocks;
         if (tip_exists) {
-            tip.nChainWork = chainman.MinimumChainWork() - (enough_work ? 0 : 1);
+            // With zero minimum chain work there is no representable
+            // chainwork value below the configured floor. Avoid unsigned
+            // underflow from 0 - 1 in that launch configuration.
+            const auto& minimum_chain_work{chainman.MinimumChainWork()};
+            tip.nChainWork = minimum_chain_work;
+            if (!enough_work && minimum_chain_work != arith_uint256{}) {
+                tip.nChainWork -= 1;
+            }
             tip.nTime = (recent_time - (tip_recent ? 0h : 100h)).time_since_epoch().count();
             chainman.ActiveChain().SetTip(tip);
         } else {
@@ -198,7 +205,19 @@ BOOST_FIXTURE_TEST_CASE(chainstatemanager_ibd_exit_after_loading_blocks, ChainTe
                 for (const bool enough_work : {false, true}) {
                     for (const bool tip_recent : {false, true}) {
                         apply(cached_is_ibd, loading_blocks, tip_exists, enough_work, tip_recent);
-                        const bool expected_ibd = cached_is_ibd && (loading_blocks || !tip_exists || !enough_work || !tip_recent);
+                        // VargaMesh launches with zero minimum chain work.
+                        // In that configuration every representable chainwork
+                        // value already satisfies the minimum-work floor, so
+                        // enough_work=false cannot independently keep IBD active.
+                        const bool can_be_below_minimum_work{
+                            chainman.MinimumChainWork() != arith_uint256{}
+                        };
+                        const bool expected_ibd =
+                            cached_is_ibd &&
+                            (loading_blocks ||
+                             !tip_exists ||
+                             (can_be_below_minimum_work && !enough_work) ||
+                             !tip_recent);
                         BOOST_CHECK_EQUAL(chainman.IsInitialBlockDownload(), expected_ibd);
                     }
                 }
