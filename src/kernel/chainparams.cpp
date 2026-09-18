@@ -154,8 +154,10 @@ public:
 
         // Gate 4B will replace these inherited BIP32 extended-key
         // version bytes with VargaMesh-specific values.
-        base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
-        base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
+        // VargaMesh HD public keys: VMPU...
+        base58Prefixes[EXT_PUBLIC_KEY] = {0x02, 0x4D, 0x77, 0x1C};
+        // VargaMesh HD private keys: VMPR...
+        base58Prefixes[EXT_SECRET_KEY] = {0x02, 0x4D, 0x77, 0x07};
 
         bech32_hrp = "vm";
 
