@@ -144,13 +144,20 @@ public:
         vSeeds.clear();
         vSeeds.emplace_back("seed.mesh.vargatech.net.");
 
-        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,0);
-        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,5);
-        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,128);
+        // VargaMesh mainnet address identity.
+        // P2PKH version 70 produces V... addresses.
+        // P2SH  version 50 produces M... addresses.
+        // WIF   version 190 gives compressed keys a V... prefix.
+        base58Prefixes[PUBKEY_ADDRESS] = std::vector<unsigned char>(1,70);
+        base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,50);
+        base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,190);
+
+        // Gate 4B will replace these inherited BIP32 extended-key
+        // version bytes with VargaMesh-specific values.
         base58Prefixes[EXT_PUBLIC_KEY] = {0x04, 0x88, 0xB2, 0x1E};
         base58Prefixes[EXT_SECRET_KEY] = {0x04, 0x88, 0xAD, 0xE4};
 
-        bech32_hrp = "bc";
+        bech32_hrp = "vm";
 
         // No inherited Bitcoin fixed seeds. VargaMesh bootstrap is DNS-based initially.
         vFixedSeeds.clear();

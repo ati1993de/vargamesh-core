@@ -147,4 +147,22 @@ BOOST_AUTO_TEST_CASE(key_io_invalid)
     }
 }
 
+
+BOOST_AUTO_TEST_CASE(vargamesh_mainnet_rejects_bitcoin_encodings)
+{
+    SelectParams(ChainType::MAIN);
+
+    // Previously valid Bitcoin-mainnet encodings must not be
+    // accepted as VargaMesh-mainnet addresses or private keys.
+    BOOST_CHECK(!IsValidDestination(
+        DecodeDestination("1FsSia9rv4NeEwvJ2GvXrX7LyxYspbN2mo")));
+    BOOST_CHECK(!IsValidDestination(
+        DecodeDestination("36j4NfKv6Akva9amjWrLG6MuSQym1GuEmm")));
+    BOOST_CHECK(!IsValidDestination(
+        DecodeDestination("bc1qvyq0cc6rahyvsazfdje0twl7ez82ndmuac2lhv")));
+
+    BOOST_CHECK(!DecodeSecret(
+        "L5nJeqKmpHp4P7F8ZYyjwc5a7P4d8EabuGAzfGJk7yC1BJyzNaEd").IsValid());
+}
+
 BOOST_AUTO_TEST_SUITE_END()
