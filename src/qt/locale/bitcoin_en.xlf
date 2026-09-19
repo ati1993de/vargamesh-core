@@ -448,177 +448,177 @@ Signing is only possible with addresses of the type &apos;legacy&apos;.</source>
         <context-group purpose="location"><context context-type="linenumber">272</context></context-group>
       </trans-unit>
       <trans-unit id="_msg99">
+        <source xml:space="preserve">Request payments (generates QR codes and vargamesh: URIs)</source>
+        <context-group purpose="location"><context context-type="linenumber">273</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg100">
         <source xml:space="preserve">&amp;Options…</source>
         <context-group purpose="location"><context context-type="linenumber">310</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg100">
+      <trans-unit id="_msg101">
         <source xml:space="preserve">&amp;Encrypt Wallet…</source>
         <context-group purpose="location"><context context-type="linenumber">315</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg101">
+      <trans-unit id="_msg102">
         <source xml:space="preserve">Encrypt the private keys that belong to your wallet</source>
         <context-group purpose="location"><context context-type="linenumber">316</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg102">
+      <trans-unit id="_msg103">
         <source xml:space="preserve">&amp;Backup Wallet…</source>
         <context-group purpose="location"><context context-type="linenumber">318</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg103">
+      <trans-unit id="_msg104">
         <source xml:space="preserve">&amp;Change Passphrase…</source>
         <context-group purpose="location"><context context-type="linenumber">320</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg104">
+      <trans-unit id="_msg105">
         <source xml:space="preserve">Sign &amp;message…</source>
         <context-group purpose="location"><context context-type="linenumber">322</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg105">
+      <trans-unit id="_msg106">
         <source xml:space="preserve">&amp;Verify message…</source>
         <context-group purpose="location"><context context-type="linenumber">324</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg106">
+      <trans-unit id="_msg107">
         <source xml:space="preserve">&amp;Load PSBT from file…</source>
         <context-group purpose="location"><context context-type="linenumber">326</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg107">
+      <trans-unit id="_msg108">
         <source xml:space="preserve">Open &amp;URI…</source>
         <context-group purpose="location"><context context-type="linenumber">342</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg108">
+      <trans-unit id="_msg109">
+        <source xml:space="preserve">Open a vargamesh: URI</source>
+        <context-group purpose="location"><context context-type="linenumber">343</context></context-group>
+      </trans-unit>
+      <trans-unit id="_msg110">
         <source xml:space="preserve">Close Wallet…</source>
         <context-group purpose="location"><context context-type="linenumber">350</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg109">
+      <trans-unit id="_msg111">
         <source xml:space="preserve">Create Wallet…</source>
         <context-group purpose="location"><context context-type="linenumber">353</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg110">
+      <trans-unit id="_msg112">
         <source xml:space="preserve">Close All Wallets…</source>
         <context-group purpose="location"><context context-type="linenumber">363</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg111">
+      <trans-unit id="_msg113">
         <source xml:space="preserve">Restore and Migrate Wallet File…</source>
         <context-group purpose="location"><context context-type="linenumber">499</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg112">
+      <trans-unit id="_msg114">
         <source xml:space="preserve">&amp;File</source>
         <context-group purpose="location"><context context-type="linenumber">539</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg113">
+      <trans-unit id="_msg115">
         <source xml:space="preserve">&amp;Settings</source>
         <context-group purpose="location"><context context-type="linenumber">560</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg114">
+      <trans-unit id="_msg116">
         <source xml:space="preserve">&amp;Help</source>
         <context-group purpose="location"><context context-type="linenumber">621</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg115">
+      <trans-unit id="_msg117">
         <source xml:space="preserve">Tabs toolbar</source>
         <context-group purpose="location"><context context-type="linenumber">632</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg116">
+      <trans-unit id="_msg118">
         <source xml:space="preserve">Syncing Headers (%1%)…</source>
         <context-group purpose="location"><context context-type="linenumber">1112</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg117">
+      <trans-unit id="_msg119">
         <source xml:space="preserve">Synchronizing with network…</source>
         <context-group purpose="location"><context context-type="linenumber">1170</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg118">
+      <trans-unit id="_msg120">
         <source xml:space="preserve">Indexing blocks on disk…</source>
         <context-group purpose="location"><context context-type="linenumber">1175</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg119">
+      <trans-unit id="_msg121">
         <source xml:space="preserve">Processing blocks on disk…</source>
         <context-group purpose="location"><context context-type="linenumber">1177</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg120">
+      <trans-unit id="_msg122">
         <source xml:space="preserve">Connecting to peers…</source>
         <context-group purpose="location"><context context-type="linenumber">1184</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg121">
-        <source xml:space="preserve">Request payments (generates QR codes and bitcoin: URIs)</source>
-        <context-group purpose="location"><context context-type="linenumber">273</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg122">
+      <trans-unit id="_msg123">
         <source xml:space="preserve">Show the list of used sending addresses and labels</source>
         <context-group purpose="location"><context context-type="linenumber">338</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg123">
+      <trans-unit id="_msg124">
         <source xml:space="preserve">Show the list of used receiving addresses and labels</source>
         <context-group purpose="location"><context context-type="linenumber">340</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg124">
+      <trans-unit id="_msg125">
         <source xml:space="preserve">&amp;Command-line options</source>
         <context-group purpose="location"><context context-type="linenumber">371</context></context-group>
       </trans-unit>
       <group restype="x-gettext-plurals">
         <context-group purpose="location"><context context-type="linenumber">1193</context></context-group>
-        <trans-unit id="_msg125[0]">
+        <trans-unit id="_msg126[0]">
           <source xml:space="preserve">Processed %n block(s) of transaction history.</source>
         </trans-unit>
-        <trans-unit id="_msg125[1]">
+        <trans-unit id="_msg126[1]">
           <source xml:space="preserve">Processed %n block(s) of transaction history.</source>
         </trans-unit>
       </group>
-      <trans-unit id="_msg126">
+      <trans-unit id="_msg127">
         <source xml:space="preserve">%1 behind</source>
         <context-group purpose="location"><context context-type="linenumber">1216</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg127">
+      <trans-unit id="_msg128">
         <source xml:space="preserve">Catching up…</source>
         <context-group purpose="location"><context context-type="linenumber">1221</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg128">
+      <trans-unit id="_msg129">
         <source xml:space="preserve">Last received block was generated %1 ago.</source>
         <context-group purpose="location"><context context-type="linenumber">1240</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg129">
+      <trans-unit id="_msg130">
         <source xml:space="preserve">Transactions after this will not yet be visible.</source>
         <context-group purpose="location"><context context-type="linenumber">1242</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg130">
+      <trans-unit id="_msg131">
         <source xml:space="preserve">Error</source>
         <context-group purpose="location"><context context-type="linenumber">1277</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg131">
+      <trans-unit id="_msg132">
         <source xml:space="preserve">Warning</source>
         <context-group purpose="location"><context context-type="linenumber">1281</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg132">
+      <trans-unit id="_msg133">
         <source xml:space="preserve">Information</source>
         <context-group purpose="location"><context context-type="linenumber">1285</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg133">
+      <trans-unit id="_msg134">
         <source xml:space="preserve">Up to date</source>
         <context-group purpose="location"><context context-type="linenumber">1197</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg134">
+      <trans-unit id="_msg135">
         <source xml:space="preserve">Ctrl+Q</source>
         <context-group purpose="location"><context context-type="linenumber">301</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg135">
+      <trans-unit id="_msg136">
         <source xml:space="preserve">Load PSBT from &amp;clipboard…</source>
         <context-group purpose="location"><context context-type="linenumber">328</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg136">
+      <trans-unit id="_msg137">
         <source xml:space="preserve">Node window</source>
         <context-group purpose="location"><context context-type="linenumber">331</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg137">
+      <trans-unit id="_msg138">
         <source xml:space="preserve">Open node debugging and diagnostic console</source>
         <context-group purpose="location"><context context-type="linenumber">332</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg138">
+      <trans-unit id="_msg139">
         <source xml:space="preserve">&amp;Sending addresses</source>
         <context-group purpose="location"><context context-type="linenumber">337</context></context-group>
       </trans-unit>
-      <trans-unit id="_msg139">
+      <trans-unit id="_msg140">
         <source xml:space="preserve">&amp;Receiving addresses</source>
         <context-group purpose="location"><context context-type="linenumber">339</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg140">
-        <source xml:space="preserve">Open a bitcoin: URI</source>
-        <context-group purpose="location"><context context-type="linenumber">343</context></context-group>
       </trans-unit>
       <trans-unit id="_msg141">
         <source xml:space="preserve">Open Wallet</source>
@@ -2168,18 +2168,18 @@ The migration process will create a backup of the wallet before migrating. This 
         <context-group purpose="location"><context context-type="linenumber">145</context></context-group>
       </trans-unit>
       <trans-unit id="_msg475">
-        <source xml:space="preserve">Cannot start bitcoin: click-to-pay handler</source>
-        <context-group purpose="location"><context context-type="linenumber">146</context></context-group>
-      </trans-unit>
-      <trans-unit id="_msg476">
         <source xml:space="preserve">URI handling</source>
         <context-group purpose="location"><context context-type="linenumber">194</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">210</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">216</context></context-group>
         <context-group purpose="location"><context context-type="linenumber">223</context></context-group>
       </trans-unit>
+      <trans-unit id="_msg476">
+        <source xml:space="preserve">Cannot start vargamesh: click-to-pay handler</source>
+        <context-group purpose="location"><context context-type="linenumber">146</context></context-group>
+      </trans-unit>
       <trans-unit id="_msg477">
-        <source xml:space="preserve">&apos;bitcoin://&apos; is not a valid URI. Use &apos;bitcoin:&apos; instead.</source>
+        <source xml:space="preserve">&apos;vargamesh://&apos; is not a valid URI. Use &apos;vargamesh:&apos; instead.</source>
         <context-group purpose="location"><context context-type="linenumber">194</context></context-group>
       </trans-unit>
       <trans-unit id="_msg478">
@@ -3742,7 +3742,7 @@ Note:  Since the fee is calculated on a per-byte basis, a fee rate of &quot;100 
         <context-group purpose="location"><context context-type="linenumber">173</context></context-group>
       </trans-unit>
       <trans-unit id="_msg809">
-        <source xml:space="preserve">A message that was attached to the bitcoin: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the VargaMesh network.</source>
+        <source xml:space="preserve">A message that was attached to the vargamesh: URI which will be stored with the transaction for your reference. Note: This message will not be sent over the VargaMesh network.</source>
         <context-group purpose="location"><context context-type="linenumber">202</context></context-group>
       </trans-unit>
       <trans-unit id="_msg810">
