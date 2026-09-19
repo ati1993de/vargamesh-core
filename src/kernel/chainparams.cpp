@@ -108,8 +108,8 @@ public:
         consensus.nASERTInitialBits = 0x1a3009a4;
         // VargaMesh AuxPoW identity.
         //
-        // Gate 7A stages these parameters only.
-        // Consensus enforcement begins in Gate 7B.
+        // VargaMesh-specific AuxPoW consensus parameters.
+        // Enforced by the AuxPoW consensus validation path.
         //
         // IMPORTANT: 0x564D is deliberately NOT encoded into
         // nVersion bits 16..31. That legacy scheme collides with
@@ -172,7 +172,7 @@ public:
         base58Prefixes[SCRIPT_ADDRESS] = std::vector<unsigned char>(1,50);
         base58Prefixes[SECRET_KEY] =     std::vector<unsigned char>(1,190);
 
-        // Gate 4B will replace these inherited BIP32 extended-key
+        // VargaMesh-specific BIP32 extended-key
         // version bytes with VargaMesh-specific values.
         // VargaMesh HD public keys: VMPU...
         base58Prefixes[EXT_PUBLIC_KEY] = {0x02, 0x4D, 0x77, 0x1C};

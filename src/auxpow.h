@@ -121,7 +121,7 @@ public:
      * Construct a minimal structurally valid AuxPoW proof.
      *
      * The parent header is not mined by this helper.
-     * Gate 7B will validate its SHA-256d PoW.
+     * Consensus validation checks its SHA-256d PoW.
      */
     static std::unique_ptr<CAuxPow>
     CreateMinimal(const CPureBlockHeader& child);

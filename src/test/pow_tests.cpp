@@ -165,10 +165,10 @@ BOOST_AUTO_TEST_CASE(asert_reference_and_vargamesh_math)
 
 
     // ----------------------------------------------------
-    // VargaMesh final Gate-6 parameters.
+    // VargaMesh ASERT consensus parameters.
     //
     // These tests verify the generic ASERT mathematics.
-    // Gate 6A deliberately does NOT activate them yet.
+    // Exercise the parameter values independently from activation.
     // ----------------------------------------------------
 
     constexpr int64_t VMESH_SPACING{120};

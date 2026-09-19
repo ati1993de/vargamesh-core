@@ -470,7 +470,7 @@ CheckAuxPowProofOfWork(
     }
 
     /*
-     * Gate 8 will establish isolated AuxPoW parameters for the
+     * AuxPoW parameters are configured independently for the
      * other VMESH networks.
      *
      * Until then, nAuxpowChainId == 0 means that this network is
@@ -604,7 +604,7 @@ CheckAuxPowHeightRules(
 
     /*
      * AuxPoW is not configured yet on the inherited auxiliary
-     * VMESH test networks.  Gate 8 will isolate/configure them.
+     * VMESH test networks use network-specific AuxPoW configuration.
      */
     if (params.nAuxpowChainId == 0) {
         return true;

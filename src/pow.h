@@ -36,7 +36,7 @@ unsigned int CalculateNextWorkRequired(const CBlockIndex* pindexLast, int64_t nF
  * Bitcoin Cash ASERT reference implementation (MIT licensed).
  *
  * This function is consensus-capable mathematics only.
- * Gate 6A does NOT activate ASERT on VargaMesh mainnet.
+ * ASERT behavior is selected by the VargaMesh mainnet consensus parameters.
  */
 arith_uint256 CalculateASERT(
     const arith_uint256& ref_target,

@@ -694,7 +694,7 @@ BOOST_AUTO_TEST_CASE(vargamesh_auxpow_redownload_preserves_proof)
     /*
      * This focused REDOWNLOAD test uses regtest's fixed easy
      * difficulty.  VMESH ASERT transition coverage remains in
-     * the dedicated Gate-6 HeadersSync test cases.
+     * the dedicated HeadersSync test cases.
      */
     consensus.fPowUseASERT =
         false;

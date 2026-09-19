@@ -44,7 +44,7 @@ MakeVargaMeshChild()
         0x1d00ffff;
 
     /*
-     * Gate 7B will consensus-enforce this chain tag
+     * Consensus validation enforces this chain tag
      * on every post-genesis VMESH block.
      */
     child.nNonce =
@@ -577,7 +577,7 @@ BOOST_AUTO_TEST_CASE(auxpow_header_wire_roundtrip)
 
     /*
      * VMESH's post-genesis chain tag.
-     * Consensus enforcement comes in Gate 7B2.
+     * Consensus validation enforces this requirement.
      */
     header.nNonce =
         0x0000564D;
@@ -1357,7 +1357,7 @@ BOOST_AUTO_TEST_CASE(auxpow_consensus_core)
 
     // --------------------------------------------------
     // Networks not yet AuxPoW-configured retain inherited
-    // native Bitcoin-style behaviour until Gate 8.
+    // native Bitcoin-style behaviour for this test-network path.
     // --------------------------------------------------
 
     {
