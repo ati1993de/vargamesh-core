@@ -23,7 +23,12 @@ function(install_binary_component component)
     COMPONENT ${component}
   )
   if(INSTALL_MAN AND IC_HAS_MANPAGE)
-    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${target_name}.1
+    set(manpage_name ${target_name})
+    get_target_property(target_output_name ${target_name} OUTPUT_NAME)
+    if(target_output_name)
+      set(manpage_name ${target_output_name})
+    endif()
+    install(FILES ${PROJECT_SOURCE_DIR}/doc/man/${manpage_name}.1
       DESTINATION ${CMAKE_INSTALL_MANDIR}/man1
       COMPONENT ${component}
     )
