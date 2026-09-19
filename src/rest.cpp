@@ -239,7 +239,7 @@ static bool rest_headers(const std::any& context,
         for (const CBlockIndex *pindex : headers) {
             CBlockHeader wire_header;
             if (!chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
-                if ((pindex->nVersion & (1 << 8)) != 0) {
+                if ((pindex->nVersion & CPureBlockHeader::VERSION_AUXPOW) != 0) {
                     return RESTERR(
                         req,
                         HTTP_NOT_FOUND,
@@ -263,7 +263,7 @@ static bool rest_headers(const std::any& context,
         for (const CBlockIndex *pindex : headers) {
             CBlockHeader wire_header;
             if (!chainman.m_blockman.ReadBlockHeader(wire_header, *pindex)) {
-                if ((pindex->nVersion & (1 << 8)) != 0) {
+                if ((pindex->nVersion & CPureBlockHeader::VERSION_AUXPOW) != 0) {
                     return RESTERR(
                         req,
                         HTTP_NOT_FOUND,
