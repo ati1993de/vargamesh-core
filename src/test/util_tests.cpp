@@ -1516,7 +1516,7 @@ BOOST_AUTO_TEST_CASE(message_sign)
     const std::string message = "Trust no one";
 
     const std::string expected_signature =
-        "IPojfrX2dfPnH26UegfbGQQLrdK844DlHq5157/P6h57WyuS/Qsl+h/WSVGDF4MUi4rWSswW38oimDYfNNUBUOk=";
+        "IIFZTRXEJKO0tU9E+X96p4tOu+q2ub7gRR0X+GW8r4O6NoDhF6GLwoc79SB/DJkNa6I7qurbEiKVGIkXHs/iO9s=";
 
     CKey privkey;
     std::string generated_signature;
@@ -1571,23 +1571,31 @@ BOOST_AUTO_TEST_CASE(message_verify)
     BOOST_CHECK_EQUAL(
         MessageVerify(
             "VEresrW98Shtaquzqf6bsGgynJfMs2TZY1",
-            "IPojfrX2dfPnH26UegfbGQQLrdK844DlHq5157/P6h57WyuS/Qsl+h/WSVGDF4MUi4rWSswW38oimDYfNNUBUOk=",
+            "IIFZTRXEJKO0tU9E+X96p4tOu+q2ub7gRR0X+GW8r4O6NoDhF6GLwoc79SB/DJkNa6I7qurbEiKVGIkXHs/iO9s=",
             "I never signed this"),
         MessageVerificationResult::ERR_NOT_SIGNED);
 
     BOOST_CHECK_EQUAL(
         MessageVerify(
             "VEresrW98Shtaquzqf6bsGgynJfMs2TZY1",
-            "IPojfrX2dfPnH26UegfbGQQLrdK844DlHq5157/P6h57WyuS/Qsl+h/WSVGDF4MUi4rWSswW38oimDYfNNUBUOk=",
+            "IIFZTRXEJKO0tU9E+X96p4tOu+q2ub7gRR0X+GW8r4O6NoDhF6GLwoc79SB/DJkNa6I7qurbEiKVGIkXHs/iO9s=",
             "Trust no one"),
         MessageVerificationResult::OK);
+
+    // A legacy Bitcoin-domain signature must not verify as VargaMesh.
+    BOOST_CHECK_EQUAL(
+        MessageVerify(
+            "VEresrW98Shtaquzqf6bsGgynJfMs2TZY1",
+            "IPojfrX2dfPnH26UegfbGQQLrdK844DlHq5157/P6h57WyuS/Qsl+h/WSVGDF4MUi4rWSswW38oimDYfNNUBUOk=",
+            "Trust no one"),
+        MessageVerificationResult::ERR_NOT_SIGNED);
 
     BOOST_CHECK_EQUAL(
         MessageVerify(
             "VAfqWPmsWmxMd9NzvCSGKdTcX5WiLGGyer",
             "IIcaIENoYW5jZWxsb3Igb24gYnJpbmsgb2Ygc2Vjb25kIGJhaWxvdXQgZm9yIGJhbmtzIAaHRtbCeDZINyavx14=",
             "Trust me"),
-        MessageVerificationResult::OK);
+        MessageVerificationResult::ERR_NOT_SIGNED);
 }
 
 BOOST_AUTO_TEST_CASE(message_hash)
