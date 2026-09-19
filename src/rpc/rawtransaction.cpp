@@ -1015,7 +1015,7 @@ static RPCHelpMan decodepsbt()
 {
     return RPCHelpMan{
         "decodepsbt",
-        "Return a JSON object representing the serialized, base64-encoded partially signed Bitcoin transaction.",
+        "Return a JSON object representing the serialized, base64-encoded partially signed VargaMesh transaction.",
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The PSBT base64 string"},
                 },
@@ -1518,7 +1518,7 @@ static RPCHelpMan combinepsbt()
 {
     return RPCHelpMan{
         "combinepsbt",
-        "Combine multiple partially signed Bitcoin transactions into one transaction.\n"
+        "Combine multiple partially signed VargaMesh transactions into one transaction.\n"
                 "Implements the Combiner role.\n",
                 {
                     {"txs", RPCArg::Type::ARR, RPCArg::Optional::NO, "The base64 strings of partially signed transactions",

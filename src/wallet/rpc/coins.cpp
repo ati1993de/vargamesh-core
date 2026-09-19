@@ -218,7 +218,7 @@ RPCHelpMan lockunspent()
         "Updates list of temporarily unspendable outputs.\n"
                 "Temporarily lock (unlock=false) or unlock (unlock=true) specified transaction outputs.\n"
                 "If no transaction outputs are specified when unlocking then all current locked transaction outputs are unlocked.\n"
-                "A locked transaction output will not be chosen by automatic coin selection, when spending bitcoins.\n"
+                "A locked transaction output will not be chosen by automatic coin selection, when spending VMESH.\n"
                 "Manually selected coins are automatically unlocked.\n"
                 "Locks are stored in memory only, unless persistent=true, in which case they will be written to the\n"
                 "wallet database and loaded on node start. Unwritten (persistent=false) locks are always cleared\n"
