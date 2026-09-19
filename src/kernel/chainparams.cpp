@@ -152,10 +152,24 @@ public:
         m_assumed_blockchain_size = 0;
         m_assumed_chain_state_size = 0;
 
-        genesis = CreateGenesisBlock(1231006505, 2083236893, 0x1d00ffff, 1, 50 * COIN);
+        const char* pszGenesisTimestamp = "VargaMesh Genesis 20/Sep/2026 - VargaTech - No premine";
+        const char* pszGenesisOutputText = "VargaMesh Genesis Output - No premine";
+        const CScript genesisOutputScript = CScript()
+            << OP_RETURN
+            << std::vector<unsigned char>(
+                (const unsigned char*)pszGenesisOutputText,
+                (const unsigned char*)pszGenesisOutputText + strlen(pszGenesisOutputText));
+        genesis = CreateGenesisBlock(
+            pszGenesisTimestamp,
+            genesisOutputScript,
+            1789855200,
+            1174766078,
+            0x1d00ffff,
+            1,
+            25 * COIN);
         consensus.hashGenesisBlock = genesis.GetHash();
-        assert(consensus.hashGenesisBlock == uint256{"000000000019d6689c085ae165831e934ff763ae46a2a6c172b3f1b60a8ce26f"});
-        assert(genesis.hashMerkleRoot == uint256{"4a5e1e4baab89f3a32518a88c31bc87f618f76673e2cc77ab2127b7afdeda33b"});
+        assert(consensus.hashGenesisBlock == uint256{"00000000b0c55c00c13e2ee67b54fe33c327c8806f8da5050cfa47095d182d9a"});
+        assert(genesis.hashMerkleRoot == uint256{"ab8120503c6bc408d07a5257f0dce8019ec494dbf627bd674c93d4f86122cb36"});
 
         // VargaMesh mainnet bootstrap.
         // Initially this hostname may resolve directly to one or more

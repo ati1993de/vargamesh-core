@@ -1109,6 +1109,78 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     const ScopedUpstreamMinerVectorConsensus
         upstream_vector_compat{};
 
+    /*
+     * TEST ONLY:
+     *
+     * BLOCKINFO[] contains historic Bitcoin PoW nonces. Their hashes
+     * depend on the complete previous-block chain, including the Bitcoin
+     * genesis hash. VargaMesh has its own final mainnet genesis, so those
+     * precomputed nonces cannot remain valid.
+     *
+     * Keep the inherited transaction/miner regression coverage, but use
+     * an easy minimum-difficulty PoW only inside this test and grind each
+     * candidate nonce dynamically. Production VargaMesh consensus is
+     * restored automatically when the scope leaves.
+     */
+    struct ScopedGenesisIndependentMinerPowConsensus
+    {
+        Consensus::Params& consensus;
+        const uint256 original_pow_limit;
+        const bool original_allow_min_difficulty;
+        const int64_t original_spacing;
+
+        ScopedGenesisIndependentMinerPowConsensus()
+            : consensus{
+                const_cast<Consensus::Params&>(
+                    Params().GetConsensus()
+                )
+            },
+              original_pow_limit{
+                  consensus.powLimit
+              },
+              original_allow_min_difficulty{
+                  consensus.fPowAllowMinDifficultyBlocks
+              },
+              original_spacing{
+                  consensus.nPowTargetSpacing
+              }
+        {
+            consensus.powLimit = uint256{
+                "7fffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            };
+
+            consensus.fPowAllowMinDifficultyBlocks =
+                true;
+
+            /*
+             * Three seconds per test block is > 2 * target spacing,
+             * deterministically selecting the easy minimum target while
+             * keeping the 110-block fixture close to genesis time.
+             */
+            consensus.nPowTargetSpacing = 1;
+        }
+
+        ~ScopedGenesisIndependentMinerPowConsensus()
+        {
+            consensus.powLimit =
+                original_pow_limit;
+
+            consensus.fPowAllowMinDifficultyBlocks =
+                original_allow_min_difficulty;
+
+            consensus.nPowTargetSpacing =
+                original_spacing;
+        }
+
+        ScopedGenesisIndependentMinerPowConsensus(
+            const ScopedGenesisIndependentMinerPowConsensus&
+        ) = delete;
+
+        ScopedGenesisIndependentMinerPowConsensus& operator=(
+            const ScopedGenesisIndependentMinerPowConsensus&
+        ) = delete;
+    };
+
     BOOST_REQUIRE_EQUAL(
         Params().GetConsensus().nInitialSubsidy,
         50 * COIN
@@ -1172,6 +1244,18 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
     int baseheight = 0;
     std::vector<CTransactionRef> txFirst;
     for (const auto& bi : BLOCKINFO) {
+        /*
+         * TEST ONLY:
+         *
+         * The historic BLOCKINFO PoW nonces depend on Bitcoin's
+         * original genesis/previous-block chain.
+         *
+         * Enable genesis-independent easy PoW only while this one
+         * historic vector is created and submitted. RAII restores
+         * normal consensus parameters at the end of the iteration.
+         */
+        const ScopedGenesisIndependentMinerPowConsensus
+            genesis_independent_pow{};
         const int current_height{mining->getTip()->height};
 
         /**
@@ -1189,7 +1273,7 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
         {
             LOCK(cs_main);
             block.nVersion = VERSIONBITS_TOP_BITS;
-            block.nTime = Assert(m_node.chainman)->ActiveChain().Tip()->GetMedianTimePast()+1;
+            block.nTime = Assert(m_node.chainman)->ActiveChain().Tip()->GetBlockTime() + 3;
             txCoinbase.version = 1;
             txCoinbase.vin[0].scriptSig = CScript{} << (current_height + 1) << bi.extranonce;
             txCoinbase.vout.resize(1); // Ignore the (optional) segwit commitment added by CreateNewBlock (as the hardcoded nonces don't account for this)
@@ -1200,7 +1284,20 @@ BOOST_AUTO_TEST_CASE(CreateNewBlock_validity)
             if (txFirst.size() < 4)
                 txFirst.push_back(block.vtx[0]);
             block.hashMerkleRoot = BlockMerkleRoot(block);
+            /*
+             * The historic nonce is only a starting point now. The final
+             * VMESH genesis changes hashPrevBlock, so grind a valid nonce
+             * for this test-local easy target.
+             */
             block.nNonce = bi.nonce;
+
+            while (!CheckProofOfWork(
+                block.GetHash(),
+                block.nBits,
+                Assert(m_node.chainman)->GetParams().GetConsensus()
+            )) {
+                ++block.nNonce;
+            }
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(block);
         // Alternate calls between Chainman's ProcessNewBlock and submitSolution
