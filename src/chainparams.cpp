@@ -114,6 +114,22 @@ const CChainParams &Params() {
     return *globalChainParams;
 }
 
+bool IsVargaMeshNodeChainAllowed(const ChainType chain)
+{
+    switch (chain) {
+    case ChainType::MAIN:
+    case ChainType::REGTEST:
+        return true;
+
+    case ChainType::TESTNET:
+    case ChainType::TESTNET4:
+    case ChainType::SIGNET:
+        return false;
+    }
+
+    assert(false);
+}
+
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, const ChainType chain)
 {
     switch (chain) {

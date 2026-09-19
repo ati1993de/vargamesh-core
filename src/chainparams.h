@@ -15,6 +15,14 @@ class ArgsManager;
 /**
  * Creates and returns a std::unique_ptr<CChainParams> of the chosen chain.
  */
+/**
+ * Return whether a chain may be selected for a running VargaMesh node.
+ *
+ * Inherited Bitcoin public test networks remain constructible internally
+ * for compatibility tests, but must never be selected by node startup.
+ */
+bool IsVargaMeshNodeChainAllowed(ChainType chain);
+
 std::unique_ptr<const CChainParams> CreateChainParams(const ArgsManager& args, ChainType chain);
 
 /**
