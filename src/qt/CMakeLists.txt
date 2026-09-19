@@ -260,6 +260,8 @@ add_executable(bitcoin-qt
   ../init/bitcoin-qt.cpp
 )
 
+set_target_properties(bitcoin-qt PROPERTIES OUTPUT_NAME vargamesh-qt)
+
 add_windows_resources(bitcoin-qt res/bitcoin-qt-res.rc)
 add_windows_application_manifest(bitcoin-qt)
 
