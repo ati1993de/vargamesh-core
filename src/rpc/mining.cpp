@@ -695,6 +695,10 @@ static RPCHelpMan getblocktemplate()
                 {RPCResult::Type::NUM_TIME, "curtime", "current timestamp in " + UNIX_EPOCH_TIME + ". Adjusted for the proposed BIP94 timewarp rule."},
                 {RPCResult::Type::STR, "bits", "compressed target of next block"},
                 {RPCResult::Type::NUM, "height", "The height of the next block"},
+                {RPCResult::Type::BOOL, "auxpow", /*optional=*/true, "True when the next VargaMesh block requires AuxPoW"},
+                {RPCResult::Type::NUM, "auxpow_chainid", /*optional=*/true, "VargaMesh AuxPoW chain ID; present when AuxPoW is required"},
+                {RPCResult::Type::NUM, "auxpow_childnonce", /*optional=*/true, "Fixed child block nNonce required by VargaMesh AuxPoW consensus"},
+                {RPCResult::Type::STR, "auxpow_submit", /*optional=*/true, "RPC method used to submit the fully serialized AuxPoW block"},
                 {RPCResult::Type::STR_HEX, "signet_challenge", /*optional=*/true, "Only on signet"},
                 {RPCResult::Type::STR_HEX, "default_witness_commitment", /*optional=*/true, "a valid witness commitment for the unmodified block template"},
             }},
@@ -886,7 +890,29 @@ static RPCHelpMan getblocktemplate()
 
     // Update nTime
     UpdateTime(&block, consensusParams, pindexPrev);
-    block.nNonce = 0;
+
+    /*
+     * VargaMesh AuxPoW:
+     *
+     * The child header hash committed by the Bitcoin parent includes
+     * nNonce.  Post-activation VargaMesh consensus requires this field
+     * to carry the VMESH chain tag.  Do not reset it to zero in GBT.
+     */
+    const int next_height{pindexPrev->nHeight + 1};
+    const bool auxpow_active{
+        consensusParams.nAuxpowChainId != 0
+        && consensusParams.AuxPowActive(next_height)
+    };
+
+    if (auxpow_active) {
+        block.SetAuxpowVersion(true);
+        block.nNonce =
+            static_cast<uint32_t>(
+                consensusParams.nAuxpowChainId
+            );
+    } else {
+        block.nNonce = 0;
+    }
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
     const bool fPreSegWit = !DeploymentActiveAfter(pindexPrev, chainman, Consensus::DEPLOYMENT_SEGWIT);
@@ -996,7 +1022,21 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("target", hashTarget.GetHex());
     result.pushKV("mintime", GetMinimumTime(pindexPrev, consensusParams.DifficultyAdjustmentInterval()));
     result.pushKV("mutable", std::move(aMutable));
-    result.pushKV("noncerange", "00000000ffffffff");
+    if (auxpow_active) {
+        result.pushKV(
+            "noncerange",
+            strprintf(
+                "%08x%08x",
+                block.nNonce,
+                block.nNonce
+            )
+        );
+    } else {
+        result.pushKV(
+            "noncerange",
+            "00000000ffffffff"
+        );
+    }
     int64_t nSigOpLimit = MAX_BLOCK_SIGOPS_COST;
     int64_t nSizeLimit = MAX_BLOCK_SERIALIZED_SIZE;
     if (fPreSegWit) {
@@ -1013,6 +1053,22 @@ static RPCHelpMan getblocktemplate()
     result.pushKV("curtime", block.GetBlockTime());
     result.pushKV("bits", strprintf("%08x", block.nBits));
     result.pushKV("height", pindexPrev->nHeight + 1);
+
+    if (auxpow_active) {
+        result.pushKV("auxpow", true);
+        result.pushKV(
+            "auxpow_chainid",
+            consensusParams.nAuxpowChainId
+        );
+        result.pushKV(
+            "auxpow_childnonce",
+            block.nNonce
+        );
+        result.pushKV(
+            "auxpow_submit",
+            "submitblock"
+        );
+    }
 
     if (consensusParams.signet_blocks) {
         result.pushKV("signet_challenge", HexStr(consensusParams.signet_challenge));

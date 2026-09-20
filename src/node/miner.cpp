@@ -232,7 +232,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
      *   - VMESH chain tag 0x564D in child nNonce
      *
      * The actual CAuxPow Bitcoin-parent proof does NOT exist
-     * yet and is intentionally attached later by submitauxblock.
+     * yet and is supplied by the miner in the full block submitted through submitblock.
      */
     const auto& consensus_params{
         chainparams.GetConsensus()
@@ -257,7 +257,7 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock()
          *
          * The placeholder parent header is NOT required to meet
          * the VMESH target here.  Real Bitcoin-parent PoW is
-         * supplied later via submitauxblock.
+         * supplied by the miner in the full block submitted through submitblock.
          */
         pblock->SetAuxpow(
             CAuxPow::CreateMinimal(
