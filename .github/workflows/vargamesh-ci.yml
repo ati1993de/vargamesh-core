@@ -1,0 +1,82 @@
+name: VargaMesh CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: vargamesh-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  linux:
+    name: Linux build and unit tests
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            ninja-build \
+            pkg-config \
+            python3 \
+            libevent-dev \
+            libboost-dev \
+            libsqlite3-dev
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DBUILD_GUI=OFF \
+            -DBUILD_BENCH=OFF \
+            -DBUILD_FUZZ_BINARY=OFF \
+            -DENABLE_IPC=OFF
+
+      - name: Build
+        run: cmake --build build --parallel 2
+
+      - name: Unit tests
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Verify VargaMesh binary identity
+        run: |
+          build/bin/vargameshd --version
+          build/bin/vargameshd --version | grep -F "VargaMesh Core"
+
+  windows:
+    name: Windows native build
+    runs-on: windows-2025
+    timeout-minutes: 180
+
+    env:
+      PYTHONUTF8: "1"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Import Visual Studio environment
+        run: py -3 .github/ci-windows.py standard github_import_vs_env
+
+      - name: Generate build
+        run: py -3 .github/ci-windows.py standard generate
+
+      - name: Build
+        run: py -3 .github/ci-windows.py standard build
+
+      - name: Check manifests
+        run: py -3 .github/ci-windows.py standard check_manifests

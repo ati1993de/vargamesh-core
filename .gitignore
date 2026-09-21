@@ -27,3 +27,28 @@ target/
 /guix-build-*
 
 /ci/scratch/
+
+# ------------------------------------------------------------------
+# VargaMesh runtime / operator data
+# ------------------------------------------------------------------
+wallet.dat
+wallets/
+.cookie
+.env
+.env.*
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+debug.log
+peers.dat
+banlist.json
+mempool.dat
+fee_estimates.dat
+anchors.dat
+settings.json
+
+# Local validation / release output
+build-public/
+dist/
+release/

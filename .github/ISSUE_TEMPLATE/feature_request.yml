@@ -1,36 +1,24 @@
-name: Feature Request
-description: Suggest an idea for this project.
-labels: [Feature]
+name: Feature request
+description: Suggest a VargaMesh Core improvement
+title: "[feature] "
 body:
   - type: textarea
-    id: feature
+    id: motivation
     attributes:
-      label: Please describe the feature you'd like to see added.
-      description: Attach screenshots or logs if applicable.
+      label: Motivation
+      description: What problem would this solve?
     validations:
       required: true
+
   - type: textarea
-    id: related-problem
+    id: proposal
     attributes:
-      label: Is your feature related to a problem, if so please describe it.
-      description: Attach screenshots or logs if applicable.
+      label: Proposed change
     validations:
-      required: false
+      required: true
+
   - type: textarea
-    id: solution
+    id: consensus
     attributes:
-      label: Describe the solution you'd like
-    validations:
-      required: false
-  - type: textarea
-    id: alternatives
-    attributes:
-      label: Describe any alternatives you've considered
-    validations:
-      required: false
-  - type: textarea
-    id: additional-context
-    attributes:
-      label: Please leave any additional context
-    validations:
-      required: false
+      label: Consensus impact
+      description: Explain whether the proposal changes consensus, P2P or serialization.

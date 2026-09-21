@@ -1,0 +1,20 @@
+# VargaMesh Core example configuration
+#
+# This file contains no credentials.
+
+# Mainnet P2P
+listen=1
+port=29666
+
+# Local JSON-RPC
+server=1
+rpcport=29667
+rpcbind=127.0.0.1
+rpcallowip=127.0.0.1
+
+# Peer discovery
+discover=1
+dnsseed=1
+
+# Full node
+prune=0

@@ -1,79 +1,125 @@
-Bitcoin Core integration/staging tree
-=====================================
+# VargaMesh Core
 
-https://bitcoincore.org
+**VargaMesh Core** is the reference full-node implementation for the
+**VargaMesh (VMESH)** network.
 
-For an immediately usable, binary version of the Bitcoin Core software, see
-https://bitcoincore.org/en/download/.
+VargaMesh is an independent proof-of-work blockchain derived from Bitcoin
+Core and extended with VargaMesh-specific network identity, monetary
+parameters, ASERT difficulty adjustment and AuxPoW merged-mining support.
 
-What is Bitcoin Core?
----------------------
+- **Network:** VargaMesh Mainnet
+- **Currency:** VMESH
+- **Software:** VargaMesh Core v0.1.0
+- **Website:** https://mesh.vargatech.net
+- **Source:** https://github.com/ati1993de/vargamesh-core
 
-Bitcoin Core connects to the Bitcoin peer-to-peer network to download and fully
-validate blocks and transactions. It also includes a wallet and graphical user
-interface, which can be optionally built.
+## Mainnet parameters
 
-Further information about Bitcoin Core is available in the [doc folder](/doc).
+| Parameter | Value |
+| --- | --- |
+| P2P port | `29666` |
+| RPC port | `29667` |
+| Genesis hash | `00000000b0c55c00c13e2ee67b54fe33c327c8806f8da5050cfa47095d182d9a` |
+| Genesis merkle root | `ab8120503c6bc408d07a5257f0dce8019ec494dbf627bd674c93d4f86122cb36` |
+| Genesis time | `1789855200` |
+| Genesis nonce | `1174766078` |
+| Genesis bits | `1d00ffff` |
+| AuxPoW chain ID | `22093` |
+| Target block spacing | `120 seconds` |
+| ASERT half-life | `34560 seconds` |
+| Coinbase maturity | `100 blocks` |
+| Subsidy halving interval | `1051200 blocks` |
+| Bech32 HRP | `vm` |
 
-License
--------
+The source code remains authoritative for consensus behavior.
 
-Bitcoin Core is released under the terms of the MIT license. See [COPYING](COPYING) for more
-information or see https://opensource.org/license/MIT.
+See [doc/mainnet.md](doc/mainnet.md) for additional information.
 
-Development Process
--------------------
+## Software components
 
-The `master` branch is regularly built (see `doc/build-*.md` for instructions) and tested, but it is not guaranteed to be
-completely stable. [Tags](https://github.com/bitcoin/bitcoin/tags) are created
-regularly from release branches to indicate new official, stable release versions of Bitcoin Core.
+A standard VargaMesh build can produce:
 
-The https://github.com/bitcoin-core/gui repository is used exclusively for the
-development of the GUI. Its master branch is identical in all monotree
-repositories. Release branches and tags do not exist, so please do not fork
-that repository unless it is for development reasons.
+- `vargameshd` — full node daemon
+- `vargamesh-cli` — JSON-RPC command-line client
+- `vargamesh-qt` — graphical client
+- `vargamesh-wallet` — offline wallet utility
+- `vargamesh-tx` — transaction utility
+- `vargamesh-util` — utility commands
 
-The contribution workflow is described in [CONTRIBUTING.md](CONTRIBUTING.md)
-and useful hints for developers can be found in [doc/developer-notes.md](doc/developer-notes.md).
+## Build
 
-Testing
--------
+### Linux
 
-Testing and code review is the bottleneck for development; we get more pull
-requests than we can review and test on short notice. Please be patient and help out by testing
-other people's pull requests, and remember this is a security-critical project where any mistake might cost people
-lots of money.
+See [doc/build-vargamesh-linux.md](doc/build-vargamesh-linux.md).
 
-### Automated Testing
+### Windows
 
-Developers are strongly encouraged to write [unit tests](src/test/README.md) for new code, and to
-submit new unit tests for old code. Unit tests can be compiled and run
-(assuming they weren't disabled during the generation of the build system) with: `ctest`. Further details on running
-and extending unit tests can be found in [/src/test/README.md](/src/test/README.md).
+See [doc/build-vargamesh-windows.md](doc/build-vargamesh-windows.md).
 
-There are also [regression and integration tests](/test), written
-in Python.
-These tests can be run (if the [test dependencies](/test) are installed) with: `build/test/functional/test_runner.py`
-(assuming `build` is your build directory).
+The inherited platform-specific documentation under `doc/` is retained
+where it remains applicable.
 
-The CI (Continuous Integration) systems make sure that every pull request is tested on Windows, Linux, and macOS.
-The CI must pass on all commits before merge to avoid unrelated CI failures on new pull requests.
+## Running a node
 
-### Manual Quality Assurance (QA) Testing
+Example:
 
-Changes should be tested by somebody other than the developer who wrote the
-code. This is especially important for large or high-risk changes. It is useful
-to add a test plan to the pull request description if testing the changes is
-not straightforward.
+```bash
+vargameshd -daemon
+vargamesh-cli getblockchaininfo
+vargamesh-cli getnetworkinfo
+```
 
-Translations
-------------
+Default mainnet ports:
 
-Changes to translations as well as new translations can be submitted to
-[Bitcoin Core's Transifex page](https://explore.transifex.com/bitcoin/bitcoin/).
+- **29666/TCP** — VargaMesh P2P
+- **29667/TCP** — JSON-RPC
 
-Translations are periodically pulled from Transifex and merged into the git repository. See the
-[translation process](doc/translation_process.md) for details on how this works.
+RPC should normally remain bound to localhost unless an operator has
+deliberately deployed a secured remote RPC configuration.
 
-**Important**: We do not accept translation changes as GitHub pull requests because the next
-pull from Transifex would automatically overwrite them again.
+## Mining
+
+VargaMesh Core contains AuxPoW validation and AuxPoW-capable mining-template
+support.
+
+Mining and consensus behavior are defined by the implementation and mainnet
+parameters in the source tree.
+
+## Security
+
+Never publish or commit production:
+
+- private keys
+- wallet files
+- seed phrases
+- RPC authentication secrets
+- authentication cookies
+- SSH private keys
+- production credentials
+
+See [SECURITY.md](SECURITY.md).
+
+## Development
+
+VargaMesh Core is consensus-critical software. Changes affecting consensus,
+serialization, proof of work, AuxPoW, monetary policy or network identity
+require additional review and testing.
+
+See:
+
+- [CONTRIBUTING.md](CONTRIBUTING.md)
+- [CHANGELOG.md](CHANGELOG.md)
+- [UPSTREAM.md](UPSTREAM.md)
+
+## Upstream and attribution
+
+VargaMesh Core is derived from Bitcoin Core.
+
+Upstream copyright notices, license notices, technical history and
+third-party attribution are intentionally preserved.
+
+## License
+
+VargaMesh Core is distributed under the MIT software license.
+
+See [COPYING](COPYING).

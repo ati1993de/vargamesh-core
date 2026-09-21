@@ -1,20 +1,48 @@
 # Security Policy
 
-## Supported Versions
+VargaMesh Core is consensus-critical network software.
 
-See our website for versions of Bitcoin Core that are currently supported with
-security updates: https://bitcoincore.org/en/lifecycle/#schedule
+## Supported versions
 
-## Reporting a Vulnerability
+Until a longer-term support schedule is published, security fixes target the
+current supported VargaMesh Core release.
 
-To report security issues send an email to security@bitcoincore.org (not for support).
+Users should verify release artifacts and run supported software.
 
-The following keys may be used to communicate sensitive information to developers:
+## Reporting a vulnerability
 
-| Name | Fingerprint |
-|------|-------------|
-| Pieter Wuille | 133E AC17 9436 F14A 5CF1  B794 860F EB80 4E66 9320 |
-| Michael Ford | E777 299F C265 DD04 7930  70EB 944D 35F9 AC3D B76A |
-| Ava Chow | 1528 1230 0785 C964 44D3  334D 1756 5732 E08E 5E41 |
+Do not publish exploitable vulnerabilities in a normal public GitHub issue.
 
-You can import a key by running the following command with that individual’s fingerprint: `gpg --keyserver hkps://keys.openpgp.org --recv-keys "<fingerprint>"` Ensure that you put quotes around fingerprints containing spaces.
+Use the private security-reporting facilities of the VargaMesh GitHub
+repository when available, or use the project contact information published
+at:
+
+https://mesh.vargatech.net/
+
+A useful report should include:
+
+- affected release or commit
+- affected component
+- reproduction steps
+- expected security impact
+- whether exploitation has been observed
+- suggested mitigation, if known
+
+Please avoid public disclosure of a working exploit before maintainers have
+had a reasonable opportunity to investigate and coordinate remediation.
+
+## Sensitive runtime data
+
+The public source repository must never contain production:
+
+- private keys
+- seed phrases or mnemonics
+- wallet files
+- RPC passwords
+- RPC authentication secrets
+- `.cookie` files
+- SSH private keys
+- production `.env` files
+- server credentials
+
+A public VargaMesh node does not require publication of any private key.
