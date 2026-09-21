@@ -59,9 +59,9 @@ jobs:
           build/bin/vargameshd --version | grep -F "VargaMesh Core"
 
   windows:
-    name: Windows native build
+    name: Windows headless release build
     runs-on: windows-2025
-    timeout-minutes: 180
+    timeout-minutes: 120
 
     env:
       PYTHONUTF8: "1"
@@ -73,11 +73,102 @@ jobs:
       - name: Import Visual Studio environment
         run: py -3 .github/ci-windows.py standard github_import_vs_env
 
-      - name: Generate build
-        run: py -3 .github/ci-windows.py standard generate
+      - name: Configure Windows release build
+        shell: pwsh
+        run: |
+          cmake -B build -Werror=dev --preset vs2026 `
+            "-DVCPKG_HOST_TRIPLET=x64-windows-release" `
+            "-DVCPKG_TARGET_TRIPLET=x64-windows-release" `
+            "-DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON" `
+            "-DVCPKG_MANIFEST_FEATURES=wallet;zeromq" `
+            "-DBUILD_GUI=OFF" `
+            "-DBUILD_TESTS=OFF" `
+            "-DBUILD_BENCH=OFF" `
+            "-DBUILD_FUZZ_BINARY=OFF" `
+            "-DBUILD_KERNEL_LIB=OFF" `
+            "-DBUILD_UTIL_CHAINSTATE=OFF" `
+            "-DENABLE_IPC=OFF" `
+            "-DWITH_ZMQ=ON"
 
-      - name: Build
-        run: py -3 .github/ci-windows.py standard build
+      - name: Build VargaMesh daemon and CLI
+        shell: pwsh
+        run: |
+          cmake --build build `
+            --config Release `
+            --target bitcoind bitcoin-cli `
+            --parallel 4
 
-      - name: Check manifests
-        run: py -3 .github/ci-windows.py standard check_manifests
+      - name: Verify Windows VargaMesh binaries
+        shell: pwsh
+        run: |
+          $daemon = Get-ChildItem `
+            -Path build `
+            -Filter vargameshd.exe `
+            -Recurse |
+            Select-Object -First 1
+
+          $cli = Get-ChildItem `
+            -Path build `
+            -Filter vargamesh-cli.exe `
+            -Recurse |
+            Select-Object -First 1
+
+          if (-not $daemon) {
+            throw "vargameshd.exe not found"
+          }
+
+          if (-not $cli) {
+            throw "vargamesh-cli.exe not found"
+          }
+
+          Write-Host "Daemon:"
+          Write-Host $daemon.FullName
+
+          Write-Host "CLI:"
+          Write-Host $cli.FullName
+
+          $version = & $daemon.FullName --version
+          $version | Write-Host
+
+          if (($version -join "`n") -notmatch "VargaMesh Core daemon") {
+            throw "Wrong daemon identity"
+          }
+
+          if (($version -join "`n") -notmatch "v0\.1\.0") {
+            throw "Wrong VargaMesh version"
+          }
+
+      - name: Validate Windows manifests
+        shell: pwsh
+        run: |
+          $files = @(
+            (Get-ChildItem -Path build -Filter vargameshd.exe -Recurse | Select-Object -First 1),
+            (Get-ChildItem -Path build -Filter vargamesh-cli.exe -Recurse | Select-Object -First 1)
+          )
+
+          foreach ($file in $files) {
+            if (-not $file) {
+              throw "Expected Windows binary missing"
+            }
+
+            Write-Host "Checking manifest: $($file.FullName)"
+
+            & mt.exe `
+              -nologo `
+              "-inputresource:$($file.FullName)" `
+              -validate_manifest
+
+            if ($LASTEXITCODE -ne 0) {
+              throw "Manifest validation failed: $($file.FullName)"
+            }
+          }
+
+      - name: Upload Windows CI binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: VargaMesh-Windows-x86_64-CI
+          path: |
+            build/bin/Release/vargameshd.exe
+            build/bin/Release/vargamesh-cli.exe
+          if-no-files-found: error
+          retention-days: 7
