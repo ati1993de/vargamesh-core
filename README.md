@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  Independent Proof-of-Work · AuxPoW · ASERT · Full Node · Wallet · Mainnet
+  Independent Proof-of-Work · SHA-256d · AuxPoW · ASERT · Full Node · Wallet · Mainnet
 </p>
 
 ---
@@ -19,8 +19,9 @@ VargaMesh is an independent Proof-of-Work network derived from Bitcoin Core
 and extended with VargaMesh-specific consensus and network parameters,
 including:
 
-- independent mainnet identity
-- VMESH native currency
+- independent VargaMesh mainnet
+- native `VMESH` cryptocurrency
+- SHA-256d Proof-of-Work
 - 120-second target block spacing
 - ASERT difficulty adjustment
 - AuxPoW merged-mining support
@@ -38,7 +39,7 @@ The VargaMesh Core source tree is authoritative for consensus behavior.
 | Releases | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop wallet | https://github.com/ati1993de/vargamesh-desktop |
 | Explorer development | https://mempool.vargacoin.com |
-| CkPool |https://github.com/ati1993de/vargamesh-ckpool |
+| CkPool | https://github.com/ati1993de/vargamesh-ckpool |
 
 ---
 
@@ -118,6 +119,8 @@ the indexing stack is explicitly marked production-ready.
 | --- | --- |
 | Network | VargaMesh Mainnet |
 | Currency | `VMESH` |
+| Consensus | Proof of Work |
+| Proof-of-Work algorithm | SHA-256d |
 | P2P port | `29666` |
 | RPC port | `29667` |
 | Genesis hash | `00000000b0c55c00c13e2ee67b54fe33c327c8806f8da5050cfa47095d182d9a` |
@@ -131,8 +134,9 @@ the indexing stack is explicitly marked production-ready.
 | Difficulty adjustment | ASERT |
 | ASERT half-life | `34560 seconds` |
 | Coinbase maturity | `100 blocks` |
-| Initial block subsidy | `50 VMESH` |
+| Initial block subsidy | `25 VMESH` |
 | Subsidy halving interval | `1,051,200 blocks` |
+| Maximum supply | `52,560,000 VMESH` |
 | Bech32 HRP | `vm` |
 | Protocol version | `70016` |
 
