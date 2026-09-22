@@ -61,6 +61,14 @@ See [doc/build-vargamesh-linux.md](doc/build-vargamesh-linux.md).
 
 ### Windows
 
+### Windows GUI available
+
+Users who prefer a graphical full-node wallet can also test VargaMesh Desktop:
+
+https://github.com/ati1993de/vargamesh-desktop
+
+The current Desktop v0.1.1 release bundles VargaMesh Core v0.1.0.
+
 See [doc/build-vargamesh-windows.md](doc/build-vargamesh-windows.md).
 
 The inherited platform-specific documentation under `doc/` is retained
