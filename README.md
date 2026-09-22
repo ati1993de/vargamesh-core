@@ -1,5 +1,12 @@
 # VargaMesh Core
 
+### Related VargaMesh projects
+
+- **VargaMesh Desktop** — Windows full-node wallet GUI  
+  https://github.com/ati1993de/vargamesh-desktop
+- **VargaMesh Core Releases**  
+  https://github.com/ati1993de/vargamesh-core/releases
+
 **VargaMesh Core** is the reference full-node implementation for the
 **VargaMesh (VMESH)** network.
 
