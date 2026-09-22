@@ -163,12 +163,161 @@ jobs:
             }
           }
 
-      - name: Upload Windows CI binaries
-        uses: actions/upload-artifact@v4
+      - name: Package Windows runtime
+        shell: pwsh
+        run: |
+          $release = "build/bin/Release"
+          $vcpkg = "build/vcpkg_installed/x64-windows-release/bin"
+
+          $packageRoot = "dist/VargaMesh-v0.1.0-windows-x86_64"
+
+          New-Item -ItemType Directory `
+            -Force `
+            -Path $packageRoot | Out-Null
+
+          Copy-Item `
+            "$release/vargameshd.exe" `
+            $packageRoot
+
+          Copy-Item `
+            "$release/vargamesh-cli.exe" `
+            $packageRoot
+
+          # vcpkg normally deploys required DLLs next to the executables.
+          # Copy those first.
+          Get-ChildItem `
+            -Path $release `
+            -Filter "*.dll" `
+            -File `
+            -ErrorAction SilentlyContinue |
+            ForEach-Object {
+              Copy-Item $_.FullName $packageRoot -Force
+            }
+
+          # Also collect all target-triplet release DLLs.
+          # This prevents an incomplete package if AppLocal omitted one.
+          if (Test-Path $vcpkg) {
+            Get-ChildItem `
+              -Path $vcpkg `
+              -Filter "*.dll" `
+              -File |
+              ForEach-Object {
+                Copy-Item $_.FullName $packageRoot -Force
+              }
+          }
+
+          Write-Host ""
+          Write-Host "===== WINDOWS RUNTIME PACKAGE ====="
+
+          Get-ChildItem $packageRoot |
+            Sort-Object Name |
+            Format-Table Name,Length
+
+      - name: Verify packaged Windows runtime
+        shell: pwsh
+        run: |
+          $packageRoot = Resolve-Path `
+            "dist/VargaMesh-v0.1.0-windows-x86_64"
+
+          $daemon = Join-Path `
+            $packageRoot `
+            "vargameshd.exe"
+
+          $cli = Join-Path `
+            $packageRoot `
+            "vargamesh-cli.exe"
+
+          if (-not (Test-Path $daemon)) {
+            throw "Packaged vargameshd.exe missing"
+          }
+
+          if (-not (Test-Path $cli)) {
+            throw "Packaged vargamesh-cli.exe missing"
+          }
+
+          # Remove vcpkg/Visual Studio directories from PATH so this test
+          # proves that the package itself contains its runtime DLLs.
+          $oldPath = $env:PATH
+          $env:PATH = "$env:SystemRoot\System32;$env:SystemRoot"
+
+          try {
+            Write-Host ""
+            Write-Host "===== DAEMON VERSION ====="
+
+            $daemonVersion = & $daemon --version
+
+            if ($LASTEXITCODE -ne 0) {
+              throw "Packaged vargameshd.exe failed"
+            }
+
+            $daemonVersion | Write-Host
+
+            if (($daemonVersion -join "`n") -notmatch "VargaMesh Core daemon") {
+              throw "Wrong daemon identity"
+            }
+
+            if (($daemonVersion -join "`n") -notmatch "v0\.1\.0") {
+              throw "Wrong daemon version"
+            }
+
+            Write-Host ""
+            Write-Host "===== CLI VERSION ====="
+
+            $cliVersion = & $cli --version
+
+            if ($LASTEXITCODE -ne 0) {
+              throw "Packaged vargamesh-cli.exe failed"
+            }
+
+            $cliVersion | Write-Host
+
+            if (($cliVersion -join "`n") -notmatch "VargaMesh Core") {
+              throw "Wrong CLI identity"
+            }
+          }
+          finally {
+            $env:PATH = $oldPath
+          }
+
+          Write-Host ""
+          Write-Host "WINDOWS RUNTIME VERIFY: PASS"
+
+      - name: Create Windows release archive
+        shell: pwsh
+        run: |
+          $folder = "dist/VargaMesh-v0.1.0-windows-x86_64"
+          $zip = "dist/VargaMesh-v0.1.0-windows-x86_64.zip"
+
+          if (Test-Path $zip) {
+            Remove-Item $zip -Force
+          }
+
+          Compress-Archive `
+            -Path "$folder/*" `
+            -DestinationPath $zip `
+            -CompressionLevel Optimal
+
+          $hash = Get-FileHash `
+            -Algorithm SHA256 `
+            $zip
+
+          "$($hash.Hash.ToLower())  VargaMesh-v0.1.0-windows-x86_64.zip" |
+            Set-Content `
+              -Encoding ascii `
+              "dist/VargaMesh-v0.1.0-windows-x86_64.zip.sha256"
+
+          Write-Host ""
+          Write-Host "===== SHA256 ====="
+
+          Get-Content `
+            "dist/VargaMesh-v0.1.0-windows-x86_64.zip.sha256"
+
+      - name: Upload Windows CI package
+        uses: actions/upload-artifact@v6
         with:
           name: VargaMesh-Windows-x86_64-CI
           path: |
-            build/bin/Release/vargameshd.exe
-            build/bin/Release/vargamesh-cli.exe
+            dist/VargaMesh-v0.1.0-windows-x86_64.zip
+            dist/VargaMesh-v0.1.0-windows-x86_64.zip.sha256
           if-no-files-found: error
           retention-days: 7
