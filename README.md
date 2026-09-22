@@ -1,140 +1,175 @@
 # VargaMesh Core
 
-### Related VargaMesh projects
+<p align="center">
+  <strong>Reference full-node implementation for the VargaMesh (VMESH) network.</strong>
+</p>
 
-- **VargaMesh Desktop** — Windows full-node wallet GUI  
-  https://github.com/ati1993de/vargamesh-desktop
-- **VargaMesh Core Releases**  
-  https://github.com/ati1993de/vargamesh-core/releases
+<p align="center">
+  Independent Proof-of-Work · AuxPoW · ASERT · Full Node · Wallet · Mainnet
+</p>
+
+---
+
+## Overview
 
 **VargaMesh Core** is the reference full-node implementation for the
-**VargaMesh (VMESH)** network.
+**VargaMesh (VMESH)** blockchain.
 
-VargaMesh is an independent proof-of-work blockchain derived from Bitcoin
-Core and extended with VargaMesh-specific network identity, monetary
-parameters, ASERT difficulty adjustment and AuxPoW merged-mining support.
+VargaMesh is an independent Proof-of-Work network derived from Bitcoin Core
+and extended with VargaMesh-specific consensus and network parameters,
+including:
 
-- **Network:** VargaMesh Mainnet
-- **Currency:** VMESH
-- **Software:** VargaMesh Core v0.1.0
-- **Website:** https://mesh.vargatech.net
-- **Source:** https://github.com/ati1993de/vargamesh-core
+- independent mainnet identity
+- VMESH native currency
+- 120-second target block spacing
+- ASERT difficulty adjustment
+- AuxPoW merged-mining support
+- VargaMesh-specific network ports and address formats
 
-## Mainnet parameters
+The VargaMesh Core source tree is authoritative for consensus behavior.
+
+| Project | Information |
+| --- | --- |
+| Network | VargaMesh Mainnet |
+| Currency | `VMESH` |
+| Core version | `v0.1.0` |
+| Website | https://vargacoin.com |
+| Source code | https://github.com/ati1993de/vargamesh-core |
+| Releases | https://github.com/ati1993de/vargamesh-core/releases |
+| Desktop wallet | https://github.com/ati1993de/vargamesh-desktop |
+| Explorer development | https://mempool.vargacoin.com |
+
+---
+
+## VargaMesh Ecosystem
+
+### VargaMesh Desktop
+
+**VargaMesh Desktop** is the graphical Windows full-node wallet for users
+who prefer a desktop interface instead of operating VargaMesh Core entirely
+through the command line.
+
+Repository:
+
+https://github.com/ati1993de/vargamesh-desktop
+
+Current desktop release:
+
+**VargaMesh Desktop v0.1.1**
+
+The current Desktop release bundles:
+
+**VargaMesh Core v0.1.0**
+
+Available Windows packages include:
+
+- Windows x64 installer
+- Windows x64 portable ZIP
+- SHA256 checksums
+
+Current functionality includes:
+
+- automatic VargaMesh Core startup
+- full-node blockchain synchronization
+- peer and node status
+- wallet creation
+- wallet loading and unloading
+- wallet encryption and temporary unlocking
+- VMESH receiving addresses
+- transaction history
+- VMESH transfers
+- wallet backup
+- wallet restore
+- legacy wallet migration support
+- English and German interface
+
+The Desktop wallet is currently being tested by the community.
+
+Before using significant funds, always create and verify a wallet backup.
+
+Individual private-key import through WIF is not yet available in the
+current Desktop release.
+
+---
+
+### VargaMesh Mempool Explorer
+
+A VargaMesh-specific blockchain explorer and mempool stack is under active
+development.
+
+Development endpoint:
+
+https://mempool.vargacoin.com
+
+The project is intended to provide public visibility into VargaMesh network
+activity including blocks, transactions, mempool activity and network data.
+
+The VMESH-specific indexing backend is still under development and testing.
+
+Explorer data should therefore not yet be treated as authoritative until
+the indexing stack is explicitly marked production-ready.
+
+---
+
+## Mainnet Parameters
 
 | Parameter | Value |
 | --- | --- |
+| Network | VargaMesh Mainnet |
+| Currency | `VMESH` |
 | P2P port | `29666` |
 | RPC port | `29667` |
 | Genesis hash | `00000000b0c55c00c13e2ee67b54fe33c327c8806f8da5050cfa47095d182d9a` |
 | Genesis merkle root | `ab8120503c6bc408d07a5257f0dce8019ec494dbf627bd674c93d4f86122cb36` |
-| Genesis time | `1789855200` |
+| Genesis timestamp | `1789855200` |
 | Genesis nonce | `1174766078` |
 | Genesis bits | `1d00ffff` |
-| AuxPoW chain ID | `22093` |
+| AuxPoW chain ID | `22093` (`0x564D`) |
+| AuxPoW activation | Block `1` |
 | Target block spacing | `120 seconds` |
+| Difficulty adjustment | ASERT |
 | ASERT half-life | `34560 seconds` |
 | Coinbase maturity | `100 blocks` |
-| Subsidy halving interval | `1051200 blocks` |
+| Initial block subsidy | `50 VMESH` |
+| Subsidy halving interval | `1,051,200 blocks` |
 | Bech32 HRP | `vm` |
+| Protocol version | `70016` |
 
-The source code remains authoritative for consensus behavior.
+The source code remains authoritative for all consensus-critical values.
 
-See [doc/mainnet.md](doc/mainnet.md) for additional information.
+Additional mainnet information:
 
-## Software components
+[doc/mainnet.md](doc/mainnet.md)
 
-A standard VargaMesh build can produce:
+---
 
-- `vargameshd` — full node daemon
-- `vargamesh-cli` — JSON-RPC command-line client
-- `vargamesh-qt` — graphical client
-- `vargamesh-wallet` — offline wallet utility
-- `vargamesh-tx` — transaction utility
-- `vargamesh-util` — utility commands
+## Software Components
 
-## Build
+A full VargaMesh Core build may produce the following binaries:
+
+| Binary | Purpose |
+| --- | --- |
+| `vargameshd` | Full-node daemon |
+| `vargamesh-cli` | JSON-RPC command-line client |
+| `vargamesh-qt` | Native graphical Core client |
+| `vargamesh-wallet` | Offline wallet utility |
+| `vargamesh-tx` | Raw transaction utility |
+| `vargamesh-util` | Utility commands |
+
+Availability may depend on the selected build configuration and platform.
+
+---
+
+## Building VargaMesh Core
 
 ### Linux
 
-See [doc/build-vargamesh-linux.md](doc/build-vargamesh-linux.md).
-
-### Windows
-
-### Windows GUI available
-
-Users who prefer a graphical full-node wallet can also test VargaMesh Desktop:
-
-https://github.com/ati1993de/vargamesh-desktop
-
-The current Desktop v0.1.1 release bundles VargaMesh Core v0.1.0.
-
-See [doc/build-vargamesh-windows.md](doc/build-vargamesh-windows.md).
-
-The inherited platform-specific documentation under `doc/` is retained
-where it remains applicable.
-
-## Running a node
-
-Example:
-
-```bash
-vargameshd -daemon
-vargamesh-cli getblockchaininfo
-vargamesh-cli getnetworkinfo
-```
-
-Default mainnet ports:
-
-- **29666/TCP** — VargaMesh P2P
-- **29667/TCP** — JSON-RPC
-
-RPC should normally remain bound to localhost unless an operator has
-deliberately deployed a secured remote RPC configuration.
-
-## Mining
-
-VargaMesh Core contains AuxPoW validation and AuxPoW-capable mining-template
-support.
-
-Mining and consensus behavior are defined by the implementation and mainnet
-parameters in the source tree.
-
-## Security
-
-Never publish or commit production:
-
-- private keys
-- wallet files
-- seed phrases
-- RPC authentication secrets
-- authentication cookies
-- SSH private keys
-- production credentials
-
-See [SECURITY.md](SECURITY.md).
-
-## Development
-
-VargaMesh Core is consensus-critical software. Changes affecting consensus,
-serialization, proof of work, AuxPoW, monetary policy or network identity
-require additional review and testing.
-
 See:
 
-- [CONTRIBUTING.md](CONTRIBUTING.md)
-- [CHANGELOG.md](CHANGELOG.md)
-- [UPSTREAM.md](UPSTREAM.md)
+[doc/build-vargamesh-linux.md](doc/build-vargamesh-linux.md)
 
-## Upstream and attribution
+Typical workflow:
 
-VargaMesh Core is derived from Bitcoin Core.
-
-Upstream copyright notices, license notices, technical history and
-third-party attribution are intentionally preserved.
-
-## License
-
-VargaMesh Core is distributed under the MIT software license.
-
-See [COPYING](COPYING).
+```bash
+git clone https://github.com/ati1993de/vargamesh-core.git
+cd vargamesh-core
