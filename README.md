@@ -38,6 +38,7 @@ The VargaMesh Core source tree is authoritative for consensus behavior.
 | Releases | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop wallet | https://github.com/ati1993de/vargamesh-desktop |
 | Explorer development | https://mempool.vargacoin.com |
+| CkPool |https://github.com/ati1993de/vargamesh-ckpool |
 
 ---
 
