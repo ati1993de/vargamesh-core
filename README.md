@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Core" src="https://img.shields.io/badge/Core-v0.1.0-2ea44f">
+  <img alt="Core" src="https://img.shields.io/badge/Core-v0.1.1-2ea44f">
   <img alt="Desktop" src="https://img.shields.io/badge/Desktop-v0.1.1-0078d4">
   <img alt="Android" src="https://img.shields.io/badge/Android-v0.2.0-3ddc84">
   <img alt="Network" src="https://img.shields.io/badge/Network-Mainnet-orange">
@@ -35,7 +35,7 @@
 > [!IMPORTANT]
 > **VargaMesh is under active development.**
 >
-> VargaMesh Core `v0.1.0`, VargaMesh Desktop `v0.1.1` and VargaMesh Android
+> VargaMesh Core `v0.1.1`, VargaMesh Desktop `v0.1.1` and VargaMesh Android
 > `v0.2.0` should currently be treated as early/public-testing software.
 >
 > Use small amounts while testing wallet software and always maintain verified
@@ -111,7 +111,7 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
 | Component                  |     Version | Status                         |
 | -------------------------- | ----------: | ------------------------------ |
-| VargaMesh Core             |    `v0.1.0` | Public pre-release             |
+| VargaMesh Core             |    `v0.1.1` | Mainnet release                 |
 | VargaMesh Desktop          |    `v0.1.1` | Public testing                 |
 | VargaMesh Android          |    `v0.2.0` | Public testing / pre-release   |
 | VargaMesh WebWallet        |     Current | Available                      |
@@ -129,7 +129,7 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | ---------------------------- | ---------------------------------------------------- |
 | Network                      | VargaMesh Mainnet                                    |
 | Currency                     | `VMESH`                                              |
-| Core version                 | `v0.1.0`                                             |
+| Core version                 | `v0.1.1`                                             |
 | Website                      | https://vargacoin.com                                |
 | Project portal               | https://mesh.vargatech.net                           |
 | Core source code             | https://github.com/ati1993de/vargamesh-core          |
@@ -190,7 +190,7 @@ https://github.com/ati1993de/vargamesh-core
 
 Current version:
 
-**VargaMesh Core v0.1.0**
+**VargaMesh Core v0.1.1**
 
 Core is responsible for:
 
@@ -865,7 +865,7 @@ VargaMesh is under active development.
 
 | Component                  | Status                            |
 | -------------------------- | --------------------------------- |
-| VargaMesh Core `v0.1.0`    | 🟠 Public pre-release             |
+| VargaMesh Core `v0.1.1`    | 🟢 Mainnet release             |
 | VargaMesh Desktop `v0.1.1` | 🟠 Public testing                 |
 | VargaMesh Android `v0.2.0` | 🟠 Public testing / pre-release   |
 | VargaMesh WebWallet        | 🟢 Available                      |
