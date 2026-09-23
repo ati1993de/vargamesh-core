@@ -169,7 +169,7 @@ jobs:
           $release = "build/bin/Release"
           $vcpkg = "build/vcpkg_installed/x64-windows-release/bin"
 
-          $packageRoot = "dist/VargaMesh-v0.1.0-windows-x86_64"
+          $packageRoot = "dist/VargaMesh-v0.1.1-windows-x86_64"
 
           New-Item -ItemType Directory `
             -Force `
@@ -217,7 +217,7 @@ jobs:
         shell: pwsh
         run: |
           $packageRoot = Resolve-Path `
-            "dist/VargaMesh-v0.1.0-windows-x86_64"
+            "dist/VargaMesh-v0.1.1-windows-x86_64"
 
           $daemon = Join-Path `
             $packageRoot `
@@ -285,8 +285,8 @@ jobs:
       - name: Create Windows release archive
         shell: pwsh
         run: |
-          $folder = "dist/VargaMesh-v0.1.0-windows-x86_64"
-          $zip = "dist/VargaMesh-v0.1.0-windows-x86_64.zip"
+          $folder = "dist/VargaMesh-v0.1.1-windows-x86_64"
+          $zip = "dist/VargaMesh-v0.1.1-windows-x86_64.zip"
 
           if (Test-Path $zip) {
             Remove-Item $zip -Force
@@ -301,23 +301,23 @@ jobs:
             -Algorithm SHA256 `
             $zip
 
-          "$($hash.Hash.ToLower())  VargaMesh-v0.1.0-windows-x86_64.zip" |
+          "$($hash.Hash.ToLower())  VargaMesh-v0.1.1-windows-x86_64.zip" |
             Set-Content `
               -Encoding ascii `
-              "dist/VargaMesh-v0.1.0-windows-x86_64.zip.sha256"
+              "dist/VargaMesh-v0.1.1-windows-x86_64.zip.sha256"
 
           Write-Host ""
           Write-Host "===== SHA256 ====="
 
           Get-Content `
-            "dist/VargaMesh-v0.1.0-windows-x86_64.zip.sha256"
+            "dist/VargaMesh-v0.1.1-windows-x86_64.zip.sha256"
 
       - name: Upload Windows CI package
         uses: actions/upload-artifact@v6
         with:
           name: VargaMesh-Windows-x86_64-CI
           path: |
-            dist/VargaMesh-v0.1.0-windows-x86_64.zip
-            dist/VargaMesh-v0.1.0-windows-x86_64.zip.sha256
+            dist/VargaMesh-v0.1.1-windows-x86_64.zip
+            dist/VargaMesh-v0.1.1-windows-x86_64.zip.sha256
           if-no-files-found: error
           retention-days: 7
