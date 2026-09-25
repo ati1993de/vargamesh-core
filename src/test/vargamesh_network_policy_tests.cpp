@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(node_network_allowlist)
     );
 
     BOOST_CHECK(
-        !IsVargaMeshNodeChainAllowed(ChainType::TESTNET)
+        IsVargaMeshNodeChainAllowed(ChainType::TESTNET)
     );
 
     BOOST_CHECK(

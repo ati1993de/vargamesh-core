@@ -118,10 +118,10 @@ bool IsVargaMeshNodeChainAllowed(const ChainType chain)
 {
     switch (chain) {
     case ChainType::MAIN:
+    case ChainType::TESTNET:
     case ChainType::REGTEST:
         return true;
 
-    case ChainType::TESTNET:
     case ChainType::TESTNET4:
     case ChainType::SIGNET:
         return false;
