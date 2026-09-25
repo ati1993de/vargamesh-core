@@ -42,14 +42,14 @@ std::optional<ConfigError> InitConfig(ArgsManager& args, SettingsAbortFn setting
         // Check for chain settings (Params() calls are only valid after this clause)
         const ChainType chain{args.GetChainType()};
 
-        // VargaMesh intentionally does not expose the inherited Bitcoin
-        // public test networks as runnable node networks. Their parameter
-        // constructors remain available internally for compatibility tests.
+        // VargaMesh allows its own mainnet, Testnet v1, and regtest.
+        // Inherited Bitcoin testnet4 and signet remain disabled as runnable
+        // node networks.
         if (!IsVargaMeshNodeChainAllowed(chain)) {
             return ConfigError{
                 ConfigStatus::FAILED,
-                _("VargaMesh node startup supports only mainnet and regtest. "
-                  "Inherited Bitcoin testnet3, testnet4, and signet are disabled.")
+                _("VargaMesh node startup supports mainnet, VargaMesh Testnet v1, "
+                  "and regtest. Inherited Bitcoin testnet4 and signet are disabled.")
             };
         }
 

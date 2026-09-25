@@ -18,8 +18,8 @@ class ArgsManager;
 /**
  * Return whether a chain may be selected for a running VargaMesh node.
  *
- * Inherited Bitcoin public test networks remain constructible internally
- * for compatibility tests, but must never be selected by node startup.
+ * VargaMesh mainnet, VargaMesh Testnet v1, and regtest may be selected
+ * by node startup. Inherited Bitcoin testnet4 and signet remain disabled.
  */
 bool IsVargaMeshNodeChainAllowed(ChainType chain);
 

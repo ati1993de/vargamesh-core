@@ -3,6 +3,7 @@
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
+#include <auxpow.h>
 #include <bitcoin-build-config.h> // IWYU pragma: keep
 
 #include <chain.h>
@@ -137,25 +138,159 @@ static RPCHelpMan getnetworkhashps()
 static bool GenerateBlock(ChainstateManager& chainman, CBlock&& block, uint64_t& max_tries, std::shared_ptr<const CBlock>& block_out, bool process_new_block)
 {
     block_out.reset();
+
+    /*
+     * Finalise the VMESH child transaction merkle root before
+     * constructing the AuxPoW parent commitment.
+     */
     block.hashMerkleRoot = BlockMerkleRoot(block);
 
-    while (max_tries > 0 && block.nNonce < std::numeric_limits<uint32_t>::max() && !CheckProofOfWork(block.GetHash(), block.nBits, chainman.GetConsensus()) && !chainman.m_interrupt) {
-        ++block.nNonce;
-        --max_tries;
+    const Consensus::Params& consensus{
+        chainman.GetConsensus()
+    };
+
+    if (block.IsAuxpow()) {
+        /*
+         * VMESH AuxPoW:
+         *
+         * The child nNonce is the VMESH chain tag and therefore
+         * MUST NOT be used as a mining nonce.
+         *
+         * Recreate the minimal AuxPoW proof after the final child
+         * merkle root has been calculated.  This guarantees that
+         * the Bitcoin-parent coinbase commits to the final 80-byte
+         * VMESH child header.
+         */
+        block.SetAuxpow(
+            CAuxPow::CreateMinimal(block)
+        );
+
+        if (!block.auxpow) {
+            throw JSONRPCError(
+                RPC_INTERNAL_ERROR,
+                "Failed to construct VMESH AuxPoW proof"
+            );
+        }
+
+        /*
+         * Mine the Bitcoin-parent header against the VMESH child
+         * target.  If the 32-bit parent nonce space is exhausted,
+         * advance only the parent timestamp and continue.
+         *
+         * The VMESH child header remains unchanged.
+         */
+        while (
+            max_tries > 0
+            && !chainman.m_interrupt
+        ) {
+            if (
+                CheckProofOfWork(
+                    block.auxpow->GetParentBlockHash(),
+                    block.nBits,
+                    consensus
+                )
+            ) {
+                break;
+            }
+
+            if (
+                block.auxpow->parentBlock.nNonce
+                == std::numeric_limits<uint32_t>::max()
+            ) {
+                block.auxpow->parentBlock.nNonce = 0;
+                ++block.auxpow->parentBlock.nTime;
+            } else {
+                ++block.auxpow->parentBlock.nNonce;
+            }
+
+            --max_tries;
+        }
+
+        if (
+            max_tries == 0
+            || chainman.m_interrupt
+        ) {
+            return false;
+        }
+
+        /*
+         * Before telling ProcessNewBlock that PoW was already
+         * checked, validate the complete VMESH AuxPoW structure:
+         * parent PoW, coinbase commitment, merkle proof and chain ID.
+         */
+        std::string auxpow_error;
+
+        if (
+            !CheckAuxPowProofOfWork(
+                block,
+                consensus,
+                &auxpow_error
+            )
+        ) {
+            throw JSONRPCError(
+                RPC_INTERNAL_ERROR,
+                strprintf(
+                    "Generated VMESH AuxPoW proof is invalid: %s",
+                    auxpow_error
+                )
+            );
+        }
+    } else {
+        /*
+         * Original Bitcoin-style native PoW path.
+         * Kept unchanged for networks/heights without AuxPoW.
+         */
+        while (
+            max_tries > 0
+            && block.nNonce
+                < std::numeric_limits<uint32_t>::max()
+            && !CheckProofOfWork(
+                block.GetHash(),
+                block.nBits,
+                consensus
+            )
+            && !chainman.m_interrupt
+        ) {
+            ++block.nNonce;
+            --max_tries;
+        }
+
+        if (
+            max_tries == 0
+            || chainman.m_interrupt
+        ) {
+            return false;
+        }
+
+        if (
+            block.nNonce
+            == std::numeric_limits<uint32_t>::max()
+        ) {
+            return true;
+        }
     }
-    if (max_tries == 0 || chainman.m_interrupt) {
-        return false;
-    }
-    if (block.nNonce == std::numeric_limits<uint32_t>::max()) {
+
+    block_out =
+        std::make_shared<const CBlock>(
+            std::move(block)
+        );
+
+    if (!process_new_block) {
         return true;
     }
 
-    block_out = std::make_shared<const CBlock>(std::move(block));
-
-    if (!process_new_block) return true;
-
-    if (!chainman.ProcessNewBlock(block_out, /*force_processing=*/true, /*min_pow_checked=*/true, nullptr)) {
-        throw JSONRPCError(RPC_INTERNAL_ERROR, "ProcessNewBlock, block not accepted");
+    if (
+        !chainman.ProcessNewBlock(
+            block_out,
+            /*force_processing=*/true,
+            /*min_pow_checked=*/true,
+            nullptr
+        )
+    ) {
+        throw JSONRPCError(
+            RPC_INTERNAL_ERROR,
+            "ProcessNewBlock, block not accepted"
+        );
     }
 
     return true;

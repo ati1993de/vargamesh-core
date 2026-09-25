@@ -680,6 +680,46 @@ Internet.
 
 ---
 
+# Public Testnet
+
+VargaMesh provides an official public Testnet for wallet, exchange, node,
+explorer, API and mining integration testing.
+
+> **tVMESH has no monetary value.**
+
+| Parameter | Value |
+| --- | --- |
+| Network | VargaMesh Public Testnet v1 |
+| Currency | `tVMESH` |
+| P2P port | `39666` |
+| RPC port | `39667` |
+| Bech32 HRP | `tvm` |
+| AuxPoW chain ID | `22094` / `0x564E` |
+| Target spacing | `120 seconds` |
+| Coinbase maturity | `100 blocks` |
+| Genesis hash | `00000000747ff112e44641470bb636ea00e43ed3cef5e1e94c451d9cd02efea9` |
+
+Start a Testnet node:
+
+```bash
+./build/bin/vargameshd -testnet
+```
+
+Public infrastructure:
+
+- Testnet portal: https://testnet.vargacoin.com/
+- Explorer: https://testnet.vargacoin.com/explorer.html
+- WebWallet: https://testnet.vargacoin.com/wallet.html
+- Public API: https://testnet.vargacoin.com/api/v1/
+- SOLO Stratum: `testnet.vargacoin.com:4933`
+
+Documentation:
+
+- [Public Testnet documentation](doc/testnet.md)
+- [Exchange and integration guide](doc/exchange-integration.md)
+
+---
+
 # Mainnet Parameters
 
 | Parameter                | Value                                                              |
