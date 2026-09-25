@@ -285,7 +285,8 @@ jobs:
             cmake \
             curl \
             file \
-            g++-mingw-w64-x86-64-posix \
+            g++-mingw-w64-x86-64 \
+            mingw-w64-x86-64-dev \
             git \
             libtool \
             ninja-build \
