@@ -1,47 +1,60 @@
-name: Release Linux + Windows binaries
+name: Release VargaMesh Core binaries
 
 on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing VargaMesh release tag to build
+        description: Release tag to create after all builds pass
         required: true
-        default: v0.1.1
+        default: v0.2.0
+        type: string
+      commit:
+        description: Exact release commit SHA to build
+        required: true
         type: string
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-binaries-${{ inputs.tag }}
+  group: vargamesh-core-release-${{ inputs.tag }}
   cancel-in-progress: false
 
 jobs:
   linux:
-    name: Linux x86_64
+    name: Linux x86_64 build + Mainnet/Testnet smoke
     runs-on: ubuntu-24.04
-    timeout-minutes: 120
+    timeout-minutes: 150
     env:
-      TAG: ${{ inputs.tag }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_COMMIT: ${{ inputs.commit }}
       HOST: x86_64-pc-linux-gnu
 
     steps:
-      - name: Checkout exact release tag
-        uses: actions/checkout@v4
+      - name: Checkout exact release commit
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.commit }}
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify version/tag
+      - name: Verify release source
         shell: bash
         run: |
           set -euxo pipefail
-          test "$(git describe --tags --exact-match)" = "$TAG"
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+
           grep -q 'set(CLIENT_VERSION_MAJOR 0)' CMakeLists.txt
-          grep -q 'set(CLIENT_VERSION_MINOR 1)' CMakeLists.txt
-          grep -q 'set(CLIENT_VERSION_BUILD 1)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_MINOR 2)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt
           grep -q 'set(CLIENT_VERSION_IS_RELEASE "true")' CMakeLists.txt
+
+          test -f doc/testnet.md
+          grep -q 'VargaMesh Public Testnet v1' doc/testnet.md
+          grep -q 'Use VargaMesh Testnet v1' src/chainparamsbase.cpp
+          grep -q '22094' doc/testnet.md
+          grep -q '39666' doc/testnet.md
+          grep -q '39667' doc/testnet.md
 
       - name: Install Linux build prerequisites
         shell: bash
@@ -49,12 +62,12 @@ jobs:
           set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y \
-            build-essential \
             autoconf \
             automake \
             autotools-dev \
             binutils \
             bison \
+            build-essential \
             ca-certificates \
             cmake \
             curl \
@@ -64,24 +77,23 @@ jobs:
             ninja-build \
             patch \
             pkg-config \
-            python3
+            python3 \
+            xz-utils
 
-      - name: Build pinned depends
+      - name: Build pinned Linux dependencies
         shell: bash
         run: |
           set -euxo pipefail
           make -C depends -j2 \
             HOST="$HOST" \
             NO_QT=1 \
-            NO_ZMQ=1 \
-            NO_NATPMP=1 \
-            NO_UPNP=1
+            NO_ZMQ=1
 
-      - name: Configure release
+      - name: Configure Linux release
         shell: bash
         run: |
           set -euxo pipefail
-          cmake -S . -B build -G Ninja \
+          cmake -S . -B build-linux -G Ninja \
             --toolchain "depends/$HOST/toolchain.cmake" \
             -DCMAKE_BUILD_TYPE=Release \
             -DBUILD_GUI=OFF \
@@ -96,61 +108,136 @@ jobs:
             -DENABLE_IPC=OFF \
             -DENABLE_EXTERNAL_SIGNER=OFF
 
-      - name: Build
+      - name: Build Linux release
         shell: bash
         run: |
           set -euxo pipefail
-          cmake --build build --parallel 2
+          cmake --build build-linux --parallel 2
 
-      - name: Collect and smoke-test Linux binaries
+      - name: Package Linux binaries
         shell: bash
         run: |
           set -euxo pipefail
 
-          VERSION="${TAG#v}"
-          ROOT="package/vargamesh-core-${VERSION}-linux-x86_64"
+          VERSION="${RELEASE_TAG#v}"
+          PKG="vargamesh-core-${VERSION}-linux-x86_64"
+          ROOT="package/$PKG"
           mkdir -p "$ROOT/bin"
 
-          find_one() {
+          find_required() {
             local name="$1"
-            local p
-            p="$(find build -type f -name "$name" -perm -111 | head -n1 || true)"
-            test -n "$p" || { echo "Missing required binary: $name"; exit 1; }
-            echo "$p"
+            local path
+            path="$(find build-linux -type f -name "$name" -perm -111 | head -n1 || true)"
+            test -n "$path" || {
+              echo "Missing required Linux binary: $name"
+              exit 1
+            }
+            echo "$path"
           }
 
-          for name in vargameshd vargamesh-cli vargamesh-wallet vargamesh-tx vargamesh-util; do
-            p="$(find_one "$name")"
-            cp -a "$p" "$ROOT/bin/$name"
-            "$ROOT/bin/$name" --version
-            "$ROOT/bin/$name" --version | grep -Eq '0\.1\.1|v0\.1\.1'
+          for name in \
+            vargameshd \
+            vargamesh-cli \
+            vargamesh-wallet \
+            vargamesh-tx \
+            vargamesh-util
+          do
+            src="$(find_required "$name")"
+            cp -a "$src" "$ROOT/bin/$name"
           done
-
-          optional="$(find build -type f -name vargamesh -perm -111 | head -n1 || true)"
-          if [ -n "$optional" ]; then
-            cp -a "$optional" "$ROOT/bin/vargamesh"
-            "$ROOT/bin/vargamesh" --version || true
-          fi
 
           cp -a COPYING "$ROOT/" 2>/dev/null || true
           cp -a README.md "$ROOT/" 2>/dev/null || cp -a README "$ROOT/" 2>/dev/null || true
+          cp -a doc/testnet.md "$ROOT/TESTNET.md"
+          cp -a doc/exchange-integration.md "$ROOT/EXCHANGE-INTEGRATION.md"
+          cp -a doc/release-notes/release-notes-v0.2.0.md "$ROOT/RELEASE-NOTES.md"
 
-          echo "===== FILE ====="
-          file "$ROOT"/bin/*
-
-          echo "===== LDD ====="
-          for f in "$ROOT"/bin/*; do
-            echo "--- $f"
-            ldd "$f" || true
+          for exe in "$ROOT"/bin/*; do
+            "$exe" --version
           done
 
-          tar -C package -czf "vargamesh-core-${VERSION}-linux-x86_64.tar.gz" \
-            "vargamesh-core-${VERSION}-linux-x86_64"
+          tar -C package -czf "${PKG}.tar.gz" "$PKG"
+          sha256sum "${PKG}.tar.gz" > linux.sha256
 
-          sha256sum "vargamesh-core-${VERSION}-linux-x86_64.tar.gz" \
-            > linux.sha256
+      - name: Linux Mainnet + Testnet daemon/RPC smoke tests
+        shell: bash
+        run: |
+          set -euxo pipefail
 
-      - name: Upload Linux build artifact
+          VERSION="${RELEASE_TAG#v}"
+          ROOT="package/vargamesh-core-${VERSION}-linux-x86_64"
+          D="$ROOT/bin/vargameshd"
+          C="$ROOT/bin/vargamesh-cli"
+
+          # ---------------- MAINNET ----------------
+          MAIN="$RUNNER_TEMP/vmesh-mainnet-smoke"
+          mkdir -p "$MAIN"
+
+          "$D" \
+            -datadir="$MAIN" \
+            -server=1 \
+            -listen=0 \
+            -connect=0 \
+            -daemonwait
+
+          "$C" -datadir="$MAIN" getblockchaininfo > "$RUNNER_TEMP/main.json"
+
+          python3 - "$RUNNER_TEMP/main.json" <<'PY'
+import json, sys
+obj = json.load(open(sys.argv[1], encoding="utf-8"))
+assert obj["chain"] == "main", obj
+PY
+
+          "$C" -datadir="$MAIN" createwallet release_smoke >/dev/null
+          MAIN_ADDR="$("$C" -datadir="$MAIN" getnewaddress)"
+          case "$MAIN_ADDR" in
+            vm1*) ;;
+            *)
+              echo "Unexpected Mainnet address: $MAIN_ADDR"
+              exit 1
+              ;;
+          esac
+
+          "$C" -datadir="$MAIN" stop
+          sleep 3
+
+          # ---------------- TESTNET ----------------
+          TEST="$RUNNER_TEMP/vmesh-testnet-smoke"
+          mkdir -p "$TEST"
+
+          "$D" \
+            -testnet \
+            -datadir="$TEST" \
+            -server=1 \
+            -listen=0 \
+            -connect=0 \
+            -daemonwait
+
+          "$C" -testnet -datadir="$TEST" getblockchaininfo > "$RUNNER_TEMP/test.json"
+
+          python3 - "$RUNNER_TEMP/test.json" <<'PY'
+import json, sys
+obj = json.load(open(sys.argv[1], encoding="utf-8"))
+assert obj["chain"] == "test", obj
+PY
+
+          "$C" -testnet -datadir="$TEST" createwallet release_smoke >/dev/null
+          TEST_ADDR="$("$C" -testnet -datadir="$TEST" getnewaddress)"
+          case "$TEST_ADDR" in
+            tvm1*) ;;
+            *)
+              echo "Unexpected Testnet address: $TEST_ADDR"
+              exit 1
+              ;;
+          esac
+
+          "$C" -testnet -datadir="$TEST" stop
+          sleep 3
+
+          echo "PASS: Linux Mainnet daemon/RPC + vm1 address"
+          echo "PASS: Linux VargaMesh Testnet v1 daemon/RPC + tvm1 address"
+
+      - name: Upload Linux artifact
         uses: actions/upload-artifact@v4
         with:
           name: linux-x86_64
@@ -160,79 +247,257 @@ jobs:
           if-no-files-found: error
           retention-days: 7
 
-  windows:
-    name: Windows x86_64
-    runs-on: windows-2022
-    timeout-minutes: 120
+
+  windows_build:
+    name: Windows x86_64 MinGW cross-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
     env:
-      TAG: ${{ inputs.tag }}
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_COMMIT: ${{ inputs.commit }}
+      HOST: x86_64-w64-mingw32
 
     steps:
-      - name: Checkout exact release tag
-        uses: actions/checkout@v4
+      - name: Checkout exact release commit
+        uses: actions/checkout@v5
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ inputs.commit }}
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Verify version/tag
-        shell: pwsh
+      - name: Verify release source
+        shell: bash
         run: |
-          $ErrorActionPreference = "Stop"
-          $actual = git describe --tags --exact-match
-          if ($actual.Trim() -ne $env:TAG) { throw "Wrong tag: $actual" }
+          set -euxo pipefail
+          test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
 
-          $cmake = Get-Content CMakeLists.txt -Raw
-          if ($cmake -notmatch 'set\(CLIENT_VERSION_MAJOR 0\)') { throw "Wrong major" }
-          if ($cmake -notmatch 'set\(CLIENT_VERSION_MINOR 1\)') { throw "Wrong minor" }
-          if ($cmake -notmatch 'set\(CLIENT_VERSION_BUILD 1\)') { throw "Wrong build" }
-          if ($cmake -notmatch 'set\(CLIENT_VERSION_IS_RELEASE "true"\)') { throw "Not release build" }
+          grep -q 'set(CLIENT_VERSION_MAJOR 0)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_MINOR 2)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_IS_RELEASE "true")' CMakeLists.txt
+          test -f doc/testnet.md
 
-      - name: Configure MSVC + static vcpkg
-        shell: pwsh
+      - name: Install MinGW-w64 cross toolchain
+        shell: bash
         run: |
-          $ErrorActionPreference = "Stop"
+          set -euxo pipefail
+          sudo apt-get update
+          sudo apt-get install -y \
+            autoconf \
+            automake \
+            autotools-dev \
+            binutils \
+            bison \
+            build-essential \
+            ca-certificates \
+            cmake \
+            curl \
+            file \
+            g++-mingw-w64-x86-64-posix \
+            git \
+            libtool \
+            ninja-build \
+            patch \
+            pkg-config \
+            python3 \
+            xz-utils \
+            zip
 
-          if (-not $env:VCPKG_INSTALLATION_ROOT) {
-            throw "VCPKG_INSTALLATION_ROOT is not available on runner"
-          }
+          # The documented Ubuntu package registers the generic
+          # x86_64-w64-mingw32 compiler commands. Do not mutate alternatives;
+          # just verify the toolchain GitHub supplied is usable.
+          command -v x86_64-w64-mingw32-gcc
+          command -v x86_64-w64-mingw32-g++
 
-          $toolchain = Join-Path $env:VCPKG_INSTALLATION_ROOT "scripts/buildsystems/vcpkg.cmake"
+          x86_64-w64-mingw32-gcc --version
+          x86_64-w64-mingw32-g++ --version
 
-          cmake -S . -B build `
-            -G "Visual Studio 17 2022" `
-            -A x64 `
-            "-DCMAKE_TOOLCHAIN_FILE=$toolchain" `
-            -DVCPKG_TARGET_TRIPLET=x64-windows-static `
-            -DVCPKG_MANIFEST_NO_DEFAULT_FEATURES=ON `
-            "-DVCPKG_MANIFEST_FEATURES=wallet" `
-            -DBUILD_GUI=OFF `
-            -DBUILD_TESTS=OFF `
-            -DBUILD_BENCH=OFF `
-            -DBUILD_FUZZ_BINARY=OFF `
-            -DBUILD_TX=ON `
-            -DBUILD_UTIL=ON `
-            -DENABLE_WALLET=ON `
-            -DBUILD_WALLET_TOOL=ON `
-            -DWITH_ZMQ=OFF `
-            -DENABLE_IPC=OFF `
+          GCC_MAJOR="$(
+            x86_64-w64-mingw32-g++ -dumpfullversion -dumpversion \
+              | cut -d. -f1
+          )"
+          test "$GCC_MAJOR" -ge 12
+
+      - name: Build pinned Windows dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          make -C depends -j2 \
+            HOST="$HOST" \
+            NO_QT=1 \
+            NO_ZMQ=1
+
+      - name: Configure Windows cross-build
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          test -f "depends/$HOST/toolchain.cmake"
+
+          cmake -S . -B build-win -G Ninja \
+            --toolchain "depends/$HOST/toolchain.cmake" \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DBUILD_GUI=OFF \
+            -DBUILD_TESTS=OFF \
+            -DBUILD_BENCH=OFF \
+            -DBUILD_FUZZ_BINARY=OFF \
+            -DBUILD_TX=ON \
+            -DBUILD_UTIL=ON \
+            -DENABLE_WALLET=ON \
+            -DBUILD_WALLET_TOOL=ON \
+            -DWITH_ZMQ=OFF \
+            -DENABLE_IPC=OFF \
             -DENABLE_EXTERNAL_SIGNER=OFF
 
-      - name: Build Windows Release
+      - name: Build Windows binaries with MinGW-w64
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cmake --build build-win --parallel 2
+
+      - name: Package Windows binaries
+        shell: bash
+        run: |
+          set -euxo pipefail
+
+          VERSION="${RELEASE_TAG#v}"
+          PKG="vargamesh-core-${VERSION}-windows-x86_64"
+          ROOT="package/$PKG"
+          mkdir -p "$ROOT/bin"
+
+          find_required() {
+            local name="$1"
+            local path
+            path="$(find build-win -type f -iname "$name" | head -n1 || true)"
+            test -n "$path" || {
+              echo "Missing required Windows binary: $name"
+              exit 1
+            }
+            echo "$path"
+          }
+
+          for name in \
+            vargameshd.exe \
+            vargamesh-cli.exe \
+            vargamesh-wallet.exe \
+            vargamesh-tx.exe \
+            vargamesh-util.exe
+          do
+            src="$(find_required "$name")"
+            cp -a "$src" "$ROOT/bin/$name"
+          done
+
+          # Strip target binaries only after a successful link.
+          x86_64-w64-mingw32-strip "$ROOT"/bin/*.exe
+
+          # Normally the depends toolchain produces self-contained release
+          # executables. If the compiler runtime is dynamically imported,
+          # package the exact MinGW runtime DLL beside the executables.
+          for dll in libwinpthread-1.dll libgcc_s_seh-1.dll libstdc++-6.dll; do
+            needed=0
+
+            for exe in "$ROOT"/bin/*.exe; do
+              if x86_64-w64-mingw32-objdump -p "$exe" \
+                   | grep -Fqi "DLL Name: $dll"
+              then
+                needed=1
+                break
+              fi
+            done
+
+            if [ "$needed" -eq 1 ]; then
+              runtime="$(
+                x86_64-w64-mingw32-g++ -print-file-name="$dll"
+              )"
+
+              test -f "$runtime" || {
+                echo "Required MinGW runtime DLL not found: $dll"
+                exit 1
+              }
+
+              cp -a "$runtime" "$ROOT/bin/$dll"
+              echo "Packaged MinGW runtime: $dll"
+            fi
+          done
+
+          cp -a COPYING "$ROOT/" 2>/dev/null || true
+          cp -a README.md "$ROOT/" 2>/dev/null || cp -a README "$ROOT/" 2>/dev/null || true
+          cp -a doc/testnet.md "$ROOT/TESTNET.md"
+          cp -a doc/exchange-integration.md "$ROOT/EXCHANGE-INTEGRATION.md"
+          cp -a doc/release-notes/release-notes-v0.2.0.md "$ROOT/RELEASE-NOTES.md"
+
+          echo "===== WINDOWS PE FILES ====="
+          file "$ROOT"/bin/*.exe
+
+          echo "===== IMPORTED DLLS ====="
+          for exe in "$ROOT"/bin/*.exe; do
+            echo "--- $(basename "$exe")"
+            x86_64-w64-mingw32-objdump -p "$exe" \
+              | sed -n 's/^[[:space:]]*DLL Name: /DLL: /p' \
+              || true
+          done
+
+          (
+            cd package
+            zip -9 -r "../${PKG}.zip" "$PKG"
+          )
+
+          sha256sum "${PKG}.zip" > windows.sha256
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x86_64
+          path: |
+            vargamesh-core-*-windows-x86_64.zip
+            windows.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+
+  windows_smoke:
+    name: Windows x86_64 execution + Mainnet/Testnet smoke
+    needs: [windows_build]
+    runs-on: windows-2022
+    timeout-minutes: 30
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x86_64
+          path: artifact
+
+      - name: Extract package
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
-          cmake --build build --config Release --parallel 2
 
-      - name: Collect and smoke-test Windows binaries
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          $zip = "artifact\vargamesh-core-$version-windows-x86_64.zip"
+
+          if (-not (Test-Path $zip)) {
+            throw "Windows release archive missing: $zip"
+          }
+
+          Expand-Archive -Path $zip -DestinationPath extracted -Force
+
+          $bin = "extracted\vargamesh-core-$version-windows-x86_64\bin"
+          if (-not (Test-Path $bin)) {
+            throw "Extracted bin directory missing: $bin"
+          }
+
+          Get-ChildItem $bin
+
+      - name: Execute all packaged Windows programs
         shell: pwsh
         run: |
           $ErrorActionPreference = "Stop"
 
-          $version = $env:TAG.TrimStart("v")
-          $root = "package\vargamesh-core-$version-windows-x86_64"
-          $bin = Join-Path $root "bin"
-          New-Item -ItemType Directory -Force -Path $bin | Out-Null
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          $bin = Resolve-Path "extracted\vargamesh-core-$version-windows-x86_64\bin"
 
           $required = @(
             "vargameshd.exe",
@@ -243,107 +508,278 @@ jobs:
           )
 
           foreach ($name in $required) {
-            $matches = @(Get-ChildItem -Path build -Recurse -File -Filter $name)
-            if ($matches.Count -lt 1) { throw "Missing required binary: $name" }
-            $src = $matches[0].FullName
-            Copy-Item $src (Join-Path $bin $name)
+            $exe = Join-Path $bin $name
+
+            if (-not (Test-Path $exe)) {
+              throw "Missing packaged Windows executable: $name"
+            }
+
+            Write-Host "===== $name ====="
+            & $exe --version
+
+            if ($LASTEXITCODE -ne 0) {
+              throw "$name --version failed with exit code $LASTEXITCODE"
+            }
           }
 
-          $optional = @(Get-ChildItem -Path build -Recurse -File -Filter "vargamesh.exe")
-          if ($optional.Count -gt 0) {
-            Copy-Item $optional[0].FullName (Join-Path $bin "vargamesh.exe")
+      - name: Windows Mainnet daemon/RPC smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          $bin = (Resolve-Path "extracted\vargamesh-core-$version-windows-x86_64\bin").Path
+          $daemon = Join-Path $bin "vargameshd.exe"
+          $cli = Join-Path $bin "vargamesh-cli.exe"
+
+          $data = Join-Path $env:RUNNER_TEMP "vmesh-mainnet-smoke"
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+
+          $proc = Start-Process `
+            -FilePath $daemon `
+            -ArgumentList @(
+              "-datadir=$data",
+              "-server=1",
+              "-listen=0",
+              "-connect=0"
+            ) `
+            -PassThru `
+            -WindowStyle Hidden
+
+          try {
+            $ready = $false
+
+            for ($i = 0; $i -lt 90; $i++) {
+              Start-Sleep -Seconds 1
+
+              try {
+                $raw = (& $cli "-datadir=$data" "getblockchaininfo" 2>$null | Out-String)
+
+                if ($LASTEXITCODE -eq 0 -and $raw.Trim()) {
+                  $info = $raw | ConvertFrom-Json
+
+                  if ($info.chain -eq "main") {
+                    $ready = $true
+                    break
+                  }
+                }
+              } catch {}
+            }
+
+            if (-not $ready) {
+              throw "Mainnet daemon/RPC did not become ready"
+            }
+
+            & $cli "-datadir=$data" "createwallet" "release_smoke" | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+              throw "Mainnet createwallet failed"
+            }
+
+            $address = (& $cli "-datadir=$data" "getnewaddress").Trim()
+
+            if (-not $address.StartsWith("vm1")) {
+              throw "Unexpected Mainnet address: $address"
+            }
+
+            Write-Host "PASS: Windows Mainnet RPC"
+            Write-Host "PASS: Windows Mainnet vm1 address"
+          }
+          finally {
+            try {
+              & $cli "-datadir=$data" "stop" | Out-Null
+            } catch {}
+
+            Start-Sleep -Seconds 3
+
+            if (-not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            }
           }
 
-          foreach ($exe in Get-ChildItem $bin -Filter "*.exe") {
-            Write-Host "===== $($exe.Name) ====="
-            & $exe.FullName --version
-            if ($LASTEXITCODE -ne 0) { throw "$($exe.Name) --version failed" }
+      - name: Windows VargaMesh Testnet v1 daemon/RPC smoke test
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          $version = $env:RELEASE_TAG.TrimStart("v")
+          $bin = (Resolve-Path "extracted\vargamesh-core-$version-windows-x86_64\bin").Path
+          $daemon = Join-Path $bin "vargameshd.exe"
+          $cli = Join-Path $bin "vargamesh-cli.exe"
+
+          $data = Join-Path $env:RUNNER_TEMP "vmesh-testnet-smoke"
+          New-Item -ItemType Directory -Force -Path $data | Out-Null
+
+          $proc = Start-Process `
+            -FilePath $daemon `
+            -ArgumentList @(
+              "-testnet",
+              "-datadir=$data",
+              "-server=1",
+              "-listen=0",
+              "-connect=0"
+            ) `
+            -PassThru `
+            -WindowStyle Hidden
+
+          try {
+            $ready = $false
+
+            for ($i = 0; $i -lt 90; $i++) {
+              Start-Sleep -Seconds 1
+
+              try {
+                $raw = (& $cli "-testnet" "-datadir=$data" "getblockchaininfo" 2>$null | Out-String)
+
+                if ($LASTEXITCODE -eq 0 -and $raw.Trim()) {
+                  $info = $raw | ConvertFrom-Json
+
+                  if ($info.chain -eq "test") {
+                    $ready = $true
+                    break
+                  }
+                }
+              } catch {}
+            }
+
+            if (-not $ready) {
+              throw "VargaMesh Testnet v1 daemon/RPC did not become ready"
+            }
+
+            & $cli "-testnet" "-datadir=$data" "createwallet" "release_smoke" | Out-Null
+            if ($LASTEXITCODE -ne 0) {
+              throw "Testnet createwallet failed"
+            }
+
+            $address = (& $cli "-testnet" "-datadir=$data" "getnewaddress").Trim()
+
+            if (-not $address.StartsWith("tvm1")) {
+              throw "Unexpected Testnet address: $address"
+            }
+
+            Write-Host "PASS: Windows VargaMesh Testnet v1 RPC"
+            Write-Host "PASS: Windows Testnet tvm1 address"
+          }
+          finally {
+            try {
+              & $cli "-testnet" "-datadir=$data" "stop" | Out-Null
+            } catch {}
+
+            Start-Sleep -Seconds 3
+
+            if (-not $proc.HasExited) {
+              Stop-Process -Id $proc.Id -Force -ErrorAction SilentlyContinue
+            }
           }
 
-          if (Test-Path COPYING) { Copy-Item COPYING $root }
-          if (Test-Path README.md) { Copy-Item README.md $root }
-          elseif (Test-Path README) { Copy-Item README $root }
-
-          Compress-Archive -Path $root -DestinationPath "vargamesh-core-$version-windows-x86_64.zip" -CompressionLevel Optimal
-
-          $hash = (Get-FileHash "vargamesh-core-$version-windows-x86_64.zip" -Algorithm SHA256).Hash.ToLower()
-          "$hash  vargamesh-core-$version-windows-x86_64.zip" | Set-Content -NoNewline windows.sha256
-
-      - name: Upload Windows build artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-x86_64
-          path: |
-            vargamesh-core-*-windows-x86_64.zip
-            windows.sha256
-          if-no-files-found: error
-          retention-days: 7
 
   publish:
-    name: Publish assets to existing GitHub release
-    needs: [linux, windows]
+    name: Publish v0.2.0 only after every test passed
+    needs: [linux, windows_build, windows_smoke]
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 20
+    env:
+      RELEASE_TAG: ${{ inputs.tag }}
+      RELEASE_COMMIT: ${{ inputs.commit }}
 
     steps:
-      - name: Download built artifacts
+      - name: Checkout exact release commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ inputs.commit }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
+          name: linux-x86_64
           path: artifacts
-          merge-multiple: true
 
-      - name: Validate artifacts and build SHA256SUMS
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-x86_64
+          path: artifacts
+
+      - name: Validate release archives and generate SHA256SUMS
         shell: bash
-        env:
-          TAG: ${{ inputs.tag }}
         run: |
           set -euxo pipefail
-          VERSION="${TAG#v}"
 
-          test -s "artifacts/vargamesh-core-${VERSION}-linux-x86_64.tar.gz"
-          test -s "artifacts/vargamesh-core-${VERSION}-windows-x86_64.zip"
+          VERSION="${RELEASE_TAG#v}"
+          LINUX="artifacts/vargamesh-core-${VERSION}-linux-x86_64.tar.gz"
+          WINDOWS="artifacts/vargamesh-core-${VERSION}-windows-x86_64.zip"
 
-          cd artifacts
-          sha256sum \
-            "vargamesh-core-${VERSION}-linux-x86_64.tar.gz" \
-            "vargamesh-core-${VERSION}-windows-x86_64.zip" \
-            > SHA256SUMS
+          test -s "$LINUX"
+          test -s "$WINDOWS"
 
-          cat SHA256SUMS
+          (
+            cd artifacts
+            sha256sum \
+              "vargamesh-core-${VERSION}-linux-x86_64.tar.gz" \
+              "vargamesh-core-${VERSION}-windows-x86_64.zip" \
+              > SHA256SUMS
 
-      - name: Verify existing GitHub release
+            cat SHA256SUMS
+          )
+
+      - name: Ensure tag/release do not already exist
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag }}
         run: |
           set -euxo pipefail
-          gh release view "$TAG" --repo "$GITHUB_REPOSITORY"
 
-      - name: Upload release assets
+          if git ls-remote --exit-code \
+            "https://github.com/$GITHUB_REPOSITORY.git" \
+            "refs/tags/$RELEASE_TAG"
+          then
+            echo "Tag $RELEASE_TAG already exists."
+            exit 1
+          fi
+
+          if gh release view "$RELEASE_TAG" \
+            --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1
+          then
+            echo "Release $RELEASE_TAG already exists."
+            exit 1
+          fi
+
+      - name: Create tag and GitHub Release atomically after successful builds
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag }}
         run: |
           set -euxo pipefail
-          VERSION="${TAG#v}"
 
-          gh release upload "$TAG" \
+          VERSION="${RELEASE_TAG#v}"
+
+          gh release create "$RELEASE_TAG" \
             "artifacts/vargamesh-core-${VERSION}-linux-x86_64.tar.gz" \
             "artifacts/vargamesh-core-${VERSION}-windows-x86_64.zip" \
             "artifacts/SHA256SUMS" \
             --repo "$GITHUB_REPOSITORY" \
-            --clobber
+            --target "$RELEASE_COMMIT" \
+            --title "VargaMesh Core ${RELEASE_TAG}" \
+            --notes-file doc/release-notes/release-notes-v0.2.0.md \
+            --latest
 
       - name: Final release verification
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ inputs.tag }}
         run: |
           set -euxo pipefail
-          gh release view "$TAG" \
+
+          gh release view "$RELEASE_TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --json tagName,name,url,assets \
-            --jq '{tag:.tagName,name:.name,url:.url,assets:[.assets[].name]}'
+            --json tagName,name,url,isDraft,isPrerelease,targetCommitish,assets \
+            --jq '{
+              tag:.tagName,
+              name:.name,
+              url:.url,
+              draft:.isDraft,
+              prerelease:.isPrerelease,
+              target:.targetCommitish,
+              assets:[.assets[].name]
+            }'
