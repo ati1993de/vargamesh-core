@@ -273,7 +273,9 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
+
           sudo apt-get update
+
           sudo apt-get install -y \
             autoconf \
             automake \
@@ -285,10 +287,11 @@ jobs:
             cmake \
             curl \
             file \
-            g++-mingw-w64-x86-64 \
-            mingw-w64-x86-64-dev \
+            gcc-mingw-w64-x86-64-posix \
+            g++-mingw-w64-x86-64-posix \
             git \
             libtool \
+            mingw-w64-x86-64-dev \
             ninja-build \
             patch \
             pkg-config \
@@ -296,20 +299,23 @@ jobs:
             xz-utils \
             zip
 
-          # The documented Ubuntu package registers the generic
-          # x86_64-w64-mingw32 compiler commands. Do not mutate alternatives;
-          # just verify the toolchain GitHub supplied is usable.
-          command -v x86_64-w64-mingw32-gcc
-          command -v x86_64-w64-mingw32-g++
+          test -x /usr/bin/x86_64-w64-mingw32-gcc-posix
+          test -x /usr/bin/x86_64-w64-mingw32-g++-posix
 
-          x86_64-w64-mingw32-gcc --version
-          x86_64-w64-mingw32-g++ --version
+          mkdir -p "$RUNNER_TEMP/mingw-posix-bin"
 
-          GCC_MAJOR="$(
-            x86_64-w64-mingw32-g++ -dumpfullversion -dumpversion \
-              | cut -d. -f1
-          )"
-          test "$GCC_MAJOR" -ge 12
+          ln -sf \
+            /usr/bin/x86_64-w64-mingw32-gcc-posix \
+            "$RUNNER_TEMP/mingw-posix-bin/x86_64-w64-mingw32-gcc"
+
+          ln -sf \
+            /usr/bin/x86_64-w64-mingw32-g++-posix \
+            "$RUNNER_TEMP/mingw-posix-bin/x86_64-w64-mingw32-g++"
+
+          echo "$RUNNER_TEMP/mingw-posix-bin" >> "$GITHUB_PATH"
+
+          /usr/bin/x86_64-w64-mingw32-gcc-posix --version
+          /usr/bin/x86_64-w64-mingw32-g++-posix --version
 
       - name: Build pinned Windows dependencies
         shell: bash
