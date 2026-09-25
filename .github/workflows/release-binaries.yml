@@ -182,11 +182,7 @@ jobs:
 
           "$C" -datadir="$MAIN" getblockchaininfo > "$RUNNER_TEMP/main.json"
 
-          python3 - "$RUNNER_TEMP/main.json" <<'PY'
-import json, sys
-obj = json.load(open(sys.argv[1], encoding="utf-8"))
-assert obj["chain"] == "main", obj
-PY
+          python3 -c 'import json,sys; obj=json.load(open(sys.argv[1], encoding="utf-8")); assert obj["chain"] == "main", obj' "$RUNNER_TEMP/main.json"
 
           "$C" -datadir="$MAIN" createwallet release_smoke >/dev/null
           MAIN_ADDR="$("$C" -datadir="$MAIN" getnewaddress)"
@@ -215,11 +211,7 @@ PY
 
           "$C" -testnet -datadir="$TEST" getblockchaininfo > "$RUNNER_TEMP/test.json"
 
-          python3 - "$RUNNER_TEMP/test.json" <<'PY'
-import json, sys
-obj = json.load(open(sys.argv[1], encoding="utf-8"))
-assert obj["chain"] == "test", obj
-PY
+          python3 -c 'import json,sys; obj=json.load(open(sys.argv[1], encoding="utf-8")); assert obj["chain"] == "test", obj' "$RUNNER_TEMP/test.json"
 
           "$C" -testnet -datadir="$TEST" createwallet release_smoke >/dev/null
           TEST_ADDR="$("$C" -testnet -datadir="$TEST" getnewaddress)"
