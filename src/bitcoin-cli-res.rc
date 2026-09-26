@@ -1,3 +1,5 @@
+101 ICON DISCARDABLE "vargamesh.ico"
+
 #include <windows.h>             // needed for VERSIONINFO
 #include "clientversion.h"       // holds the needed client version information
 
