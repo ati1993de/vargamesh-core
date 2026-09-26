@@ -95,7 +95,7 @@ jobs:
         run: |
           cmake --build build `
             --config Release `
-            --target bitcoind bitcoin-cli `
+            --target bitcoind bitcoin-cli bitcoin-wallet bitcoin-tx bitcoin-util `
             --parallel 4
 
       - name: Verify Windows VargaMesh binaries
@@ -134,7 +134,7 @@ jobs:
             throw "Wrong daemon identity"
           }
 
-          if (($version -join "`n") -notmatch "v0\.1\.1") {
+          if (($version -join "`n") -notmatch "v0\.2\.0") {
             throw "Wrong VargaMesh version"
           }
 
@@ -169,19 +169,29 @@ jobs:
           $release = "build/bin/Release"
           $vcpkg = "build/vcpkg_installed/x64-windows-release/bin"
 
-          $packageRoot = "dist/VargaMesh-v0.1.1-windows-x86_64"
+          $packageRoot = "dist/VargaMesh-v0.2.0-windows-x86_64"
 
           New-Item -ItemType Directory `
             -Force `
             -Path $packageRoot | Out-Null
 
-          Copy-Item `
-            "$release/vargameshd.exe" `
-            $packageRoot
+          $executables = @(
+            "vargameshd.exe",
+            "vargamesh-cli.exe",
+            "vargamesh-wallet.exe",
+            "vargamesh-tx.exe",
+            "vargamesh-util.exe"
+          )
 
-          Copy-Item `
-            "$release/vargamesh-cli.exe" `
-            $packageRoot
+          foreach ($exe in $executables) {
+            $src = Join-Path $release $exe
+
+            if (-not (Test-Path $src)) {
+              throw "Expected Windows binary missing: $exe"
+            }
+
+            Copy-Item $src $packageRoot -Force
+          }
 
           # vcpkg normally deploys required DLLs next to the executables.
           # Copy those first.
@@ -217,7 +227,7 @@ jobs:
         shell: pwsh
         run: |
           $packageRoot = Resolve-Path `
-            "dist/VargaMesh-v0.1.1-windows-x86_64"
+            "dist/VargaMesh-v0.2.0-windows-x86_64"
 
           $daemon = Join-Path `
             $packageRoot `
@@ -256,7 +266,7 @@ jobs:
               throw "Wrong daemon identity"
             }
 
-            if (($daemonVersion -join "`n") -notmatch "v0\.1\.1") {
+            if (($daemonVersion -join "`n") -notmatch "v0\.2\.0") {
               throw "Wrong daemon version"
             }
 
@@ -285,8 +295,8 @@ jobs:
       - name: Create Windows release archive
         shell: pwsh
         run: |
-          $folder = "dist/VargaMesh-v0.1.1-windows-x86_64"
-          $zip = "dist/VargaMesh-v0.1.1-windows-x86_64.zip"
+          $folder = "dist/VargaMesh-v0.2.0-windows-x86_64"
+          $zip = "dist/VargaMesh-v0.2.0-windows-x86_64.zip"
 
           if (Test-Path $zip) {
             Remove-Item $zip -Force
@@ -301,23 +311,23 @@ jobs:
             -Algorithm SHA256 `
             $zip
 
-          "$($hash.Hash.ToLower())  VargaMesh-v0.1.1-windows-x86_64.zip" |
+          "$($hash.Hash.ToLower())  VargaMesh-v0.2.0-windows-x86_64.zip" |
             Set-Content `
               -Encoding ascii `
-              "dist/VargaMesh-v0.1.1-windows-x86_64.zip.sha256"
+              "dist/VargaMesh-v0.2.0-windows-x86_64.zip.sha256"
 
           Write-Host ""
           Write-Host "===== SHA256 ====="
 
           Get-Content `
-            "dist/VargaMesh-v0.1.1-windows-x86_64.zip.sha256"
+            "dist/VargaMesh-v0.2.0-windows-x86_64.zip.sha256"
 
       - name: Upload Windows CI package
         uses: actions/upload-artifact@v6
         with:
           name: VargaMesh-Windows-x86_64-CI
           path: |
-            dist/VargaMesh-v0.1.1-windows-x86_64.zip
-            dist/VargaMesh-v0.1.1-windows-x86_64.zip.sha256
+            dist/VargaMesh-v0.2.0-windows-x86_64.zip
+            dist/VargaMesh-v0.2.0-windows-x86_64.zip.sha256
           if-no-files-found: error
           retention-days: 7
