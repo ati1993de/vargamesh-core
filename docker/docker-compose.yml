@@ -1,0 +1,31 @@
+services:
+
+  vargamesh:
+    build:
+      context: .
+      args:
+        VMESH_VERSION: "0.2.0"
+        VMESH_SHA256: "d24087cf3dd73d6f113076fd751446041a08aaa2820bb9d409f5e4ea3696dd72"
+
+    image: vargamesh/core:0.2.0
+
+    container_name: vargamesh-node
+
+    restart: unless-stopped
+
+    ports:
+      - "29666:29666/tcp"
+
+    volumes:
+      - vargamesh-data:/data
+
+    stop_grace_period: 2m
+
+    security_opt:
+      - no-new-privileges:true
+
+    cap_drop:
+      - ALL
+
+volumes:
+  vargamesh-data:
