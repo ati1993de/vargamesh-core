@@ -11,7 +11,7 @@
 <p align="center">
   <img alt="Core" src="https://img.shields.io/badge/Core-v0.2.0-2ea44f">
   <img alt="Desktop" src="https://img.shields.io/badge/Desktop-v0.4.0-0078d4">
-  <img alt="Android" src="https://img.shields.io/badge/Android-v0.2.0-3ddc84">
+  <img alt="Android" src="https://img.shields.io/badge/Android-v0.3.0-3ddc84">
   <img alt="Network" src="https://img.shields.io/badge/Network-Mainnet-orange">
   <img alt="Consensus" src="https://img.shields.io/badge/Consensus-SHA--256d%20PoW-yellow">
 </p>
@@ -36,11 +36,11 @@
 > **VargaMesh is under active development.**
 >
 > VargaMesh Core `v0.2.0` is the current Mainnet/Testnet release. VargaMesh
-> Desktop `v0.4.0` and VargaMesh Android `v0.2.0` should currently be treated
+> Desktop `v0.4.0` and VargaMesh Android `v0.3.0` should currently be treated
 > as public-testing / pre-release wallet software.
 >
 > Use small amounts while testing wallet software and always maintain verified
-> backups of private keys and wallet data.
+> backups of private keys, Recovery Phrases and wallet data.
 
 ---
 
@@ -97,6 +97,7 @@ The network currently includes:
 * VargaMesh-specific address formats
 * desktop full-node wallet
 * native Android self-custody wallet
+* shared BIP39/BIP32 Recovery Wallet convention across Desktop, Android and WebWallet
 * browser-based WebWallet / PWA
 * blockchain explorer
 * public network statistics
@@ -115,7 +116,7 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | -------------------------- | ----------: | ------------------------------ |
 | VargaMesh Core             |    `v0.2.0` | Mainnet + Testnet release       |
 | VargaMesh Desktop          |    `v0.4.0` | Public testing                 |
-| VargaMesh Android          |    `v0.2.0` | Public testing / pre-release   |
+| VargaMesh Android          |    `v0.3.0` | Public testing / pre-release   |
 | VargaMesh WebWallet        |     Current | Available                      |
 | Public Explorer            |     Current | Available                      |
 | Public API                 |        `v1` | Available                      |
@@ -139,6 +140,7 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | Desktop wallet               | https://github.com/ati1993de/vargamesh-desktop       |
 | Android information          | https://vargacoin.com/android.html                   |
 | Android APK                  | https://vargacoin.com/vmesh.apk                      |
+| Android APK SHA256           | https://vargacoin.com/vmesh.apk.sha256               |
 | WebWallet                    | https://vargacoin.com/wallet.html                    |
 | Explorer                     | https://vargacoin.com/explorer.html                  |
 | Mempool Explorer development | https://mempool.vargacoin.com                        |
@@ -273,8 +275,9 @@ The current Desktop release bundles:
 
 ### Desktop Recovery Wallet interoperability
 
-VargaMesh Desktop `v0.4.0` defines the current VMESH HD Recovery Wallet
-derivation used by the Desktop client and the VargaMesh WebWallet.
+VargaMesh Desktop `v0.4.0` defines the full VMESH HD descriptor wallet
+hierarchy. The current VargaMesh WebWallet and VargaMesh Android `v0.3.0` use
+the same first Native SegWit external receive path for deterministic recovery.
 
 Mainnet Native SegWit receive path:
 
@@ -305,11 +308,13 @@ m/84'/22093'/0'/0/0
 ```
 
 Therefore the same valid Recovery Phrase restores the same first `vm1...`
-address in VargaMesh Desktop `v0.4.0` and the current WebWallet.
+address in VargaMesh Desktop `v0.4.0`, VargaMesh Android `v0.3.0` and the
+current WebWallet.
 
 The Desktop wallet is a full HD descriptor wallet and can derive additional
-receive/change addresses. The current WebWallet remains a single-address
-implementation and does not yet perform a full HD gap-limit scan.
+receive/change addresses. The current WebWallet and Android `v0.3.0` remain
+single-active-address implementations and do not yet perform a full HD
+gap-limit scan.
 
 > [!WARNING]
 > The Desktop wallet is currently being tested by the community.
@@ -326,7 +331,7 @@ VargaMesh (VMESH) mainnet.
 
 Current release:
 
-**VargaMesh Android v0.2.0**
+**VargaMesh Android v0.3.0**
 
 Status:
 
@@ -340,9 +345,45 @@ Direct APK:
 
 https://vargacoin.com/vmesh.apk
 
-VargaMesh Android extends the original read-only network companion with a
-native **self-custody VMESH wallet** while retaining explorer, mining and
-network-monitoring functionality.
+SHA256 checksum file:
+
+https://vargacoin.com/vmesh.apk.sha256
+
+VargaMesh Android combines the original network companion with a native
+**self-custody VMESH wallet**. Version `v0.3.0` extends the wallet with the
+VargaMesh BIP39/BIP32 Recovery Wallet standard while preserving compatibility
+with wallets and encrypted backups created by the earlier `v0.2.x` single-key
+wallet model.
+
+---
+
+## Android v0.3.0 Release Highlights
+
+Version `v0.3.0` is the first Android release with deterministic Recovery Wallet
+support.
+
+Major changes include:
+
+* 12-word and 24-word BIP39 Recovery Phrase creation
+* Recovery Wallet restore from a valid BIP39 phrase
+* BIP32 hierarchical deterministic key derivation
+* VargaMesh Mainnet Native SegWit derivation at `m/84'/22093'/0'/0/0`
+* deterministic first-address interoperability with VargaMesh Desktop `v0.4.0`
+  and the current WebWallet
+* encrypted local storage for Recovery Phrase material
+* encrypted JSON backup export and restore for HD Recovery Wallets
+* continued support for legacy `v0.2.x` encrypted single-key backups
+* continued compressed VMESH WIF import support
+* password-protected Recovery Phrase display/copy for HD wallets
+* improved handling of sensitive clipboard contents
+* heavy cryptographic operations moved away from the Android UI thread
+* additional wallet error handling and runtime diagnostics
+* Android release-build / dependency / packaging hardening
+* Android application/cloud backup disabled for wallet secrets
+
+The Android HD wallet currently uses one active deterministic address at index
+`0`. Full gap-limit scanning and multi-address HD aggregation are not yet
+implemented on Android.
 
 ---
 
@@ -382,12 +423,36 @@ vargacoin.com:3933
 
 ## Native Android VMESH Wallet
 
-Version `v0.2.0` introduces a native self-custody VMESH wallet.
+VargaMesh Android `v0.3.0` provides a native self-custody wallet with both the
+new HD Recovery Wallet model and the established legacy single-key/WIF model.
 
-### Wallet functionality
+### Recovery Wallet functionality
 
-* create a new local VMESH wallet
-* import compressed VMESH WIF
+* create a new 12-word BIP39 Recovery Wallet
+* create a new 24-word BIP39 Recovery Wallet
+* restore a wallet from a valid 12-word or 24-word Recovery Phrase
+* derive the active VMESH key with BIP32
+* use the VargaMesh BIP84 Mainnet path `m/84'/22093'/0'/0/0`
+* derive the same first `vm1...` address as the current Desktop/WebWallet
+  Recovery Wallet convention
+* show/copy the Recovery Phrase after password verification
+* encrypt Recovery Phrase material locally
+* export an encrypted HD wallet JSON backup
+* restore an encrypted HD wallet JSON backup with the correct wallet password
+
+### Legacy wallet compatibility
+
+* create/import a compressed VMESH WIF wallet
+* retain access to existing `v0.2.x` Android wallet data
+* restore supported legacy encrypted JSON backups
+* preserve the original single-key/WIF wallet model for existing users
+* reveal/export the active WIF with an explicit security warning
+
+Existing users do **not** need to recreate their wallet when updating from a
+supported earlier Android release.
+
+### Transaction and wallet functionality
+
 * receive VMESH
 * receive-address QR code
 * spendable balance
@@ -403,14 +468,76 @@ Version `v0.2.0` introduces a native self-custody VMESH wallet.
 * signed raw transaction broadcast
 * encrypted backup export
 * encrypted backup restore
-* WebWallet-compatible backup format
 * wallet password change
 * optional biometric/device unlock
-* WIF reveal/export with security warning
-* automatic clipboard clearing
+* automatic handling of sensitive clipboard contents
 * 10-minute in-memory auto-lock
 * screenshot protection on wallet-sensitive screens
 * local wallet removal
+
+---
+
+## Android Recovery Wallet Interoperability
+
+Android `v0.3.0` follows the same first-address Mainnet Recovery Wallet
+convention documented for VargaMesh Desktop and the WebWallet.
+
+Active Native SegWit path:
+
+```text
+m/84'/22093'/0'/0/0
+```
+
+The Mainnet coin type `22093` is the **proposed VargaMesh SLIP-0044 value**. It
+must not be described as an official SLIP-0044 assignment unless and until it
+is accepted by the upstream SLIP-0044 registry.
+
+A valid BIP39 Recovery Phrase therefore deterministically derives the same first
+Native SegWit `vm1...` address in:
+
+* VargaMesh Desktop `v0.4.0`
+* the current VargaMesh WebWallet
+* VargaMesh Android `v0.3.0`
+
+The interoperability guarantee concerns deterministic key/address derivation.
+It does **not** imply that every application's encrypted JSON backup container
+is interchangeable with every other client.
+
+Android currently operates the first external address at index `0`. Desktop is
+a full HD descriptor wallet and can derive additional receive/change addresses.
+Android and the current WebWallet do not yet perform a full HD gap-limit scan.
+
+---
+
+## Android Encrypted Backup Model
+
+VargaMesh Android supports encrypted JSON backup export and restore.
+
+For an HD Recovery Wallet, the backup contains the Recovery Wallet metadata and
+**encrypted** Recovery Phrase material. The Recovery Phrase is not intentionally
+written into the JSON backup as plaintext.
+
+The HD backup records the information required to restore the Android Recovery
+Wallet, including the relevant derivation information. Restoring the encrypted
+backup requires the correct wallet password.
+
+In practical terms, HD backup recovery requires:
+
+```text
+Encrypted JSON backup + correct wallet password
+```
+
+Users should still keep an independent offline copy of the 12-word or 24-word
+Recovery Phrase. A Recovery Phrase can reconstruct the deterministic wallet
+without relying on the Android JSON backup container.
+
+Legacy `v0.2.x` single-key encrypted backups remain supported separately for
+compatibility with existing Android users and the established legacy WebWallet
+backup model.
+
+Never publish or send an encrypted wallet backup to third parties. Encryption
+reduces exposure if the file is obtained without the password, but the backup
+must still be treated as sensitive wallet material.
 
 ---
 
@@ -418,30 +545,37 @@ Version `v0.2.0` introduces a native self-custody VMESH wallet.
 
 VargaMesh Android is **non-custodial**.
 
-Private keys are generated or imported locally.
+Recovery Phrases and private keys are created, imported and processed locally.
+The application derives/signs transactions locally and sends only signed raw
+transactions to the public broadcast API.
 
 ```text
-Private key
-    │
-    │ generated/imported locally
-    ▼
-Password-encrypted Android storage
-    │
-    │ unlocked in device memory only
-    ▼
-Local transaction construction
-    │
-    ▼
-Local transaction signing
-    │
-    │ signed raw transaction only
-    ▼
-HTTPS POST /api/v1/broadcast
+12/24-word Recovery Phrase                 Legacy compressed WIF
+            │                                        │
+            │ BIP39 / BIP32                          │ imported locally
+            ▼                                        ▼
+HD active private key                       Single private key
+            │                                        │
+            └──────────────────┬─────────────────────┘
+                               ▼
+                  Password-encrypted local storage
+                               │
+                               │ unlocked in device memory only
+                               ▼
+                  Local transaction construction
+                               │
+                               ▼
+                      Local transaction signing
+                               │
+                               │ signed raw transaction only
+                               ▼
+                 HTTPS POST /api/v1/broadcast
 ```
 
-The Android application does **not** send any of the following to the
-VargaMesh server:
+The Android application does **not** intentionally send any of the following to
+the VargaMesh public server:
 
+* Recovery Phrases / seed words
 * private keys
 * WIF private keys
 * wallet passwords
@@ -456,31 +590,36 @@ Android application/cloud backup is disabled for the wallet store so that
 wallet material is not silently copied through normal Android backup
 mechanisms.
 
+Sensitive wallet operations require local password verification where
+applicable. Recovery Phrase and key material should be shown or copied only in
+a trusted environment.
+
 ---
 
 ## Android Wallet Parameters
 
-VargaMesh Android `v0.2.0` intentionally remains on the original
-single-private-key / WIF wallet model.
+VargaMesh Android `v0.3.0` supports both deterministic HD Recovery Wallets and
+legacy single-private-key/WIF wallets.
 
-The WebWallet now supports both the existing single-key model and the newer
-BIP39/HD Recovery Wallet model. Android `v0.2.0` remains compatible with the
-legacy/single-key WebWallet backup format; it does **not** import the newer
-HD Recovery Wallet payload or 12/24-word Recovery Phrases.
-
-| Parameter            | Value              |
-| -------------------- | ------------------ |
-| Elliptic curve       | `secp256k1`        |
-| Primary address      | SegWit v0 P2WPKH   |
-| Bech32 HRP           | `vm`               |
-| WIF version          | `190 / 0xBE`       |
-| Legacy P2PKH version | `70`               |
-| Legacy P2SH version  | `50`               |
-| Decimals             | `8`                |
-| Default fee          | `1 sat/vB`         |
-| Backup KDF           | PBKDF2-HMAC-SHA256 |
-| KDF iterations       | `250,000`          |
-| Backup cipher        | AES-256-GCM        |
+| Parameter                         | Value                         |
+| --------------------------------- | ----------------------------- |
+| Elliptic curve                    | `secp256k1`                   |
+| Primary address                   | SegWit v0 P2WPKH              |
+| Bech32 HRP                        | `vm`                          |
+| WIF version                       | `190 / 0xBE`                  |
+| Legacy P2PKH version              | `70`                          |
+| Legacy P2SH version               | `50`                          |
+| Decimals                          | `8`                           |
+| Default fee                       | `1 sat/vB`                    |
+| Recovery Phrase                   | BIP39, `12` or `24` words     |
+| HD derivation                     | BIP32                         |
+| Active BIP84 path                 | `m/84'/22093'/0'/0/0`         |
+| Proposed Mainnet SLIP-0044 type   | `22093`                       |
+| Legacy key/backup KDF             | PBKDF2-HMAC-SHA256            |
+| Legacy KDF iterations             | `250,000`                     |
+| HD Recovery Phrase KDF            | PBKDF2-HMAC-SHA256            |
+| HD Recovery KDF iterations        | `350,000`                     |
+| Local/backup authenticated cipher | AES-256-GCM                   |
 
 Signing uses:
 
@@ -488,36 +627,31 @@ Signing uses:
 * low-S normalization
 * BIP143-style SegWit v0 signing
 
-Encrypted Android wallet backups are compatible with the legacy/single-key
-VargaMesh WebWallet backup format.
-
-They are not the same as the newer Desktop/WebWallet BIP39 Recovery Wallet
-format.
+The current Android HD implementation intentionally uses the first external
+Native SegWit address at index `0`. It does not yet scan an HD address range or
+aggregate balances across multiple derived addresses.
 
 ---
 
 ## Android Limitations
 
-VargaMesh Android `v0.2.0` currently does **not** implement:
+VargaMesh Android `v0.3.0` currently does **not** implement:
 
-* BIP39 seed phrases
-* HD wallet derivation
+* full HD gap-limit scanning
+* multiple HD receive/change addresses in the active wallet UI
 * multi-account wallets
 * coin control
 * PSBT
 * hardware-wallet support
 * light-client/header verification
+* a locally synchronized VargaMesh full node
 
-VargaMesh Desktop `v0.4.0` and the current WebWallet now define and implement
-the VMESH BIP39/BIP32/BIP44/BIP84 Recovery Wallet convention documented in
-this repository.
+Android uses the purpose-built public HTTPS API for blockchain/UTXO data and
+signed-transaction broadcast. Private keys and Recovery Phrases are not needed
+by the public API.
 
-Android `v0.2.0` predates that wallet standard and deliberately retains its
-existing single-key/WIF model for compatibility with already-created Android
-wallets and legacy WebWallet backups.
-
-A future Android wallet version may implement the same HD Recovery Wallet
-standard after dedicated interoperability and migration testing.
+VargaMesh Desktop `v0.4.0` remains the more complete HD/full-node wallet: it can
+operate VargaMesh Core locally and derive additional receive/change addresses.
 
 ---
 
@@ -539,29 +673,39 @@ Minimum supported Android version:
 ## Android Testing Notice
 
 > [!CAUTION]
-> VargaMesh Android `v0.2.0` can create, hold and spend real VMESH.
+> VargaMesh Android `v0.3.0` can create, recover, hold and spend real VMESH.
 >
 > It is currently **public-testing / pre-release software**.
 
-Recommended testing procedure:
+Recommended testing procedure for a newly created Recovery Wallet:
 
-1. create a test wallet
-2. export an encrypted backup
-3. verify that the backup can be restored
-4. receive a small VMESH amount
-5. send a small VMESH transaction
-6. confirm the transaction in the explorer
-7. verify WIF compatibility in a separate trusted environment
+1. create a 12-word or 24-word test Recovery Wallet
+2. securely record the Recovery Phrase offline
+3. record the first `vm1...` address
+4. export an encrypted JSON backup
+5. verify Recovery Phrase restore in a safe test environment and confirm the
+   same first address
+6. verify encrypted JSON restore with the correct password and confirm the same
+   first address
+7. receive a small VMESH amount
+8. send a small VMESH transaction
+9. confirm the transaction in the explorer
+10. test legacy WIF/backup compatibility separately if migrating an older wallet
 
-Do not use significant amounts until the Android wallet has received
-sufficient real-device and interoperability testing.
+Do not perform destructive restore/removal tests on a funded wallet unless all
+required recovery material has already been independently verified.
+
+Do not use significant amounts until the Android wallet has received sufficient
+real-device and interoperability testing.
 
 Never share:
 
+* Recovery Phrases / seed words
 * private keys
 * WIFs
 * wallet passwords
 * decrypted wallet backups
+* encrypted wallet backup files with untrusted third parties
 
 ---
 
@@ -601,10 +745,10 @@ m/84'/22093'/0'/0/0
 ```
 
 This is the first external Native SegWit receive address of the same wallet
-tree used by VargaMesh Desktop `v0.4.0`.
+tree used by VargaMesh Desktop `v0.4.0` and VargaMesh Android `v0.3.0`.
 
 A valid Recovery Phrase therefore derives the same first `vm1...` address in
-both clients.
+Desktop, Android and the current WebWallet.
 
 > [!IMPORTANT]
 > The current WebWallet remains a **single-address HD implementation**.
@@ -634,21 +778,34 @@ Because a browser wallet depends on the integrity of code delivered by the
 website origin, users should prefer the Desktop/full-node wallet for larger
 holdings or higher-security use cases.
 
-### Legacy WebWallet / Android compatibility
+### WebWallet / Android interoperability
 
 The legacy WIF wallet and encrypted backup functionality remains supported.
 
-VargaMesh Android `v0.2.0` remains compatible with the legacy/single-key
-WebWallet backup model. Android `v0.2.0` does not yet support the newer
-BIP39/HD Recovery Wallet format.
+VargaMesh Android `v0.3.0` now also implements the documented BIP39/BIP32
+Recovery Wallet derivation. A valid Recovery Phrase derives the same first
+Native SegWit `vm1...` address in Android, Desktop and the current WebWallet.
+
+The current Android and WebWallet HD implementations both use:
+
+```text
+m/84'/22093'/0'/0/0
+```
+
+The clients may use different encrypted local/backup container formats.
+Recovery Phrase interoperability therefore refers to deterministic wallet
+derivation, not automatic interchangeability of every encrypted JSON file.
+
+Legacy `v0.2.x` Android single-key/WIF backups remain supported for migration
+and compatibility.
 
 ### Wallet access models
 
-| Client              | Model                                        | Platform      |
-| ------------------- | -------------------------------------------- | ------------- |
-| VargaMesh Desktop   | Full-node HD / Core wallet                   | Windows       |
-| VargaMesh Android   | Native single-key self-custody wallet        | Android       |
-| VargaMesh WebWallet | Browser/PWA single-key + HD Recovery Wallet  | Browser / PWA |
+| Client              | Model                                                | Platform      |
+| ------------------- | ---------------------------------------------------- | ------------- |
+| VargaMesh Desktop   | Full-node HD / Core wallet                           | Windows       |
+| VargaMesh Android   | Native single-address HD Recovery + legacy WIF wallet | Android       |
+| VargaMesh WebWallet | Browser/PWA single-key + HD Recovery Wallet          | Browser / PWA |
 
 The browser wallet should not be confused with VargaMesh Desktop.
 
@@ -917,8 +1074,9 @@ Testnet BIP44/SLIP-0044 coin type.
 
 # HD Recovery Wallet Standard
 
-VargaMesh Desktop `v0.4.0` and the current VargaMesh WebWallet implement the
-same Mainnet BIP39/BIP32/BIP84 Recovery Wallet derivation.
+VargaMesh Desktop `v0.4.0`, VargaMesh Android `v0.3.0` and the current
+VargaMesh WebWallet implement the same first-address Mainnet
+BIP39/BIP32/BIP84 Recovery Wallet derivation.
 
 ### Mainnet hierarchy
 
@@ -976,23 +1134,26 @@ the expected VargaMesh Mainnet Native SegWit address is:
 vm1q7w4sewykzmq3x5jyazqhefz7jptmnzylx3cjv2
 ```
 
-This vector has been used to validate deterministic derivation against the
-VargaMesh Core descriptor wallet path and the Desktop/WebWallet
+This vector defines the deterministic interoperability target for the
+VargaMesh Core descriptor wallet path and the Desktop, Android and WebWallet
 implementations.
 
 ### Current interoperability scope
 
-| Capability                              | Desktop v0.4.0 | WebWallet | Android v0.2.0 |
+| Capability                              | Desktop v0.4.0 | WebWallet | Android v0.3.0 |
 | --------------------------------------- | :------------: | :-------: | :------------: |
-| BIP39 12/24 words                       |       Yes      |    Yes    |       No       |
-| BIP32 HD derivation                     |       Yes      |    Yes    |       No       |
-| BIP84 `m/84'/22093'...`                 |       Yes      |    Yes    |       No       |
-| Same first `vm1...` address from phrase |       Yes      |    Yes    |       No       |
+| BIP39 12/24 words                       |       Yes      |    Yes    |       Yes      |
+| BIP32 HD derivation                     |       Yes      |    Yes    |       Yes      |
+| BIP84 `m/84'/22093'...`                 |       Yes      |    Yes    |       Yes      |
+| Same first `vm1...` address from phrase |       Yes      |    Yes    |       Yes      |
 | Multiple HD receive/change addresses    |       Yes      |    No     |       No       |
+| Full HD gap-limit scanning              |       Yes      |    No     |       No       |
 | Legacy single-key/WIF wallets           |       Yes      |    Yes    |       Yes      |
 
-The WebWallet currently implements index `0` as its active HD address.
-Full gap-limit scanning and multi-address aggregation remain future work.
+The current WebWallet and Android implementations use index `0` as their active
+HD address. Desktop can derive additional receive/change addresses. Full
+gap-limit scanning and multi-address aggregation remain future work for the
+lightweight clients.
 
 ### Recovery Phrase security
 
@@ -1140,7 +1301,7 @@ VargaMesh is under active development.
 | -------------------------- | --------------------------------- |
 | VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet release   |
 | VargaMesh Desktop `v0.4.0` | 🟠 Public testing                 |
-| VargaMesh Android `v0.2.0` | 🟠 Public testing / pre-release   |
+| VargaMesh Android `v0.3.0` | 🟠 Public testing / pre-release   |
 | VargaMesh WebWallet        | 🟢 Available                      |
 | Public Explorer            | 🟢 Available                      |
 | Public API                 | 🟢 Available                      |
@@ -1179,13 +1340,16 @@ Current development directions include:
 
 ### Android
 
-* broader physical-device testing
-* backup interoperability testing
+* broader physical-device testing for `v0.3.0`
+* continued 12/24-word Recovery Wallet testing
+* Android/Desktop/WebWallet deterministic recovery interoperability validation
+* encrypted HD JSON backup/restore testing
+* legacy `v0.2.x` WIF/backup migration testing
 * transaction compatibility validation
 * wallet UX improvements
 * crash and edge-case testing
 * expanded QR payment handling
-* future evaluation of the Desktop/WebWallet BIP39 HD Recovery standard
+* future multi-address HD and gap-limit scanning evaluation
 
 ### Wallet Standards
 
@@ -1193,8 +1357,8 @@ Current and future wallet-standard work includes:
 
 * continued validation of the documented VMESH BIP39/HD derivation standard
 * upstream SLIP-0044 registration request for proposed Mainnet coin type `22093`
-* WebWallet gap-limit scanning and multi-address HD support
-* Android HD Recovery Wallet interoperability
+* WebWallet and Android gap-limit scanning / multi-address HD support
+* continued Android/Desktop/WebWallet HD Recovery interoperability testing
 * multi-account wallet support
 * coin control
 * PSBT support
@@ -1261,6 +1425,7 @@ endorsement of VMESH.
 | Desktop repository  | https://github.com/ati1993de/vargamesh-desktop       |
 | Android information | https://vargacoin.com/android.html                   |
 | Android APK         | https://vargacoin.com/vmesh.apk                      |
+| Android APK SHA256  | https://vargacoin.com/vmesh.apk.sha256               |
 | WebWallet           | https://vargacoin.com/wallet.html                    |
 | Explorer            | https://vargacoin.com/explorer.html                  |
 | Mempool Explorer    | https://mempool.vargacoin.com                        |
@@ -1321,7 +1486,7 @@ software.
 
 Recommended precautions:
 
-* verify release checksums
+* verify release checksums (including the published Android APK SHA256 file)
 * use official download sources
 * keep backups
 * test backups
