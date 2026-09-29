@@ -35,12 +35,15 @@
 > [!IMPORTANT]
 > **VargaMesh is under active development.**
 >
-> VargaMesh Core `v0.2.0` is the current Mainnet/Testnet release. VargaMesh
-> Desktop `v0.4.0` and VargaMesh Android `v0.3.0` should currently be treated
-> as public-testing / pre-release wallet software.
+> VargaMesh Core `v0.2.0` is the current Mainnet/Testnet release.
 >
-> Use small amounts while testing wallet software and always maintain verified
-> backups of private keys, Recovery Phrases and wallet data.
+> VargaMesh Desktop `v0.4.0` is publicly available for Windows through the
+> Microsoft Store and GitHub releases. VargaMesh Android `v0.3.0` is publicly
+> available through APKPure and as the official direct APK.
+>
+> All wallet software remains under active development. Always maintain verified
+> backups of private keys, Recovery Phrases and wallet data and verify recovery
+> before relying on a wallet with meaningful funds.
 
 ---
 
@@ -54,9 +57,11 @@
   * [VargaMesh Desktop](#vargamesh-desktop)
   * [VargaMesh Android](#vargamesh-android)
   * [VargaMesh WebWallet](#vargamesh-webwallet)
+  * [VargaMesh Name Service (VNS)](#vargamesh-name-service-vns)
   * [VargaMesh Explorer](#vargamesh-explorer)
   * [VargaMesh Mempool Explorer](#vargamesh-mempool-explorer)
   * [VargaProof](#vargaproof)
+  * [MeshProof](#meshproof)
   * [Mining Infrastructure](#mining-infrastructure)
   * [Public API](#public-api)
 * [Mainnet Parameters](#mainnet-parameters)
@@ -99,12 +104,16 @@ The network currently includes:
 * native Android self-custody wallet
 * shared BIP39/BIP32 Recovery Wallet convention across Desktop, Android and WebWallet
 * browser-based WebWallet / PWA
-* blockchain explorer
+* VargaMesh Name Service (VNS) with human-readable `.vmesh` names
+* blockchain explorer with VNS resolution and on-chain name history
+* VargaMesh-specific mempool explorer with VNS transaction recognition
 * public network statistics
 * public HTTPS API
 * public mining infrastructure
 * VargaProof verification infrastructure
-* VargaMesh-specific mempool explorer development
+* MeshProof public-node contribution infrastructure
+* Microsoft Store distribution for VargaMesh Desktop
+* APKPure distribution for VargaMesh Android
 
 The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
@@ -112,17 +121,19 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
 ## Project Status
 
-| Component                  |     Version | Status                         |
-| -------------------------- | ----------: | ------------------------------ |
-| VargaMesh Core             |    `v0.2.0` | Mainnet + Testnet release       |
-| VargaMesh Desktop          |    `v0.4.0` | Public testing                 |
-| VargaMesh Android          |    `v0.3.0` | Public testing / pre-release   |
-| VargaMesh WebWallet        |     Current | Available                      |
-| Public Explorer            |     Current | Available                      |
-| Public API                 |        `v1` | Available                      |
-| Mining / CkPool            |     Current | Available / active development |
-| VargaProof                 |     Current | Available                      |
-| VargaMesh Mempool Explorer | Development | In development                 |
+| Component                  |     Version | Status                                      |
+| -------------------------- | ----------: | ------------------------------------------- |
+| VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet release                |
+| VargaMesh Desktop          |    `v0.4.0` | 🟢 Available · Microsoft Store + GitHub      |
+| VargaMesh Android          |    `v0.3.0` | 🟢 Available · APKPure + official direct APK |
+| VargaMesh WebWallet        |     Current | 🟢 Available                                |
+| VargaMesh Name Service     |     Current | 🟢 Available · WebWallet / Explorer / Mempool |
+| Public Explorer            |     Current | 🟢 Available                                |
+| Public API                 |        `v1` | 🟢 Available                                |
+| Mining / CkPool            |     Current | 🟢 Available / active development           |
+| VargaProof                 |     Current | 🟢 Available                                |
+| MeshProof                  |     Current | 🟢 Available                                |
+| VargaMesh Mempool Explorer | Development | 🔵 Active development                       |
 
 ---
 
@@ -138,14 +149,17 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | Core source code             | https://github.com/ati1993de/vargamesh-core          |
 | Core releases                | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop wallet               | https://github.com/ati1993de/vargamesh-desktop       |
+| Desktop Microsoft Store      | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
 | Android information          | https://vargacoin.com/android.html                   |
 | Android APK                  | https://vargacoin.com/vmesh.apk                      |
 | Android APK SHA256           | https://vargacoin.com/vmesh.apk.sha256               |
+| Android APKPure              | https://apkpure.com/p/de.vargatech.vargamesh         |
 | WebWallet                    | https://vargacoin.com/wallet.html                    |
 | Explorer                     | https://vargacoin.com/explorer.html                  |
 | Mempool Explorer development | https://mempool.vargacoin.com                        |
 | Mining / CkPool              | https://github.com/ati1993de/vargamesh-ckpool        |
 | VargaProof                   | https://vargacoin.com/proof.html                     |
+| MeshProof                    | https://vargacoin.com/meshproof.html                 |
 | Public API                   | https://vargacoin.com/api/v1                         |
 | Network information          | https://vargacoin.com/network.html                   |
 | Roadmap                      | https://vargacoin.com/roadmap.html                   |
@@ -158,8 +172,8 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 VargaMesh is developed as more than a command-line blockchain node.
 
 The ecosystem combines the consensus layer with wallet software, network
-monitoring, mining infrastructure, public APIs, explorer services and
-verification tools.
+monitoring, mining infrastructure, public APIs, explorer services, on-chain
+human-readable names and verification/contribution tools.
 
 ```text
                         VargaMesh Mainnet
@@ -232,7 +246,7 @@ Current release:
 
 Status:
 
-**Public testing**
+**Released / publicly available**
 
 The current Desktop release bundles:
 
@@ -240,9 +254,14 @@ The current Desktop release bundles:
 
 ### Available packages
 
+* Microsoft Store distribution
 * Windows x64 installer
 * Windows x64 portable ZIP
 * SHA256 checksums
+
+Microsoft Store:
+
+https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare
 
 ### Current functionality
 
@@ -316,8 +335,10 @@ receive/change addresses. The current WebWallet and Android `v0.3.0` remain
 single-active-address implementations and do not yet perform a full HD
 gap-limit scan.
 
-> [!WARNING]
-> The Desktop wallet is currently being tested by the community.
+> [!IMPORTANT]
+> VargaMesh Desktop `v0.4.0` is publicly released and available through the
+> Microsoft Store and GitHub releases, while continuing to receive active
+> development and interoperability testing.
 >
 > Before using meaningful amounts, verify the Recovery Phrase or Core backup
 > with a recovery test and begin with a small transaction.
@@ -335,7 +356,7 @@ Current release:
 
 Status:
 
-**Public testing / pre-release**
+**Released / publicly available**
 
 Official information:
 
@@ -348,6 +369,10 @@ https://vargacoin.com/vmesh.apk
 SHA256 checksum file:
 
 https://vargacoin.com/vmesh.apk.sha256
+
+APKPure:
+
+https://apkpure.com/p/de.vargatech.vargamesh
 
 VargaMesh Android combines the original network companion with a native
 **self-custody VMESH wallet**. Version `v0.3.0` extends the wallet with the
@@ -364,6 +389,8 @@ support.
 
 Major changes include:
 
+* public APKPure distribution
+* official direct APK distribution
 * 12-word and 24-word BIP39 Recovery Phrase creation
 * Recovery Wallet restore from a valid BIP39 phrase
 * BIP32 hierarchical deterministic key derivation
@@ -670,12 +697,13 @@ Minimum supported Android version:
 
 ---
 
-## Android Testing Notice
+## Android Validation and Backup Notice
 
 > [!CAUTION]
 > VargaMesh Android `v0.3.0` can create, recover, hold and spend real VMESH.
 >
-> It is currently **public-testing / pre-release software**.
+> It is publicly available through APKPure and the official direct APK and
+> remains under active development.
 
 Recommended testing procedure for a newly created Recovery Wallet:
 
@@ -756,6 +784,33 @@ Desktop, Android and the current WebWallet.
 > VargaMesh Desktop can derive further receive/change addresses. The WebWallet
 > does not yet scan or aggregate the complete HD address range.
 
+### WebWallet VNS integration
+
+The current WebWallet integrates the **VargaMesh Name Service (VNS)**.
+
+Current VNS wallet functionality includes:
+
+* search and resolve human-readable `.vmesh` names
+* register names through the on-chain commit/reveal flow
+* select a registration period from `1` to `5` years
+* renew existing names
+* transfer name ownership
+* resolve a `.vmesh` name to its current VMESH target address
+* send normal VMESH payments to a `.vmesh` name after resolution
+* keep wallet private keys and Recovery Phrase material local to the client
+
+The current VNS registration policy uses a fee of **10 VMESH per year**.
+Registration fees are directed to the publicly declared VargaMesh Ecosystem
+Treasury according to the current VNS policy.
+
+VNS registration and ownership data is represented on-chain. The public
+Explorer and VargaMesh Mempool Explorer expose the corresponding name state
+and transaction information for visibility.
+
+Desktop and Android VNS wallet integration is planned as the next client-side
+expansion. The current production-facing VNS user interface is integrated first
+in the WebWallet, Explorer and Mempool Explorer.
+
 ### WebWallet local security model
 
 Recovery Wallet material is handled locally in the browser.
@@ -815,6 +870,55 @@ broadcast.
 
 ---
 
+# VargaMesh Name Service (VNS)
+
+The **VargaMesh Name Service (VNS)** provides human-readable `.vmesh` names that
+resolve to VMESH addresses.
+
+Example:
+
+```text
+alice.vmesh -> vm1...
+```
+
+VNS is designed as an on-chain naming layer rather than a custodial address book.
+
+Current implementation includes:
+
+* `.vmesh` name search and resolution
+* on-chain commit/reveal registration
+* registration periods from `1` to `5` years
+* `10 VMESH` per year registration policy
+* renewal
+* ownership transfer
+* target-address updates
+* Explorer resolution and full on-chain name history
+* Mempool recognition of VNS registration/state transactions
+* direct WebWallet payments to resolved `.vmesh` names
+
+### Current VNS interfaces
+
+| Interface                       | Status |
+| ------------------------------- | ------ |
+| VargaMesh WebWallet             | 🟢 Integrated |
+| Public Explorer                 | 🟢 Integrated |
+| VargaMesh Mempool Explorer      | 🟢 Integrated / active development |
+| VargaMesh Desktop `v0.4.0`      | Planned client integration |
+| VargaMesh Android `v0.3.0`      | Planned client integration |
+
+The Explorer can expose the current name status, resolved target address,
+registration/expiry height, owner reference and the available on-chain history.
+
+The Mempool Explorer can identify VNS-related transactions and surface
+registration metadata such as name, owner/anchor information, fee/treasury
+information and pending/active state where available.
+
+> [!NOTE]
+> VNS name resolution is a convenience and identity layer. The VMESH address
+> produced by resolution remains the actual transaction destination.
+
+---
+
 # VargaMesh Explorer
 
 Public explorer:
@@ -826,6 +930,8 @@ The public explorer can be used to inspect:
 * blocks
 * transactions
 * addresses
+* `.vmesh` name resolution
+* VNS registration and ownership history
 * network information
 * blockchain activity
 
@@ -845,7 +951,7 @@ Development endpoint:
 
 https://mempool.vargacoin.com
 
-Planned and developing functionality includes:
+Current and developing functionality includes:
 
 * block visualization
 * transaction visualization
@@ -854,8 +960,13 @@ Planned and developing functionality includes:
 * address activity
 * network statistics
 * VMESH-specific indexing
+* VNS transaction recognition
+* `.vmesh` registration metadata
+* VNS pending/active state display where available
 
-The VMESH-specific indexing backend remains under development and testing.
+The VMESH-specific indexing backend remains under active development and
+testing. VNS support is already integrated into the current Mempool Explorer
+interface while broader indexing work continues.
 
 > [!WARNING]
 > Development explorer data should not yet be treated as authoritative until
@@ -883,6 +994,46 @@ cryptographic hash was associated with a particular network state or time.
 > Cryptographic proof verification should not be interpreted as automatic
 > legal certification, identity verification or validation of the truth of
 > the underlying content.
+
+---
+
+# MeshProof
+
+**MeshProof** is the public VargaMesh node-contribution and observation system.
+
+Public interface:
+
+https://vargacoin.com/meshproof.html
+
+MeshProof allows operators to register a public VargaMesh node, prove control
+of that node through a temporary P2P user-agent claim tag and build a public
+observation history from repeated probes.
+
+Current MeshProof functionality includes:
+
+* public node registration
+* ownership verification through the actual VargaMesh P2P handshake
+* repeated public availability probes
+* Mesh Score and observed coverage
+* latency visibility
+* public contribution history
+* hash-chained probe receipts
+* optional treasury-funded community rewards
+
+Current reward safety limits are:
+
+```text
+100 VMESH/day total
+10 VMESH/node maximum per completed UTC epoch
+```
+
+MeshProof rewards are not protocol block rewards and do not create new VMESH.
+When enabled, they are funded from the publicly declared VargaMesh Ecosystem
+Treasury through the configured payout process.
+
+> [!NOTE]
+> MeshProof contribution rewards are separate from mining payouts and do not
+> represent a guarantee of payment, value or future availability.
 
 ---
 
@@ -1297,18 +1448,20 @@ spend the corresponding VMESH.
 
 VargaMesh is under active development.
 
-| Component                  | Status                            |
-| -------------------------- | --------------------------------- |
-| VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet release   |
-| VargaMesh Desktop `v0.4.0` | 🟠 Public testing                 |
-| VargaMesh Android `v0.3.0` | 🟠 Public testing / pre-release   |
-| VargaMesh WebWallet        | 🟢 Available                      |
-| Public Explorer            | 🟢 Available                      |
-| Public API                 | 🟢 Available                      |
-| Public network statistics  | 🟢 Available                      |
-| Mining / CkPool            | 🟢 Available / active development |
-| VargaProof                 | 🟢 Available                      |
-| VargaMesh Mempool Explorer | 🔵 In development                 |
+| Component                  | Status                                      |
+| -------------------------- | ------------------------------------------- |
+| VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet release                |
+| VargaMesh Desktop `v0.4.0` | 🟢 Available · Microsoft Store + GitHub      |
+| VargaMesh Android `v0.3.0` | 🟢 Available · APKPure + official direct APK |
+| VargaMesh WebWallet        | 🟢 Available                                |
+| VargaMesh Name Service     | 🟢 Available · WebWallet / Explorer / Mempool |
+| Public Explorer            | 🟢 Available                                |
+| Public API                 | 🟢 Available                                |
+| Public network statistics  | 🟢 Available                                |
+| Mining / CkPool            | 🟢 Available / active development           |
+| VargaProof                 | 🟢 Available                                |
+| MeshProof                  | 🟢 Available                                |
+| VargaMesh Mempool Explorer | 🔵 Active development                       |
 
 Interfaces, APIs and wallet functionality may evolve.
 
@@ -1332,6 +1485,7 @@ Current development directions include:
 
 ### Desktop
 
+* VNS `.vmesh` name resolution and wallet integration
 * continued Recovery Wallet testing
 * improved wallet UX
 * broader Desktop/WebWallet interoperability validation
@@ -1340,6 +1494,7 @@ Current development directions include:
 
 ### Android
 
+* VNS `.vmesh` name resolution and wallet integration
 * broader physical-device testing for `v0.3.0`
 * continued 12/24-word Recovery Wallet testing
 * Android/Desktop/WebWallet deterministic recovery interoperability validation
@@ -1364,6 +1519,14 @@ Current and future wallet-standard work includes:
 * PSBT support
 * hardware-wallet integration
 * light-client/header verification
+
+### VargaMesh Name Service
+
+* Desktop wallet `.vmesh` resolution and payment integration
+* Android wallet `.vmesh` resolution and payment integration
+* expanded VNS metadata/indexing
+* improved name-management UX
+* continued commit/reveal, renewal and transfer interoperability testing
 
 ### Explorer
 
@@ -1423,14 +1586,17 @@ endorsement of VMESH.
 | Core repository     | https://github.com/ati1993de/vargamesh-core          |
 | Core releases       | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop repository  | https://github.com/ati1993de/vargamesh-desktop       |
+| Microsoft Store     | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
 | Android information | https://vargacoin.com/android.html                   |
 | Android APK         | https://vargacoin.com/vmesh.apk                      |
 | Android APK SHA256  | https://vargacoin.com/vmesh.apk.sha256               |
+| Android APKPure     | https://apkpure.com/p/de.vargatech.vargamesh         |
 | WebWallet           | https://vargacoin.com/wallet.html                    |
 | Explorer            | https://vargacoin.com/explorer.html                  |
 | Mempool Explorer    | https://mempool.vargacoin.com                        |
 | Network statistics  | https://vargacoin.com/network.html                   |
 | VargaProof          | https://vargacoin.com/proof.html                     |
+| MeshProof           | https://vargacoin.com/meshproof.html                 |
 | Public API          | https://vargacoin.com/api/v1                         |
 | CkPool              | https://github.com/ati1993de/vargamesh-ckpool        |
 | Roadmap             | https://vargacoin.com/roadmap.html                   |
@@ -1490,7 +1656,7 @@ Recommended precautions:
 * use official download sources
 * keep backups
 * test backups
-* use small amounts with pre-release software
+* verify wallet recovery before relying on meaningful amounts
 * keep operating systems updated
 * protect private keys
 * protect Recovery Phrases / seed material
@@ -1509,7 +1675,7 @@ private-key material or exploit details together with live wallet data.
 VargaMesh Core and the surrounding VargaMesh ecosystem are under active
 development.
 
-Pre-release and public-testing versions may contain bugs or incomplete
+Software under active development may contain bugs, regressions or incomplete
 functionality.
 
 Nothing in this repository constitutes:
@@ -1526,7 +1692,7 @@ Users remain responsible for:
 * securing private keys
 * maintaining wallet backups
 * validating software before use
-* evaluating the risks of pre-release software
+* evaluating the risks of wallet and node software
 * complying with applicable laws and regulations
 
 The **VargaMesh Core source code is the authoritative reference for
