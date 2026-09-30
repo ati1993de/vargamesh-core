@@ -17,15 +17,15 @@
 </p>
 
 <p align="center">
-  <a href="https://vargacoin.com">Website</a>
+  <a href="https://vargamesh.com">Website</a>
   ·
   <a href="https://mesh.vargatech.net">Project Portal</a>
   ·
-  <a href="https://vargacoin.com/explorer.html">Explorer</a>
+  <a href="https://vargamesh.com/explorer.html">Explorer</a>
   ·
-  <a href="https://vargacoin.com/wallet.html">WebWallet</a>
+  <a href="https://vargamesh.com/wallet.html">WebWallet</a>
   ·
-  <a href="https://vargacoin.com/android.html">Android</a>
+  <a href="https://vargamesh.com/android.html">Android</a>
   ·
   <a href="https://discord.gg/AeC8sxt2aB">Discord</a>
 </p>
@@ -144,25 +144,25 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | Network                      | VargaMesh Mainnet                                    |
 | Currency                     | `VMESH`                                              |
 | Core version                 | `v0.2.0`                                             |
-| Website                      | https://vargacoin.com                                |
+| Website                      | https://vargamesh.com                                |
 | Project portal               | https://mesh.vargatech.net                           |
 | Core source code             | https://github.com/ati1993de/vargamesh-core          |
 | Core releases                | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop wallet               | https://github.com/ati1993de/vargamesh-desktop       |
 | Desktop Microsoft Store      | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
-| Android information          | https://vargacoin.com/android.html                   |
-| Android APK                  | https://vargacoin.com/vmesh.apk                      |
-| Android APK SHA256           | https://vargacoin.com/vmesh.apk.sha256               |
+| Android information          | https://vargamesh.com/android.html                   |
+| Android APK                  | https://vargamesh.com/vmesh.apk                      |
+| Android APK SHA256           | https://vargamesh.com/vmesh.apk.sha256               |
 | Android APKPure              | https://apkpure.com/p/de.vargatech.vargamesh         |
-| WebWallet                    | https://vargacoin.com/wallet.html                    |
-| Explorer                     | https://vargacoin.com/explorer.html                  |
-| Mempool Explorer development | https://mempool.vargacoin.com                        |
+| WebWallet                    | https://vargamesh.com/wallet.html                    |
+| Explorer                     | https://vargamesh.com/explorer.html                  |
+| Mempool Explorer development | https://mempool.vargamesh.com                        |
 | Mining / CkPool              | https://github.com/ati1993de/vargamesh-ckpool        |
-| VargaProof                   | https://vargacoin.com/proof.html                     |
-| MeshProof                    | https://vargacoin.com/meshproof.html                 |
-| Public API                   | https://vargacoin.com/api/v1                         |
-| Network information          | https://vargacoin.com/network.html                   |
-| Roadmap                      | https://vargacoin.com/roadmap.html                   |
+| VargaProof                   | https://vargamesh.com/proof.html                     |
+| MeshProof                    | https://vargamesh.com/meshproof.html                 |
+| Public API                   | https://vargamesh.com/api/v1                         |
+| Network information          | https://vargamesh.com/network.html                   |
+| Roadmap                      | https://vargamesh.com/roadmap.html                   |
 | Discord                      | https://discord.gg/AeC8sxt2aB                        |
 
 ---
@@ -360,15 +360,15 @@ Status:
 
 Official information:
 
-https://vargacoin.com/android.html
+https://vargamesh.com/android.html
 
 Direct APK:
 
-https://vargacoin.com/vmesh.apk
+https://vargamesh.com/vmesh.apk
 
 SHA256 checksum file:
 
-https://vargacoin.com/vmesh.apk.sha256
+https://vargamesh.com/vmesh.apk.sha256
 
 APKPure:
 
@@ -443,7 +443,7 @@ Current functionality includes:
 Public Stratum endpoint:
 
 ```text
-vargacoin.com:3933
+vargamesh.com:3933
 ```
 
 ---
@@ -743,7 +743,7 @@ The VargaMesh ecosystem includes a browser-based self-custody wallet.
 
 WebWallet:
 
-https://vargacoin.com/wallet.html
+https://vargamesh.com/wallet.html
 
 The WebWallet provides a lightweight alternative for users who do not want
 to operate a local full node.
@@ -923,7 +923,7 @@ information and pending/active state where available.
 
 Public explorer:
 
-https://vargacoin.com/explorer.html
+https://vargamesh.com/explorer.html
 
 The public explorer can be used to inspect:
 
@@ -949,7 +949,7 @@ development.
 
 Development endpoint:
 
-https://mempool.vargacoin.com
+https://mempool.vargamesh.com
 
 Current and developing functionality includes:
 
@@ -981,7 +981,7 @@ infrastructure for cryptographic data proofs.
 
 Public interface:
 
-https://vargacoin.com/proof.html
+https://vargamesh.com/proof.html
 
 VargaProof is intended to make it possible to work with cryptographic
 fingerprints and verification data without treating uploaded content itself
@@ -1003,7 +1003,7 @@ cryptographic hash was associated with a particular network state or time.
 
 Public interface:
 
-https://vargacoin.com/meshproof.html
+https://vargamesh.com/meshproof.html
 
 MeshProof allows operators to register a public VargaMesh node, prove control
 of that node through a temporary P2P user-agent claim tag and build a public
@@ -1051,7 +1051,7 @@ https://github.com/ati1993de/vargamesh-ckpool
 Public Stratum endpoint:
 
 ```text
-vargacoin.com:3933
+vargamesh.com:3933
 ```
 
 Mining infrastructure includes or supports:
@@ -1079,7 +1079,7 @@ VargaMesh provides a purpose-built public HTTPS API.
 Base URL:
 
 ```text
-https://vargacoin.com/api/v1
+https://vargamesh.com/api/v1
 ```
 
 The API is intended for public applications including:
@@ -1135,11 +1135,11 @@ Start a Testnet node:
 
 Public infrastructure:
 
-- Testnet portal: https://testnet.vargacoin.com/
-- Explorer: https://testnet.vargacoin.com/explorer.html
-- WebWallet: https://testnet.vargacoin.com/wallet.html
-- Public API: https://testnet.vargacoin.com/api/v1/
-- SOLO Stratum: `testnet.vargacoin.com:4933`
+- Testnet portal: https://testnet.vargamesh.com/
+- Explorer: https://testnet.vargamesh.com/explorer.html
+- WebWallet: https://testnet.vargamesh.com/wallet.html
+- Public API: https://testnet.vargamesh.com/api/v1/
+- SOLO Stratum: `testnet.vargamesh.com:4933`
 
 Documentation:
 
@@ -1581,25 +1581,25 @@ endorsement of VMESH.
 
 | Resource            | URL                                                  |
 | ------------------- | ---------------------------------------------------- |
-| Official website    | https://vargacoin.com                                |
+| Official website    | https://vargamesh.com                                |
 | Project portal      | https://mesh.vargatech.net                           |
 | Core repository     | https://github.com/ati1993de/vargamesh-core          |
 | Core releases       | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop repository  | https://github.com/ati1993de/vargamesh-desktop       |
 | Microsoft Store     | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
-| Android information | https://vargacoin.com/android.html                   |
-| Android APK         | https://vargacoin.com/vmesh.apk                      |
-| Android APK SHA256  | https://vargacoin.com/vmesh.apk.sha256               |
+| Android information | https://vargamesh.com/android.html                   |
+| Android APK         | https://vargamesh.com/vmesh.apk                      |
+| Android APK SHA256  | https://vargamesh.com/vmesh.apk.sha256               |
 | Android APKPure     | https://apkpure.com/p/de.vargatech.vargamesh         |
-| WebWallet           | https://vargacoin.com/wallet.html                    |
-| Explorer            | https://vargacoin.com/explorer.html                  |
-| Mempool Explorer    | https://mempool.vargacoin.com                        |
-| Network statistics  | https://vargacoin.com/network.html                   |
-| VargaProof          | https://vargacoin.com/proof.html                     |
-| MeshProof           | https://vargacoin.com/meshproof.html                 |
-| Public API          | https://vargacoin.com/api/v1                         |
+| WebWallet           | https://vargamesh.com/wallet.html                    |
+| Explorer            | https://vargamesh.com/explorer.html                  |
+| Mempool Explorer    | https://mempool.vargamesh.com                        |
+| Network statistics  | https://vargamesh.com/network.html                   |
+| VargaProof          | https://vargamesh.com/proof.html                     |
+| MeshProof           | https://vargamesh.com/meshproof.html                 |
+| Public API          | https://vargamesh.com/api/v1                         |
 | CkPool              | https://github.com/ati1993de/vargamesh-ckpool        |
-| Roadmap             | https://vargacoin.com/roadmap.html                   |
+| Roadmap             | https://vargamesh.com/roadmap.html                   |
 | Blockspot           | https://blockspot.io/coin/vargamesh-vmesh/           |
 | Discord             | https://discord.gg/AeC8sxt2aB                        |
 
@@ -1705,7 +1705,7 @@ consensus-critical VargaMesh network behavior**.
 </p>
 
 <p align="center">
-  <a href="https://vargacoin.com">vargacoin.com</a>
+  <a href="https://vargamesh.com">vargamesh.com</a>
   ·
   <a href="https://github.com/ati1993de/vargamesh-core">GitHub</a>
   ·
