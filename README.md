@@ -5,13 +5,14 @@
 </p>
 
 <p align="center">
-  Independent Proof-of-Work · SHA-256d · AuxPoW · ASERT · Full Node · Desktop · Android · WebWallet · Explorer · Mining · Mainnet
+  Independent Proof-of-Work · SHA-256d · AuxPoW · ASERT · Full Node · Desktop · Android · WebWallet/PWA · VMT-1 · VNS · Explorer · Mining · Mainnet
 </p>
 
 <p align="center">
   <img alt="Core" src="https://img.shields.io/badge/Core-v0.2.0-2ea44f">
-  <img alt="Desktop" src="https://img.shields.io/badge/Desktop-v0.4.0-0078d4">
-  <img alt="Android" src="https://img.shields.io/badge/Android-v0.3.0-3ddc84">
+  <img alt="Desktop" src="https://img.shields.io/badge/Desktop-v0.5.2-0078d4">
+  <img alt="Android" src="https://img.shields.io/badge/Android-v0.4.0-3ddc84">
+  <img alt="VMT-1" src="https://img.shields.io/badge/VMT--1-Mainnet-8a2be2">
   <img alt="Network" src="https://img.shields.io/badge/Network-Mainnet-orange">
   <img alt="Consensus" src="https://img.shields.io/badge/Consensus-SHA--256d%20PoW-yellow">
 </p>
@@ -37,9 +38,17 @@
 >
 > VargaMesh Core `v0.2.0` is the current Mainnet/Testnet release.
 >
-> VargaMesh Desktop `v0.4.0` is publicly available for Windows through the
-> Microsoft Store and GitHub releases. VargaMesh Android `v0.3.0` is publicly
-> available through APKPure and as the official direct APK.
+> VargaMesh Desktop `v0.5.2` is the current Windows x64 public-testing release.
+> It bundles VargaMesh Core `v0.2.0`, adds native VMT-1 token operations and a
+> complete German / English / Russian / Simplified Chinese interface.
+>
+> VargaMesh Android `v0.4.0` is the current native Android public-testing release.
+> It adds native VMT-1 support, wallet activity/history improvements and the same
+> four interface languages while preserving BIP39/BIP32 recovery and legacy
+> `v0.2.x` single-WIF compatibility.
+>
+> The canonical machine-readable release manifest is:
+> https://vargamesh.com/api/v1/releases
 >
 > All wallet software remains under active development. Always maintain verified
 > backups of private keys, Recovery Phrases and wallet data and verify recovery
@@ -51,29 +60,33 @@
 
 * [Overview](#overview)
 * [Project Status](#project-status)
+* [Quick Links](#quick-links)
 * [VargaMesh Ecosystem](#vargamesh-ecosystem)
-
   * [VargaMesh Core](#vargamesh-core-1)
   * [VargaMesh Desktop](#vargamesh-desktop)
   * [VargaMesh Android](#vargamesh-android)
   * [VargaMesh WebWallet](#vargamesh-webwallet)
+  * [VMT-1 Token Layer](#vmt-1-token-layer)
   * [VargaMesh Name Service (VNS)](#vargamesh-name-service-vns)
   * [VargaMesh Explorer](#vargamesh-explorer)
   * [VargaMesh Mempool Explorer](#vargamesh-mempool-explorer)
   * [VargaProof](#vargaproof)
   * [MeshProof](#meshproof)
+  * [VargaMesh Ecosystem Treasury](#vargamesh-ecosystem-treasury)
   * [Mining Infrastructure](#mining-infrastructure)
   * [Public API](#public-api)
+* [Public Testnet](#public-testnet)
 * [Mainnet Parameters](#mainnet-parameters)
 * [Address and Wallet Parameters](#address-and-wallet-parameters)
 * [HD Recovery Wallet Standard](#hd-recovery-wallet-standard)
 * [Software Components](#software-components)
 * [Building VargaMesh Core](#building-vargamesh-core)
-* [Running a Node](#running-a-vargamesh-node)
+* [Running a VargaMesh Node](#running-a-vargamesh-node)
 * [RPC Security](#rpc-security)
 * [Self-Custody](#self-custody)
 * [Development Status](#development-status)
 * [Roadmap Direction](#roadmap-direction)
+* [External Listings](#external-listings)
 * [Project Links](#project-links)
 * [Contributing](#contributing)
 * [Security Notice](#security-notice)
@@ -104,6 +117,9 @@ The network currently includes:
 * native Android self-custody wallet
 * shared BIP39/BIP32 Recovery Wallet convention across Desktop, Android and WebWallet
 * browser-based WebWallet / PWA
+* VMT-1 fungible-token layer indexed from confirmed VargaMesh transactions
+* native VMT-1 support in Desktop `v0.5.2` and Android `v0.4.0`
+* public VMT-1 token directory and token API
 * VargaMesh Name Service (VNS) with human-readable `.vmesh` names
 * blockchain explorer with VNS resolution and on-chain name history
 * VargaMesh-specific mempool explorer with VNS transaction recognition
@@ -112,6 +128,7 @@ The network currently includes:
 * public mining infrastructure
 * VargaProof verification infrastructure
 * MeshProof public-node contribution infrastructure
+* public VargaMesh Ecosystem Treasury with on-chain transparency
 * Microsoft Store distribution for VargaMesh Desktop
 * APKPure distribution for VargaMesh Android
 
@@ -121,18 +138,23 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
 ## Project Status
 
+Canonical release manifest: https://vargamesh.com/api/v1/releases
+
+
 | Component                  |     Version | Status                                      |
 | -------------------------- | ----------: | ------------------------------------------- |
 | VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet release                |
-| VargaMesh Desktop          |    `v0.4.0` | 🟢 Available · Microsoft Store + GitHub      |
-| VargaMesh Android          |    `v0.3.0` | 🟢 Available · APKPure + official direct APK |
+| VargaMesh Desktop          |    `v0.5.2` | 🟢 Released · GitHub · Windows x64          |
+| VargaMesh Android          |    `v0.4.0` | 🟢 Released · official direct APK           |
 | VargaMesh WebWallet        |     Current | 🟢 Available                                |
+| VMT-1 Token Layer         |     Current | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     |     Current | 🟢 Available · WebWallet / Explorer / Mempool |
 | Public Explorer            |     Current | 🟢 Available                                |
 | Public API                 |        `v1` | 🟢 Available                                |
 | Mining / CkPool            |     Current | 🟢 Available / active development           |
 | VargaProof                 |     Current | 🟢 Available                                |
 | MeshProof                  |     Current | 🟢 Available                                |
+| Ecosystem Treasury          |     Current | 🟢 Public on-chain transparency             |
 | VargaMesh Mempool Explorer | Development | 🔵 Active development                       |
 
 ---
@@ -144,6 +166,8 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | Network                      | VargaMesh Mainnet                                    |
 | Currency                     | `VMESH`                                              |
 | Core version                 | `v0.2.0`                                             |
+| Desktop version              | `v0.5.2`                                             |
+| Android version              | `v0.4.0`                                             |
 | Website                      | https://vargamesh.com                                |
 | Project portal               | https://mesh.vargatech.net                           |
 | Core source code             | https://github.com/ati1993de/vargamesh-core          |
@@ -155,14 +179,19 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 | Android APK SHA256           | https://vargamesh.com/vmesh.apk.sha256               |
 | Android APKPure              | https://apkpure.com/p/de.vargatech.vargamesh         |
 | WebWallet                    | https://vargamesh.com/wallet.html                    |
+| VMT-1 token directory        | https://vargamesh.com/tokens.html                    |
+| Release manifest               | https://vargamesh.com/api/v1/releases                |
+| Wallet standard                | https://vargamesh.com/wallet-standard/                |
 | Explorer                     | https://vargamesh.com/explorer.html                  |
 | Mempool Explorer development | https://mempool.vargamesh.com                        |
 | Mining / CkPool              | https://github.com/ati1993de/vargamesh-ckpool        |
 | VargaProof                   | https://vargamesh.com/proof.html                     |
 | MeshProof                    | https://vargamesh.com/meshproof.html                 |
+| Ecosystem Treasury             | https://vargamesh.com/treasury.html                  |
 | Public API                   | https://vargamesh.com/api/v1                         |
 | Network information          | https://vargamesh.com/network.html                   |
 | Roadmap                      | https://vargamesh.com/roadmap.html                   |
+| Listing information            | https://vargamesh.com/listing/                       |
 | Discord                      | https://discord.gg/AeC8sxt2aB                        |
 
 ---
@@ -193,6 +222,10 @@ human-readable names and verification/contribution tools.
        ┌─────────────┼─────────────┐
        │             │             │
     Explorer     VargaProof    Network Stats
+       │
+       ├──────── VMT-1 Indexer / Token Directory
+       │
+       └──────── VNS / Treasury / MeshProof
 ```
 
 ---
@@ -232,7 +265,7 @@ Consensus-critical behavior is defined by the VargaMesh Core source code.
 
 ## VargaMesh Desktop
 
-**VargaMesh Desktop** is the graphical Windows full-node wallet for users
+**VargaMesh Desktop** is the graphical Windows x64 full-node wallet for users
 who prefer a desktop interface instead of operating VargaMesh Core entirely
 through the command line.
 
@@ -242,11 +275,19 @@ https://github.com/ati1993de/vargamesh-desktop
 
 Current release:
 
-**VargaMesh Desktop v0.4.0**
+**VargaMesh Desktop v0.5.2**
+
+Release date:
+
+**2 October 2026**
 
 Status:
 
-**Released / publicly available**
+**Released / public testing**
+
+Latest releases:
+
+https://github.com/ati1993de/vargamesh-desktop/releases/latest
 
 The current Desktop release bundles:
 
@@ -254,16 +295,51 @@ The current Desktop release bundles:
 
 ### Available packages
 
-* Microsoft Store distribution
 * Windows x64 installer
 * Windows x64 portable ZIP
 * SHA256 checksums
+* Microsoft Store distribution channel
 
-Microsoft Store:
+### v0.5.2 highlights
 
-https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare
+VargaMesh Desktop `v0.5.2` combines the existing full-node Recovery Wallet with
+native **VMT-1** token support and a complete four-language interface.
 
-### Current functionality
+Supported UI languages:
+
+* Deutsch
+* English
+* Русский
+* 简体中文
+
+Current VMT-1 functionality includes:
+
+* discover VMT-1 balances across owned `vm1...` addresses in the active Core wallet
+* show approved token metadata, logos, supply, issuer, holder and transfer data
+* browse and search the public VMT-1 token directory
+* create VMT-1 tokens using the live Mainnet CREATE policy
+* transfer VMT-1 tokens
+* burn VMT-1 tokens
+* mint additional units when the selected address is the authorized issuer and the token is mintable
+* keep the VMT owner/issuer address as transaction input `0`
+* verify the input-0 authorization invariant before and after Core signing
+* run exact signed-transaction VMT preflight before broadcast
+* repeat the same exact preflight immediately before final broadcast
+* sign and broadcast through the local VargaMesh Core
+* obtain the active VMT CREATE fee policy dynamically instead of hard-coding the fee or recipient
+
+Private keys remain in VargaMesh Core. The renderer remains sandboxed and does
+not receive arbitrary Core RPC access or the RPC cookie.
+
+Approved VMT metadata is displayed in Desktop. Native metadata submission is not
+enabled in the `v0.5.x` line because the current issuer-proof format is not
+available through an approved Core wallet RPC without exporting private-key
+material.
+
+Version `v0.5.2` also includes the `v0.5.1` first-launch localization fix and
+regression coverage for localization collection selection.
+
+### Current wallet functionality
 
 * automatic VargaMesh Core startup
 * full-node blockchain synchronization
@@ -277,26 +353,25 @@ https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare
 * BIP44 legacy receive/change descriptors
 * Recovery Wallet restore with blockchain rescan
 * Recovery Phrase copy and explicit TXT export during creation
-* wallet loading
-* wallet unloading
-* wallet encryption
-* temporary wallet unlocking
+* wallet loading and unloading
+* wallet encryption and temporary unlocking
 * VMESH receiving addresses
-* transaction history
-* VMESH transfers
-* wallet backup
-* wallet restore
+* local/offline receive QR codes
+* VMESH balance, UTXO view and transaction history
+* VMESH transfers with validation and confirmation
+* wallet backup and restore
 * WIF private-key import
 * watch-only address import
 * legacy wallet migration support
-* English UI
-* German UI
+* Windows notification-area / system-tray integration
+* optional minimize/close-to-tray and background startup
+* four selectable UI languages: DE / EN / RU / ZH
 
 ### Desktop Recovery Wallet interoperability
 
-VargaMesh Desktop `v0.4.0` defines the full VMESH HD descriptor wallet
-hierarchy. The current VargaMesh WebWallet and VargaMesh Android `v0.3.0` use
-the same first Native SegWit external receive path for deterministic recovery.
+VargaMesh Desktop `v0.5.2` uses the full VMESH HD descriptor wallet hierarchy.
+The current VargaMesh WebWallet and VargaMesh Android `v0.4.0` use the same first
+Native SegWit external receive path for deterministic recovery.
 
 Mainnet Native SegWit receive path:
 
@@ -320,43 +395,48 @@ The Mainnet coin type `22093` is the **proposed VargaMesh SLIP-0044 value**.
 It must not be described as an official SLIP-0044 assignment unless and until
 it is accepted by the upstream SLIP-0044 registry.
 
-The WebWallet currently uses the first Native SegWit external receive address:
+The current lightweight-wallet interoperability target remains the first Native
+SegWit external address:
 
 ```text
 m/84'/22093'/0'/0/0
 ```
 
 Therefore the same valid Recovery Phrase restores the same first `vm1...`
-address in VargaMesh Desktop `v0.4.0`, VargaMesh Android `v0.3.0` and the
+address in VargaMesh Desktop `v0.5.2`, VargaMesh Android `v0.4.0` and the
 current WebWallet.
 
-The Desktop wallet is a full HD descriptor wallet and can derive additional
-receive/change addresses. The current WebWallet and Android `v0.3.0` remain
-single-active-address implementations and do not yet perform a full HD
-gap-limit scan.
+The Desktop wallet can derive additional receive/change addresses and aggregate
+Core wallet state. The current Android/WebWallet Recovery Wallet model remains
+focused on the active index-0 address unless explicitly expanded by a later
+client release.
 
 > [!IMPORTANT]
-> VargaMesh Desktop `v0.4.0` is publicly released and available through the
-> Microsoft Store and GitHub releases, while continuing to receive active
-> development and interoperability testing.
+> VargaMesh Desktop `v0.5.2` is pre-1.0 public-testing software.
 >
 > Before using meaningful amounts, verify the Recovery Phrase or Core backup
-> with a recovery test and begin with a small transaction.
+> with a recovery test and begin with a small transaction. For VMT-1 operations,
+> verify the selected owner address, token ID, amount and signed-transaction
+> preflight result before broadcast.
 
 ---
 
 # VargaMesh Android
 
-**VargaMesh Android** is the native Android application for the
-VargaMesh (VMESH) mainnet.
+**VargaMesh Android** is the native Android application for the VargaMesh
+(VMESH) mainnet.
 
 Current release:
 
-**VargaMesh Android v0.3.0**
+**VargaMesh Android v0.4.0**
+
+Release date:
+
+**2 October 2026**
 
 Status:
 
-**Released / publicly available**
+**Released / public testing / pre-release**
 
 Official information:
 
@@ -370,47 +450,53 @@ SHA256 checksum file:
 
 https://vargamesh.com/vmesh.apk.sha256
 
-APKPure:
+APKPure project page:
 
 https://apkpure.com/p/de.vargatech.vargamesh
 
-VargaMesh Android combines the original network companion with a native
-**self-custody VMESH wallet**. Version `v0.3.0` extends the wallet with the
-VargaMesh BIP39/BIP32 Recovery Wallet standard while preserving compatibility
-with wallets and encrypted backups created by the earlier `v0.2.x` single-key
-wallet model.
+VargaMesh Android combines network, explorer and mining tools with a native
+self-custody VMESH wallet. Version `v0.4.0` adds native **VMT-1 token support**
+on top of the VargaMesh BIP39/BIP32 Recovery Wallet while preserving the
+existing `v0.2.x` legacy single-WIF compatibility model.
 
 ---
 
-## Android v0.3.0 Release Highlights
+## Android v0.4.0 Release Highlights
 
-Version `v0.3.0` is the first Android release with deterministic Recovery Wallet
-support.
+Version `v0.4.0` extends the Android wallet from VMESH-only wallet operations to
+native VMESH + VMT-1 wallet functionality.
 
 Major changes include:
 
-* public APKPure distribution
-* official direct APK distribution
-* 12-word and 24-word BIP39 Recovery Phrase creation
-* Recovery Wallet restore from a valid BIP39 phrase
-* BIP32 hierarchical deterministic key derivation
-* VargaMesh Mainnet Native SegWit derivation at `m/84'/22093'/0'/0/0`
-* deterministic first-address interoperability with VargaMesh Desktop `v0.4.0`
-  and the current WebWallet
-* encrypted local storage for Recovery Phrase material
-* encrypted JSON backup export and restore for HD Recovery Wallets
+* native VMT-1 token portfolio support
+* token balances tied to the active `vm1...` wallet address
+* public token directory, token details and token activity
+* VMT-1 CREATE
+* VMT-1 TRANSFER
+* VMT-1 BURN
+* authorized issuer-only VMT-1 MINT for mintable tokens
+* VMT-1 receive information using the same native `vm1...` address
+* dynamic CREATE policy obtained from the live VMT API instead of a hard-coded fee
+* local token transaction construction/signing
+* input-0 owner/issuer authorization handling
+* exact signed-transaction preflight before broadcast
+* repeated final preflight immediately before broadcast
+* VMESH wallet activity/history filters: All / Received / Sent / Mining
+* improved UTXO, mining-reward, TXID and confirmation visibility
+* German, English, Russian and Simplified Chinese interfaces
+* continued 12-word and 24-word BIP39 Recovery Wallet creation
+* continued Recovery Wallet restore
+* continued BIP32 derivation using `m/84'/22093'/0'/0/0`
+* continued encrypted local wallet storage
+* continued encrypted HD backup export/restore
 * continued support for legacy `v0.2.x` encrypted single-key backups
 * continued compressed VMESH WIF import support
-* password-protected Recovery Phrase display/copy for HD wallets
-* improved handling of sensitive clipboard contents
-* heavy cryptographic operations moved away from the Android UI thread
-* additional wallet error handling and runtime diagnostics
-* Android release-build / dependency / packaging hardening
-* Android application/cloud backup disabled for wallet secrets
+* continued local signing and signed raw-transaction broadcast
+* dark, light and system theme support
 
 The Android HD wallet currently uses one active deterministic address at index
-`0`. Full gap-limit scanning and multi-address HD aggregation are not yet
-implemented on Android.
+`0`. Full HD gap-limit scanning and multi-address aggregation are not claimed
+for `v0.4.0`.
 
 ---
 
@@ -434,8 +520,10 @@ Current functionality includes:
 * public Stratum information
 * release notifications
 * VMESH QR scanning
-* English interface
 * German interface
+* English interface
+* Russian interface
+* Simplified Chinese interface
 * dark theme
 * light theme
 * system theme
@@ -450,8 +538,8 @@ vargamesh.com:3933
 
 ## Native Android VMESH Wallet
 
-VargaMesh Android `v0.3.0` provides a native self-custody wallet with both the
-new HD Recovery Wallet model and the established legacy single-key/WIF model.
+VargaMesh Android `v0.4.0` provides a native self-custody wallet with both the
+HD Recovery Wallet model and the established legacy single-key/WIF model.
 
 ### Recovery Wallet functionality
 
@@ -460,8 +548,7 @@ new HD Recovery Wallet model and the established legacy single-key/WIF model.
 * restore a wallet from a valid 12-word or 24-word Recovery Phrase
 * derive the active VMESH key with BIP32
 * use the VargaMesh BIP84 Mainnet path `m/84'/22093'/0'/0/0`
-* derive the same first `vm1...` address as the current Desktop/WebWallet
-  Recovery Wallet convention
+* derive the same first `vm1...` address as the current Desktop/WebWallet Recovery Wallet convention
 * show/copy the Recovery Phrase after password verification
 * encrypt Recovery Phrase material locally
 * export an encrypted HD wallet JSON backup
@@ -475,10 +562,10 @@ new HD Recovery Wallet model and the established legacy single-key/WIF model.
 * preserve the original single-key/WIF wallet model for existing users
 * reveal/export the active WIF with an explicit security warning
 
-Existing users do **not** need to recreate their wallet when updating from a
-supported earlier Android release.
+Existing users do **not** need to recreate a supported wallet solely because
+they update the application.
 
-### Transaction and wallet functionality
+### VMESH transaction and wallet functionality
 
 * receive VMESH
 * receive-address QR code
@@ -501,12 +588,36 @@ supported earlier Android release.
 * 10-minute in-memory auto-lock
 * screenshot protection on wallet-sensitive screens
 * local wallet removal
+* activity/history views for received, sent and mining-related activity
+
+### Native VMT-1 functionality
+
+VargaMesh Android `v0.4.0` can operate VMT-1 tokens without sending private
+keys to the public indexer/API.
+
+Current token functionality includes:
+
+* list VMT-1 balances for the active wallet address
+* inspect token name, symbol, supply, issuer and approved metadata
+* browse/search the public token directory
+* create a token through the live Mainnet CREATE policy
+* transfer tokens to another native VargaMesh address
+* burn owned tokens
+* mint when the active address is the authorized issuer and the token is mintable
+* construct and sign the transaction locally
+* preserve the VMT owner/issuer authorizer as input `0`
+* use public VMT preflight for exact signed-transaction semantic validation
+* broadcast only the signed raw transaction
+
+VMT-1 token balances are application-layer state reconstructed from confirmed
+VargaMesh transactions. The same `vm1...` address can receive both VMESH and
+VMT-1 tokens.
 
 ---
 
 ## Android Recovery Wallet Interoperability
 
-Android `v0.3.0` follows the same first-address Mainnet Recovery Wallet
+Android `v0.4.0` follows the same first-address Mainnet Recovery Wallet
 convention documented for VargaMesh Desktop and the WebWallet.
 
 Active Native SegWit path:
@@ -522,17 +633,13 @@ is accepted by the upstream SLIP-0044 registry.
 A valid BIP39 Recovery Phrase therefore deterministically derives the same first
 Native SegWit `vm1...` address in:
 
-* VargaMesh Desktop `v0.4.0`
+* VargaMesh Desktop `v0.5.2`
 * the current VargaMesh WebWallet
-* VargaMesh Android `v0.3.0`
+* VargaMesh Android `v0.4.0`
 
 The interoperability guarantee concerns deterministic key/address derivation.
 It does **not** imply that every application's encrypted JSON backup container
 is interchangeable with every other client.
-
-Android currently operates the first external address at index `0`. Desktop is
-a full HD descriptor wallet and can derive additional receive/change addresses.
-Android and the current WebWallet do not yet perform a full HD gap-limit scan.
 
 ---
 
@@ -573,8 +680,9 @@ must still be treated as sensitive wallet material.
 VargaMesh Android is **non-custodial**.
 
 Recovery Phrases and private keys are created, imported and processed locally.
-The application derives/signs transactions locally and sends only signed raw
-transactions to the public broadcast API.
+The application derives/signs VMESH and supported VMT-1 transactions locally.
+Public services receive blockchain queries, token/indexer queries and signed raw
+transactions — not the wallet's private key material.
 
 ```text
 12/24-word Recovery Phrase                 Legacy compressed WIF
@@ -587,16 +695,14 @@ HD active private key                       Single private key
                                ▼
                   Password-encrypted local storage
                                │
-                               │ unlocked in device memory only
                                ▼
-                  Local transaction construction
+                     Local transaction signing
                                │
                                ▼
-                      Local transaction signing
+                       Signed raw transaction
                                │
-                               │ signed raw transaction only
                                ▼
-                 HTTPS POST /api/v1/broadcast
+                    HTTPS/API broadcast path
 ```
 
 The Android application does **not** intentionally send any of the following to
@@ -608,25 +714,15 @@ the VargaMesh public server:
 * wallet passwords
 * decrypted wallet backups
 
-Only signed raw transactions are submitted for broadcast.
-
 VargaMesh Core RPC is **not exposed to or directly used by the Android
 application**.
-
-Android application/cloud backup is disabled for the wallet store so that
-wallet material is not silently copied through normal Android backup
-mechanisms.
-
-Sensitive wallet operations require local password verification where
-applicable. Recovery Phrase and key material should be shown or copied only in
-a trusted environment.
 
 ---
 
 ## Android Wallet Parameters
 
-VargaMesh Android `v0.3.0` supports both deterministic HD Recovery Wallets and
-legacy single-private-key/WIF wallets.
+VargaMesh Android `v0.4.0` supports deterministic HD Recovery Wallets and legacy
+single-private-key/WIF wallets.
 
 | Parameter                         | Value                         |
 | --------------------------------- | ----------------------------- |
@@ -654,37 +750,28 @@ Signing uses:
 * low-S normalization
 * BIP143-style SegWit v0 signing
 
-The current Android HD implementation intentionally uses the first external
-Native SegWit address at index `0`. It does not yet scan an HD address range or
-aggregate balances across multiple derived addresses.
-
 ---
 
 ## Android Limitations
 
-VargaMesh Android `v0.3.0` currently does **not** implement:
+VargaMesh Android `v0.4.0` currently does **not** claim:
 
 * full HD gap-limit scanning
 * multiple HD receive/change addresses in the active wallet UI
-* multi-account wallets
-* coin control
-* PSBT
-* hardware-wallet support
-* light-client/header verification
 * a locally synchronized VargaMesh full node
+* arbitrary VargaMesh Core RPC access
 
-Android uses the purpose-built public HTTPS API for blockchain/UTXO data and
-signed-transaction broadcast. Private keys and Recovery Phrases are not needed
-by the public API.
+Android uses purpose-built public HTTPS APIs for blockchain/UTXO and VMT-1
+indexer data while keeping private-key operations local.
 
-VargaMesh Desktop `v0.4.0` remains the more complete HD/full-node wallet: it can
-operate VargaMesh Core locally and derive additional receive/change addresses.
+VargaMesh Desktop `v0.5.2` remains the full-node wallet: it can operate
+VargaMesh Core locally and derive additional receive/change addresses.
 
 ---
 
 ## Android Requirements
 
-Current development requirements:
+Current development requirements include:
 
 * Android Studio
 * JDK 17-compatible toolchain
@@ -700,10 +787,10 @@ Minimum supported Android version:
 ## Android Validation and Backup Notice
 
 > [!CAUTION]
-> VargaMesh Android `v0.3.0` can create, recover, hold and spend real VMESH.
+> VargaMesh Android `v0.4.0` can create, recover, hold and spend real VMESH and
+> operate supported VMT-1 token actions.
 >
-> It is publicly available through APKPure and the official direct APK and
-> remains under active development.
+> It remains pre-1.0 public-testing software.
 
 Recommended testing procedure for a newly created Recovery Wallet:
 
@@ -711,20 +798,13 @@ Recommended testing procedure for a newly created Recovery Wallet:
 2. securely record the Recovery Phrase offline
 3. record the first `vm1...` address
 4. export an encrypted JSON backup
-5. verify Recovery Phrase restore in a safe test environment and confirm the
-   same first address
-6. verify encrypted JSON restore with the correct password and confirm the same
-   first address
+5. verify Recovery Phrase restore and confirm the same first address
+6. verify encrypted JSON restore with the correct password
 7. receive a small VMESH amount
 8. send a small VMESH transaction
 9. confirm the transaction in the explorer
-10. test legacy WIF/backup compatibility separately if migrating an older wallet
-
-Do not perform destructive restore/removal tests on a funded wallet unless all
-required recovery material has already been independently verified.
-
-Do not use significant amounts until the Android wallet has received sufficient
-real-device and interoperability testing.
+10. if using VMT-1, verify the token ID, owner address and a small token action
+11. test legacy WIF/backup compatibility separately if migrating an older wallet
 
 Never share:
 
@@ -739,20 +819,50 @@ Never share:
 
 # VargaMesh WebWallet
 
-The VargaMesh ecosystem includes a browser-based self-custody wallet.
+The VargaMesh ecosystem includes a browser-based self-custody wallet and
+installable Progressive Web App (PWA).
 
 WebWallet:
 
 https://vargamesh.com/wallet.html
 
-The WebWallet provides a lightweight alternative for users who do not want
-to operate a local full node.
+The WebWallet provides a lightweight alternative for users who do not want to
+operate a local full node.
 
-The current WebWallet supports two wallet models:
+The current WebWallet supports:
 
 * the established single-private-key / WIF wallet model
-* the newer BIP39/HD Recovery Wallet model compatible with VargaMesh Desktop
-  `v0.4.0`
+* BIP39/HD Recovery Wallets compatible with VargaMesh Desktop `v0.5.2` and Android `v0.4.0`
+* local encrypted wallet storage
+* receive QR codes
+* VMESH send/receive
+* local transaction signing
+* watch-only VMESH/miner-address analysis
+* spendable and immature balance views
+* VNS `.vmesh` registration, renewal, transfer and name-resolution workflows
+* wallet activity views for received, sent and mining-related activity
+* access to the public VMT-1 token directory
+* installable PWA behavior on supported mobile browsers
+* multilingual portal/UI delivery including English, German, Hungarian, Russian and Simplified Chinese pages
+
+### WebWallet PWA
+
+The WebWallet can be installed as a PWA.
+
+On iPhone/iPad:
+
+1. open the wallet page in Safari
+2. use **Share**
+3. choose **Add to Home Screen**
+
+On Android with Chrome/Chromium:
+
+1. use the in-page install prompt when available
+2. otherwise use the browser menu
+3. choose **Install app** or **Add to Home screen**
+
+Installing the PWA is **not** a wallet backup. Recovery Phrase/WIF backup
+responsibility remains unchanged.
 
 ### WebWallet HD Recovery Wallet
 
@@ -766,23 +876,14 @@ The HD Recovery Wallet supports:
 * local encrypted wallet storage
 * explicit Recovery Phrase copy/export during creation
 
-The current WebWallet derives its active address from:
+The current lightweight recovery convention uses:
 
 ```text
 m/84'/22093'/0'/0/0
 ```
 
-This is the first external Native SegWit receive address of the same wallet
-tree used by VargaMesh Desktop `v0.4.0` and VargaMesh Android `v0.3.0`.
-
-A valid Recovery Phrase therefore derives the same first `vm1...` address in
-Desktop, Android and the current WebWallet.
-
-> [!IMPORTANT]
-> The current WebWallet remains a **single-address HD implementation**.
->
-> VargaMesh Desktop can derive further receive/change addresses. The WebWallet
-> does not yet scan or aggregate the complete HD address range.
+This is the first external Native SegWit receive address of the same wallet tree
+used by VargaMesh Desktop `v0.5.2` and VargaMesh Android `v0.4.0`.
 
 ### WebWallet VNS integration
 
@@ -803,21 +904,32 @@ The current VNS registration policy uses a fee of **10 VMESH per year**.
 Registration fees are directed to the publicly declared VargaMesh Ecosystem
 Treasury according to the current VNS policy.
 
-VNS registration and ownership data is represented on-chain. The public
-Explorer and VargaMesh Mempool Explorer expose the corresponding name state
-and transaction information for visibility.
+VNS uses a small ownership anchor output. A VNS-aware client should avoid
+accidentally spending that owner output during unrelated payments.
 
-Desktop and Android VNS wallet integration is planned as the next client-side
-expansion. The current production-facing VNS user interface is integrated first
-in the WebWallet, Explorer and Mempool Explorer.
+### WebWallet activity model
+
+The WebWallet combines currently visible on-chain outputs, mining payout scans
+and locally recorded outgoing browser-wallet broadcasts.
+
+Current filters include:
+
+* All
+* Received
+* Sent
+* Mining
+
+The public API does not necessarily represent a complete lifetime address
+transaction index in every lightweight-wallet view. The blockchain explorer
+remains the independent verification surface for confirmed transactions.
 
 ### WebWallet local security model
 
 Recovery Wallet material is handled locally in the browser.
 
 The current HD wallet storage uses authenticated encryption and a
-password-derived key. Recovery words are not intentionally stored as
-plaintext application state.
+password-derived key. Recovery words are not intentionally stored as plaintext
+application state.
 
 The current implementation uses:
 
@@ -833,15 +945,12 @@ Because a browser wallet depends on the integrity of code delivered by the
 website origin, users should prefer the Desktop/full-node wallet for larger
 holdings or higher-security use cases.
 
-### WebWallet / Android interoperability
+### WebWallet / Android / Desktop interoperability
 
-The legacy WIF wallet and encrypted backup functionality remains supported.
+A valid Recovery Phrase derives the same first Native SegWit `vm1...` address in
+Android, Desktop and the current WebWallet.
 
-VargaMesh Android `v0.3.0` now also implements the documented BIP39/BIP32
-Recovery Wallet derivation. A valid Recovery Phrase derives the same first
-Native SegWit `vm1...` address in Android, Desktop and the current WebWallet.
-
-The current Android and WebWallet HD implementations both use:
+The lightweight clients use:
 
 ```text
 m/84'/22093'/0'/0/0
@@ -852,21 +961,119 @@ Recovery Phrase interoperability therefore refers to deterministic wallet
 derivation, not automatic interchangeability of every encrypted JSON file.
 
 Legacy `v0.2.x` Android single-key/WIF backups remain supported for migration
-and compatibility.
+and compatibility where the client explicitly supports that format.
 
 ### Wallet access models
 
-| Client              | Model                                                | Platform      |
-| ------------------- | ---------------------------------------------------- | ------------- |
-| VargaMesh Desktop   | Full-node HD / Core wallet                           | Windows       |
-| VargaMesh Android   | Native single-address HD Recovery + legacy WIF wallet | Android       |
-| VargaMesh WebWallet | Browser/PWA single-key + HD Recovery Wallet          | Browser / PWA |
+| Client              | Model                                                   | Platform      |
+| ------------------- | ------------------------------------------------------- | ------------- |
+| VargaMesh Desktop   | Full-node HD / Core wallet + native VMT-1              | Windows x64   |
+| VargaMesh Android   | Native index-0 HD Recovery + legacy WIF + native VMT-1 | Android       |
+| VargaMesh WebWallet | Browser/PWA single-key + HD Recovery Wallet            | Browser / PWA |
 
 The browser wallet should not be confused with VargaMesh Desktop.
 
 VargaMesh Desktop runs and synchronizes VargaMesh Core locally. The WebWallet
 uses purpose-built public HTTPS APIs for blockchain data and signed-transaction
 broadcast.
+
+---
+
+# VMT-1 Token Layer
+
+**VMT-1** is the VargaMesh fungible-token application layer.
+
+Public token directory:
+
+https://vargamesh.com/tokens.html
+
+VMT-1 does **not** replace VMESH and does not modify the VargaMesh Core
+consensus rules. Token operations are encoded in ordinary VargaMesh
+transactions and reconstructed deterministically by independent VMT-aware
+indexers.
+
+Current public directory data describes VMT-1 as active on Mainnet from block
+`8,633+`.
+
+### Supported operations
+
+The VMT-1 ledger recognizes:
+
+* `CREATE`
+* `MINT`
+* `TRANSFER`
+* `BURN`
+
+A confirmed CREATE transaction defines a new token. The CREATE transaction TXID
+becomes that token's VMT token ID.
+
+### Address and authorization model
+
+VMT-1 balances belong to a concrete native SegWit `vm1...` address.
+
+For owner/issuer-authorized token operations, transaction input `0` is used as
+the authorization anchor. Wallet clients therefore have to preserve and verify
+the intended owner/issuer input ordering when constructing and signing token
+transactions.
+
+A VMT owner address may also need a confirmed spendable VMESH UTXO so the
+transaction can prove authorization and pay the normal base-chain network fee.
+
+### CREATE policy and fees
+
+Clients should obtain the current VMT CREATE policy from the public VMT status
+API rather than hard-coding an amount, activation height or recipient.
+
+TRANSFER, BURN and authorized MINT use the normal VMESH network transaction fee.
+The VMT CREATE policy is separate and may include an additional active CREATE
+fee according to the published Mainnet policy.
+
+### Token directory trust model
+
+On-chain token facts are chain-derived.
+
+The public directory indexes:
+
+* token existence
+* issuer
+* current/lifetime supply data
+* holder balances
+* CREATE/MINT/TRANSFER/BURN events
+* token activity
+
+Issuer logos, descriptions and external links are **off-chain metadata**.
+Publication of that metadata requires issuer proof and manual review. Approval
+means the metadata passed the directory workflow; it is not an audit,
+investment recommendation, price guarantee or legal/compliance certification.
+
+Public read replicas can verify the authority's signed metadata manifest.
+
+### Current client support
+
+| Client / service          | VMT-1 status |
+| ------------------------- | ------------ |
+| VargaMesh Desktop v0.5.2  | 🟢 Native portfolio + CREATE/TRANSFER/BURN/MINT |
+| VargaMesh Android v0.4.0  | 🟢 Native portfolio + token actions |
+| VargaMesh Token Directory | 🟢 Public read-only directory |
+| Public API                | 🟢 VMT-1 status, stats, balances, tokens, holders and events |
+| VargaMesh WebWallet       | 🟢 Public token-directory access / web integration surface |
+
+### Public VMT-1 API
+
+Current public endpoints include:
+
+```text
+GET /api/v1/vmt/status
+GET /api/v1/vmt/stats
+GET /api/v1/tokens
+GET /api/v1/tokens/<token_id>
+GET /api/v1/tokens/<token_id>/holders
+GET /api/v1/tokens/<token_id>/events
+GET /api/v1/addresses/<vm1...>/tokens
+```
+
+The public VMT API is an indexer/API layer. VargaMesh Core remains authoritative
+for base-chain consensus and transaction validity.
 
 ---
 
@@ -903,8 +1110,8 @@ Current implementation includes:
 | VargaMesh WebWallet             | 🟢 Integrated |
 | Public Explorer                 | 🟢 Integrated |
 | VargaMesh Mempool Explorer      | 🟢 Integrated / active development |
-| VargaMesh Desktop `v0.4.0`      | Planned client integration |
-| VargaMesh Android `v0.3.0`      | Planned client integration |
+| VargaMesh Desktop `v0.5.2`      | Planned client integration |
+| VargaMesh Android `v0.4.0`      | Planned client integration |
 
 The Explorer can expose the current name status, resolved target address,
 registration/expiry height, owner reference and the available on-chain history.
@@ -976,24 +1183,38 @@ interface while broader indexing work continues.
 
 # VargaProof
 
-VargaProof is part of the VargaMesh ecosystem and provides verification
-infrastructure for cryptographic data proofs.
+**VargaProof** is the VargaMesh proof-of-existence service using the `VPF1`
+on-chain format.
 
 Public interface:
 
 https://vargamesh.com/proof.html
 
-VargaProof is intended to make it possible to work with cryptographic
-fingerprints and verification data without treating uploaded content itself
-as the authoritative object.
+A file is hashed locally with SHA-256. The file itself does not need to be
+uploaded to the VargaProof service.
 
-Typical proof systems can be used to demonstrate that a specific
-cryptographic hash was associated with a particular network state or time.
+The on-chain VPF1 payload is:
 
-> [!NOTE]
-> Cryptographic proof verification should not be interpreted as automatic
-> legal certification, identity verification or validation of the truth of
-> the underlying content.
+```text
+"VPF1" + 32-byte SHA-256 digest
+```
+
+Hex prefix:
+
+```text
+56504631
+```
+
+The resulting 36-byte payload is committed in an unspendable `OP_RETURN`
+output.
+
+A confirmed VargaProof demonstrates that the exact SHA-256 digest was committed
+no later than the confirming VargaMesh block. It does **not** by itself prove
+authorship, ownership, truth of content, contractual validity or legal
+certification.
+
+Public API support includes proof status, digest lookup, recent anchors and a
+proof OpenAPI specification.
 
 ---
 
@@ -1005,20 +1226,21 @@ Public interface:
 
 https://vargamesh.com/meshproof.html
 
-MeshProof allows operators to register a public VargaMesh node, prove control
-of that node through a temporary P2P user-agent claim tag and build a public
-observation history from repeated probes.
+MeshProof is **off-consensus**. It does not alter Proof of Work, AuxPoW, block
+rewards or VargaMesh Core consensus rules.
 
-Current MeshProof functionality includes:
+Current functionality includes:
 
 * public node registration
-* ownership verification through the actual VargaMesh P2P handshake
+* real VargaMesh P2P handshake validation on port `29666`
+* randomized ping/pong liveness challenges
+* one-time ownership verification through a temporary node user-agent claim
 * repeated public availability probes
 * Mesh Score and observed coverage
 * latency visibility
 * public contribution history
 * hash-chained probe receipts
-* optional treasury-funded community rewards
+* optional Treasury-funded community rewards
 
 Current reward safety limits are:
 
@@ -1027,20 +1249,60 @@ Current reward safety limits are:
 10 VMESH/node maximum per completed UTC epoch
 ```
 
-MeshProof rewards are not protocol block rewards and do not create new VMESH.
-When enabled, they are funded from the publicly declared VargaMesh Ecosystem
-Treasury through the configured payout process.
+Current published eligibility includes:
 
-> [!NOTE]
-> MeshProof contribution rewards are separate from mining payouts and do not
-> represent a guarantee of payment, value or future availability.
+* verified ownership
+* at least `12` probes in the epoch
+* at least `90%` observed uptime
+* Mesh Score of at least `70`
+
+Reward weight is based on Mesh Score and observed epoch coverage. Anti-Sybil
+limits apply. Registration alone does not guarantee a payout.
+
+MeshProof rewards are funded from existing VMESH staged from the VargaMesh
+Ecosystem Treasury. They are not protocol block rewards and do not create new
+VMESH.
+
+---
+
+# VargaMesh Ecosystem Treasury
+
+The **VargaMesh Ecosystem Treasury** is a public project-operated VMESH wallet
+for voluntary ecosystem contributions and documented distributions.
+
+Public interface:
+
+https://vargamesh.com/treasury.html
+
+Public Treasury address:
+
+```text
+vm1qmh7cnjshtxyrqdfefzs2k7g6r7pd7ma9ntrleg
+```
+
+The Treasury page exposes on-chain balance reconciliation, verified attributed
+contributions, a public activity ledger and documented distribution purposes.
+
+Important properties:
+
+* contributions are voluntary
+* direct on-chain movements are independently inspectable
+* pseudonymous contributor attribution is optional
+* unattributed inflows remain separate instead of being assigned to a nickname without proof
+* contribution-share percentages are transparency metrics only
+* contribution share does not create equity, repayment, dividends, profit participation, redemption or voting rights
+* Treasury funds do not guarantee VMESH price, liquidity, exchange listing or future rewards
+* MeshProof rewards are a documented Treasury-funded program rather than new coin issuance
+
+The Treasury is not a DAO escrow. Spending authority remains with the project
+operator and distributions should be published with purpose and transaction
+references.
 
 ---
 
 # Mining Infrastructure
 
-VargaMesh uses **SHA-256d Proof-of-Work** and supports **AuxPoW merged
-mining**.
+VargaMesh uses **SHA-256d Proof-of-Work** and supports **AuxPoW merged mining**.
 
 Mining infrastructure is developed separately from VargaMesh Core.
 
@@ -1048,27 +1310,88 @@ CkPool repository:
 
 https://github.com/ati1993de/vargamesh-ckpool
 
-Public Stratum endpoint:
+### Public VMESH SOLO
+
+Primary direct VMESH mining endpoint:
 
 ```text
-vargamesh.com:3933
+stratum+tcp://vargamesh.com:3933
 ```
 
-Mining infrastructure includes or supports:
+Miner configuration:
 
-* SHA-256d mining
-* VMESH block-template handling
-* public Stratum connectivity
-* mining statistics
-* mining-address lookup
-* AuxPoW infrastructure
-* CkPool integration
+```text
+User: vm1YOUR_VMESH_ADDRESS.worker
+Pass: x
+Start difficulty: 1024
+```
 
-AuxPoW allows valid work from a compatible parent-chain mining process to
-also contribute toward VargaMesh block production when the participating
-mining software supports the required merged-mining protocol.
+Current documented payout policy:
 
-Consensus validation of AuxPoW blocks is performed by VargaMesh Core.
+```text
+99% miner
+1% pool / development
+```
+
+The split is designed to be encoded directly in the VMESH child coinbase. The
+confirmed coinbase transaction remains authoritative for each payout.
+
+### BTC + VMESH Merged SOLO
+
+AuxPoW merged-mining endpoint:
+
+```text
+stratum+tcp://mergedsolo.vargamesh.com:3950
+```
+
+Configuration:
+
+```text
+Username: YOUR_BTC_PAYOUT_ADDRESS
+Password: YOUR_VMESH_PAYOUT_ADDRESS
+Mode: Bitcoin SOLO + VMESH AuxPoW
+```
+
+Current documented fee policy:
+
+```text
+BTC side:   0% pool fee
+VMESH side: 99% miner / 1% pool-development
+```
+
+The same SHA-256d parent work is evaluated independently against the Bitcoin
+parent target and VargaMesh child target. Mining VMESH through AuxPoW does not
+split the ASIC's hashrate into a second algorithm.
+
+### Home Mining / PPLNS
+
+Additional Home Mining endpoint:
+
+```text
+stratum+tcp://homemining.vargamesh.com:3940
+```
+
+Configuration:
+
+```text
+Username: YOUR_VMESH_ADDRESS.WorkerName
+Password: x
+Algorithm: SHA-256d
+```
+
+Home Mining is a separate PPLNS service with independent accounting. It does not
+share accounting with VMESH SOLO or BTC + VMESH Merged SOLO.
+
+### Consensus relationship
+
+AuxPoW validation is performed by VargaMesh Core.
+
+Mining services, dashboards and pool accounting are infrastructure layers.
+A pool UI or telemetry endpoint is not consensus-authoritative.
+
+Proof of Work is probabilistic. Hashrate, accepted shares, historic block finds,
+pool policy or past payouts do not guarantee future blocks, payouts,
+profitability or economic value.
 
 ---
 
@@ -1088,23 +1411,70 @@ The API is intended for public applications including:
 * browser applications
 * explorers
 * monitoring services
+* VMT-1 token tools
 * external integrations
-
-The Android wallet uses read-only API endpoints for balance, address and
-UTXO information.
-
-Signed transactions can be submitted through:
-
-```http
-POST /api/v1/broadcast
-```
-
-Only already signed raw transactions are submitted.
 
 The public HTTPS API is **not VargaMesh Core RPC**.
 
 Applications should use the public API instead of exposing Core RPC to the
 Internet.
+
+### Core public endpoints
+
+Representative endpoints include:
+
+```text
+GET /api/v1/health
+GET /api/v1/config
+GET /api/v1/status
+GET /api/v1/blocks
+GET /api/v1/block/{id}
+GET /api/v1/tx/{txid}
+GET /api/v1/address/{address}
+GET /api/v1/utxos/{address}
+GET /api/v1/pool
+GET /api/v1/pool/blocks
+GET /api/v1/supply
+GET /api/v1/supply/circulating
+GET /api/v1/supply/total
+GET /api/v1/releases
+GET /api/v1/wallet-standard
+GET /api/v1/fee
+POST /api/v1/broadcast
+```
+
+Only already signed raw transactions are submitted through the broadcast path.
+
+### VMT-1 endpoints
+
+```text
+GET /api/v1/vmt/status
+GET /api/v1/vmt/stats
+GET /api/v1/tokens
+GET /api/v1/tokens/<token_id>
+GET /api/v1/tokens/<token_id>/holders
+GET /api/v1/tokens/<token_id>/events
+GET /api/v1/addresses/<vm1...>/tokens
+```
+
+### VargaProof endpoints
+
+The public API also exposes VargaProof status, digest lookup, recent proof
+anchors and an OpenAPI document.
+
+### VNS API
+
+The VNS application layer exposes name status, availability, resolution,
+history/address lookups and payload-encoding helpers for commit/register,
+transfer and renew flows.
+
+### Treasury and MeshProof APIs
+
+Public transparency endpoints exist for Treasury status/ledger/contributors and
+MeshProof status/nodes/receipts/reward previews/epochs.
+
+Public applications must not require or request user Recovery Phrases, private
+keys, WIFs or Core RPC credentials.
 
 ---
 
@@ -1225,7 +1595,7 @@ Testnet BIP44/SLIP-0044 coin type.
 
 # HD Recovery Wallet Standard
 
-VargaMesh Desktop `v0.4.0`, VargaMesh Android `v0.3.0` and the current
+VargaMesh Desktop `v0.5.2`, VargaMesh Android `v0.4.0` and the current
 VargaMesh WebWallet implement the same first-address Mainnet
 BIP39/BIP32/BIP84 Recovery Wallet derivation.
 
@@ -1291,7 +1661,7 @@ implementations.
 
 ### Current interoperability scope
 
-| Capability                              | Desktop v0.4.0 | WebWallet | Android v0.3.0 |
+| Capability                              | Desktop v0.5.2 | WebWallet | Android v0.4.0 |
 | --------------------------------------- | :------------: | :-------: | :------------: |
 | BIP39 12/24 words                       |       Yes      |    Yes    |       Yes      |
 | BIP32 HD derivation                     |       Yes      |    Yes    |       Yes      |
@@ -1451,9 +1821,10 @@ VargaMesh is under active development.
 | Component                  | Status                                      |
 | -------------------------- | ------------------------------------------- |
 | VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet release                |
-| VargaMesh Desktop `v0.4.0` | 🟢 Available · Microsoft Store + GitHub      |
-| VargaMesh Android `v0.3.0` | 🟢 Available · APKPure + official direct APK |
+| VargaMesh Desktop `v0.5.2` | 🟢 Released · GitHub · Windows x64          |
+| VargaMesh Android `v0.4.0` | 🟢 Released · official direct APK           |
 | VargaMesh WebWallet        | 🟢 Available                                |
+| VMT-1 Token Layer         | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     | 🟢 Available · WebWallet / Explorer / Mempool |
 | Public Explorer            | 🟢 Available                                |
 | Public API                 | 🟢 Available                                |
@@ -1461,6 +1832,7 @@ VargaMesh is under active development.
 | Mining / CkPool            | 🟢 Available / active development           |
 | VargaProof                 | 🟢 Available                                |
 | MeshProof                  | 🟢 Available                                |
+| Ecosystem Treasury         | 🟢 Available · public on-chain transparency |
 | VargaMesh Mempool Explorer | 🔵 Active development                       |
 
 Interfaces, APIs and wallet functionality may evolve.
@@ -1472,39 +1844,59 @@ implemented and reviewed at the VargaMesh Core layer.
 
 # Roadmap Direction
 
-Current development directions include:
+VargaMesh uses status-based development rather than guaranteed release dates.
 
 ### Core
 
-* continued VargaMesh Core testing
-* consensus hardening
-* interoperability testing
-* broader node testing
+* continued VargaMesh Core `v0.2.x` testing and hardening
+* consensus and AuxPoW validation review
+* broader independent-node testing
 * easier node deployment
-* expanded documentation
+* expanded integration documentation
 
 ### Desktop
 
-* VNS `.vmesh` name resolution and wallet integration
-* continued Recovery Wallet testing
-* improved wallet UX
-* broader Desktop/WebWallet interoperability validation
-* multi-account and advanced wallet functionality
-* continued WIF/import and descriptor compatibility testing
+Current shipped line: **VargaMesh Desktop v0.5.2**
+
+Priorities include:
+
+* continued VMT-1 transaction and portfolio hardening
+* continued four-language UI review
+* continued Recovery Wallet / descriptor interoperability testing
+* improved wallet UX and diagnostics
+* continued Core/WIF/watch-only compatibility testing
+* VNS client integration when ready
 
 ### Android
 
-* VNS `.vmesh` name resolution and wallet integration
-* broader physical-device testing for `v0.3.0`
+Current shipped line: **VargaMesh Android v0.4.0**
+
+Priorities include:
+
+* continued VMT-1 wallet hardening
+* broader physical-device testing
 * continued 12/24-word Recovery Wallet testing
 * Android/Desktop/WebWallet deterministic recovery interoperability validation
 * encrypted HD JSON backup/restore testing
 * legacy `v0.2.x` WIF/backup migration testing
 * transaction compatibility validation
-* wallet UX improvements
-* crash and edge-case testing
-* expanded QR payment handling
-* future multi-address HD and gap-limit scanning evaluation
+* wallet UX and QR improvements
+* future multi-address HD / gap-limit scanning evaluation
+* VNS client integration when ready
+
+### VMT-1
+
+Current shipped/public components include native Desktop/Android token support,
+the public token directory and public VMT API.
+
+Further work can include:
+
+* additional independent VMT indexers/read replicas
+* indexer consistency/audit tooling
+* improved token-directory UX
+* metadata/logo workflow hardening
+* broader WebWallet token-management parity
+* additional developer documentation and regression vectors
 
 ### Wallet Standards
 
@@ -1514,11 +1906,9 @@ Current and future wallet-standard work includes:
 * upstream SLIP-0044 registration request for proposed Mainnet coin type `22093`
 * WebWallet and Android gap-limit scanning / multi-address HD support
 * continued Android/Desktop/WebWallet HD Recovery interoperability testing
-* multi-account wallet support
-* coin control
-* PSBT support
-* hardware-wallet integration
-* light-client/header verification
+* advanced wallet-management functionality where justified
+
+Hardware-wallet/Trezor integration is **not a current project priority**.
 
 ### VargaMesh Name Service
 
@@ -1528,13 +1918,14 @@ Current and future wallet-standard work includes:
 * improved name-management UX
 * continued commit/reveal, renewal and transfer interoperability testing
 
-### Explorer
+### Explorer and Mempool
 
-* VMESH-specific mempool indexing
-* richer transaction information
+* VMESH-specific mempool indexing maturity
+* richer transaction and token information
 * additional fee data
 * improved address information
 * broader network visualization
+* continued VNS and VMT-1 event visibility
 
 ### Developer Ecosystem
 
@@ -1549,11 +1940,11 @@ Current and future wallet-standard work includes:
 
 ### Network
 
-* additional independent nodes
+* additional independent public nodes
 * wider geographic node distribution
 * improved mining tooling
 * broader AuxPoW testing
-* improved monitoring
+* improved observability and monitoring
 
 > [!NOTE]
 > Roadmap items describe development direction and should not be interpreted
@@ -1563,7 +1954,11 @@ Current and future wallet-standard work includes:
 
 # External Listings
 
-VargaMesh may also be listed by independent third-party data platforms.
+VargaMesh may be listed by independent third-party data platforms and services.
+
+Canonical project/listing information:
+
+https://vargamesh.com/listing/
 
 Current verified Blockspot listing:
 
@@ -1575,33 +1970,43 @@ been validated/confirmed through their listing process.
 It should not be interpreted as an audit, financial recommendation or
 endorsement of VMESH.
 
+Third-party exchanges, directories, wallets, pools or integrations operate
+independently. A listing or integration should not be interpreted as a promise
+of price, liquidity, availability or future support.
+
 ---
 
 # Project Links
 
-| Resource            | URL                                                  |
-| ------------------- | ---------------------------------------------------- |
-| Official website    | https://vargamesh.com                                |
-| Project portal      | https://mesh.vargatech.net                           |
-| Core repository     | https://github.com/ati1993de/vargamesh-core          |
-| Core releases       | https://github.com/ati1993de/vargamesh-core/releases |
-| Desktop repository  | https://github.com/ati1993de/vargamesh-desktop       |
-| Microsoft Store     | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
-| Android information | https://vargamesh.com/android.html                   |
-| Android APK         | https://vargamesh.com/vmesh.apk                      |
-| Android APK SHA256  | https://vargamesh.com/vmesh.apk.sha256               |
-| Android APKPure     | https://apkpure.com/p/de.vargatech.vargamesh         |
-| WebWallet           | https://vargamesh.com/wallet.html                    |
-| Explorer            | https://vargamesh.com/explorer.html                  |
-| Mempool Explorer    | https://mempool.vargamesh.com                        |
-| Network statistics  | https://vargamesh.com/network.html                   |
-| VargaProof          | https://vargamesh.com/proof.html                     |
-| MeshProof           | https://vargamesh.com/meshproof.html                 |
-| Public API          | https://vargamesh.com/api/v1                         |
-| CkPool              | https://github.com/ati1993de/vargamesh-ckpool        |
-| Roadmap             | https://vargamesh.com/roadmap.html                   |
-| Blockspot           | https://blockspot.io/coin/vargamesh-vmesh/           |
-| Discord             | https://discord.gg/AeC8sxt2aB                        |
+| Resource              | URL                                                  |
+| --------------------- | ---------------------------------------------------- |
+| Official website      | https://vargamesh.com                                |
+| Project portal        | https://mesh.vargatech.net                           |
+| Core repository       | https://github.com/ati1993de/vargamesh-core          |
+| Core releases         | https://github.com/ati1993de/vargamesh-core/releases |
+| Desktop repository    | https://github.com/ati1993de/vargamesh-desktop       |
+| Desktop releases      | https://github.com/ati1993de/vargamesh-desktop/releases/latest |
+| Microsoft Store       | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
+| Android information   | https://vargamesh.com/android.html                   |
+| Android APK           | https://vargamesh.com/vmesh.apk                      |
+| Android APK SHA256    | https://vargamesh.com/vmesh.apk.sha256               |
+| Android APKPure       | https://apkpure.com/p/de.vargatech.vargamesh         |
+| WebWallet / PWA       | https://vargamesh.com/wallet.html                    |
+| Token directory       | https://vargamesh.com/tokens.html                    |
+| Explorer              | https://vargamesh.com/explorer.html                  |
+| Mempool Explorer      | https://mempool.vargamesh.com                        |
+| Network statistics    | https://vargamesh.com/network.html                   |
+| VargaProof            | https://vargamesh.com/proof.html                     |
+| MeshProof             | https://vargamesh.com/meshproof.html                 |
+| Ecosystem Treasury    | https://vargamesh.com/treasury.html                  |
+| Public API            | https://vargamesh.com/api/v1                         |
+| Release manifest      | https://vargamesh.com/api/v1/releases                |
+| Wallet standard       | https://vargamesh.com/wallet-standard/               |
+| CkPool                | https://github.com/ati1993de/vargamesh-ckpool        |
+| Roadmap               | https://vargamesh.com/roadmap.html                   |
+| Listing information   | https://vargamesh.com/listing/                       |
+| Blockspot             | https://blockspot.io/coin/vargamesh-vmesh/           |
+| Discord               | https://discord.gg/AeC8sxt2aB                        |
 
 ---
 
@@ -1623,6 +2028,8 @@ Useful contributions include:
 * mining testing
 * AuxPoW testing
 * explorer/indexer testing
+* VMT-1 indexer and wallet-operation testing
+* multilingual UI review
 * API testing
 
 When reporting a problem, include:
@@ -1664,6 +2071,7 @@ Recommended precautions:
 * never expose Core RPC publicly
 * verify destination addresses before sending
 * independently confirm important transactions in the blockchain
+* verify VMT token IDs, owner/issuer addresses and signed preflight results before token broadcasts
 
 If a security issue could put users or funds at risk, avoid publishing
 private-key material or exploit details together with live wallet data.
