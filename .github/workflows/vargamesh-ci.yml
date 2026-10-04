@@ -58,6 +58,151 @@ jobs:
           build/bin/vargameshd --version
           build/bin/vargameshd --version | grep -F "VargaMesh Core"
 
+
+  macos:
+    name: macOS ${{ matrix.arch }} build + Mainnet/Testnet smoke
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            arch: x86_64
+            host: x86_64-apple-darwin
+          - runner: macos-15
+            arch: arm64
+            host: arm64-apple-darwin
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 180
+    env:
+      HOST: ${{ matrix.host }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Verify native runner architecture
+        shell: bash
+        run: |
+          set -euxo pipefail
+          echo "Runner: ${{ matrix.runner }}"
+          echo "Host triplet: $HOST"
+          echo "uname -m: $(uname -m)"
+          case "${{ matrix.arch }}" in
+            x86_64) test "$(uname -m)" = "x86_64" ;;
+            arm64) test "$(uname -m)" = "arm64" ;;
+            *) echo "Unknown architecture"; exit 1 ;;
+          esac
+
+      - name: Install macOS build prerequisites
+        shell: bash
+        run: |
+          set -euxo pipefail
+          brew install cmake make ninja
+
+      - name: Build pinned macOS dependencies
+        shell: bash
+        run: |
+          set -euxo pipefail
+          gmake -C depends -j2             HOST="$HOST"             NO_QT=1             NO_ZMQ=1
+
+      - name: Configure macOS release build
+        shell: bash
+        run: |
+          set -euxo pipefail
+          test -f "depends/$HOST/toolchain.cmake"
+          cmake -S . -B build-macos -G Ninja             --toolchain "depends/$HOST/toolchain.cmake"             -DCMAKE_BUILD_TYPE=Release             -DBUILD_GUI=OFF             -DBUILD_TESTS=OFF             -DBUILD_BENCH=OFF             -DBUILD_FUZZ_BINARY=OFF             -DBUILD_TX=ON             -DBUILD_UTIL=ON             -DENABLE_WALLET=ON             -DBUILD_WALLET_TOOL=ON             -DWITH_ZMQ=OFF             -DENABLE_IPC=OFF             -DENABLE_EXTERNAL_SIGNER=OFF
+
+      - name: Build macOS binaries
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cmake --build build-macos --parallel 2
+
+      - name: Verify packaged-program candidates
+        shell: bash
+        run: |
+          set -euxo pipefail
+          for name in vargameshd vargamesh-cli vargamesh-wallet vargamesh-tx vargamesh-util; do
+            exe="$(find build-macos -type f -name "$name" | head -n1 || true)"
+            test -n "$exe"
+            test -x "$exe"
+            echo "===== $name ====="
+            file "$exe"
+            "$exe" --version
+          done
+
+      - name: macOS Mainnet + Testnet daemon/RPC smoke tests
+        shell: bash
+        run: |
+          set -euxo pipefail
+          D="$(find build-macos -type f -name vargameshd | head -n1)"
+          C="$(find build-macos -type f -name vargamesh-cli | head -n1)"
+          test -x "$D"
+          test -x "$C"
+
+          MAIN="$RUNNER_TEMP/vmesh-mainnet-smoke"
+          mkdir -p "$MAIN"
+          "$D" -datadir="$MAIN" -server=1 -listen=0 -connect=0 -daemonwait
+          "$C" -datadir="$MAIN" getblockchaininfo > "$RUNNER_TEMP/main.json"
+          grep -Eq '"chain"[[:space:]]*:[[:space:]]*"main"' "$RUNNER_TEMP/main.json"
+          "$C" -datadir="$MAIN" createwallet release_smoke >/dev/null
+          MAIN_ADDR="$("$C" -datadir="$MAIN" getnewaddress)"
+          case "$MAIN_ADDR" in
+            vm1*) ;;
+            *) echo "Unexpected Mainnet address: $MAIN_ADDR"; exit 1 ;;
+          esac
+          "$C" -datadir="$MAIN" stop
+          sleep 3
+
+          TEST="$RUNNER_TEMP/vmesh-testnet-smoke"
+          mkdir -p "$TEST"
+          "$D" -testnet -datadir="$TEST" -server=1 -listen=0 -connect=0 -daemonwait
+          "$C" -testnet -datadir="$TEST" getblockchaininfo > "$RUNNER_TEMP/test.json"
+          grep -Eq '"chain"[[:space:]]*:[[:space:]]*"test"' "$RUNNER_TEMP/test.json"
+          "$C" -testnet -datadir="$TEST" createwallet release_smoke >/dev/null
+          TEST_ADDR="$("$C" -testnet -datadir="$TEST" getnewaddress)"
+          case "$TEST_ADDR" in
+            tvm1*) ;;
+            *) echo "Unexpected Testnet address: $TEST_ADDR"; exit 1 ;;
+          esac
+          "$C" -testnet -datadir="$TEST" stop
+          sleep 3
+
+          echo "PASS: macOS ${{ matrix.arch }} Mainnet daemon/RPC + vm1 address"
+          echo "PASS: macOS ${{ matrix.arch }} Testnet daemon/RPC + tvm1 address"
+
+      - name: Package macOS CI runtime
+        shell: bash
+        run: |
+          set -euxo pipefail
+          MAJOR="$(sed -n 's/^set(CLIENT_VERSION_MAJOR \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
+          MINOR="$(sed -n 's/^set(CLIENT_VERSION_MINOR \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
+          BUILD="$(sed -n 's/^set(CLIENT_VERSION_BUILD \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
+          VERSION="$MAJOR.$MINOR.$BUILD"
+          PKG="VargaMesh-v$VERSION-macOS-${{ matrix.arch }}"
+          ROOT="dist/$PKG"
+          mkdir -p "$ROOT"
+
+          for name in vargameshd vargamesh-cli vargamesh-wallet vargamesh-tx vargamesh-util; do
+            src="$(find build-macos -type f -name "$name" | head -n1 || true)"
+            test -n "$src"
+            cp -a "$src" "$ROOT/$name"
+          done
+
+          cp -a COPYING "$ROOT/"
+          tar -C dist -czf "dist/$PKG.tar.gz" "$PKG"
+          shasum -a 256 "dist/$PKG.tar.gz" > "dist/$PKG.tar.gz.sha256"
+
+      - name: Upload macOS CI package
+        uses: actions/upload-artifact@v6
+        with:
+          name: VargaMesh-macOS-${{ matrix.arch }}-CI
+          path: |
+            dist/VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz
+            dist/VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
+
   windows:
     name: Windows headless release build
     runs-on: windows-2025
