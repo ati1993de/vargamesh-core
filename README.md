@@ -37,6 +37,11 @@
 > **VargaMesh is under active development.**
 >
 > VargaMesh Core `v0.2.0` is the current Mainnet/Testnet release.
+> Official Core binaries are published for Linux x86_64, Windows x86_64,
+> macOS Intel x86_64 and macOS Apple Silicon arm64.
+>
+> The macOS Core archives contain the daemon and command-line utilities. They
+> are separate from the graphical VargaMesh Desktop application.
 >
 > VargaMesh Desktop `v0.5.2` is the current Windows x64 public-testing release.
 > It bundles VargaMesh Core `v0.2.0`, adds native VMT-1 token operations and a
@@ -143,7 +148,7 @@ Canonical release manifest: https://vargamesh.com/api/v1/releases
 
 | Component                  |     Version | Status                                      |
 | -------------------------- | ----------: | ------------------------------------------- |
-| VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet release                |
+| VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
 | VargaMesh Desktop          |    `v0.5.2` | 🟢 Released · GitHub · Windows x64          |
 | VargaMesh Android          |    `v0.4.0` | 🟢 Released · official direct APK           |
 | VargaMesh WebWallet        |     Current | 🟢 Available                                |
@@ -242,6 +247,21 @@ https://github.com/ati1993de/vargamesh-core
 Current version:
 
 **VargaMesh Core v0.2.0**
+
+Official v0.2.0 binary packages:
+
+* Linux x86_64
+* Windows x86_64
+* macOS Intel x86_64
+* macOS Apple Silicon arm64
+
+Release downloads and SHA-256 checksum files:
+
+https://github.com/ati1993de/vargamesh-core/releases/tag/v0.2.0
+
+The macOS packages contain `vargameshd`, `vargamesh-cli`, `vargamesh-wallet`,
+`vargamesh-tx` and `vargamesh-util`. They are Core command-line packages, not
+the graphical VargaMesh Desktop application.
 
 Core is responsible for:
 
@@ -1713,11 +1733,11 @@ Availability depends on build configuration and platform.
 
 # Building VargaMesh Core
 
-## Linux
+Platform-specific VargaMesh build notes:
 
-Build documentation:
-
-[doc/build-vargamesh-linux.md](doc/build-vargamesh-linux.md)
+* Linux: [doc/build-vargamesh-linux.md](doc/build-vargamesh-linux.md)
+* Windows: [doc/build-vargamesh-windows.md](doc/build-vargamesh-windows.md)
+* macOS Intel / Apple Silicon: [doc/build-vargamesh-macos.md](doc/build-vargamesh-macos.md)
 
 Typical source checkout:
 
@@ -1725,6 +1745,10 @@ Typical source checkout:
 git clone https://github.com/ati1993de/vargamesh-core.git
 cd vargamesh-core
 ```
+
+Official v0.2.0 release archives are available for Linux x86_64, Windows
+x86_64, macOS x86_64 and macOS arm64. Verify the published SHA-256 checksum
+files before replacing an existing node binary.
 
 Follow the platform-specific build documentation for dependencies and
 configuration options.
@@ -1820,7 +1844,7 @@ VargaMesh is under active development.
 
 | Component                  | Status                                      |
 | -------------------------- | ------------------------------------------- |
-| VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet release                |
+| VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
 | VargaMesh Desktop `v0.5.2` | 🟢 Released · GitHub · Windows x64          |
 | VargaMesh Android `v0.4.0` | 🟢 Released · official direct APK           |
 | VargaMesh WebWallet        | 🟢 Available                                |
@@ -2021,6 +2045,7 @@ Useful contributions include:
 * build testing
 * Linux build testing
 * Windows testing
+* macOS Intel / Apple Silicon testing
 * Android device testing
 * wallet interoperability and deterministic recovery testing
 * documentation improvements
