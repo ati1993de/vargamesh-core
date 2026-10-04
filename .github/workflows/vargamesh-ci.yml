@@ -59,51 +59,51 @@ jobs:
           build/bin/vargameshd --version | grep -F "VargaMesh Core"
 
 
-  macos:
-    name: macOS ${{ matrix.arch }} build + Mainnet/Testnet smoke
+
+  macos_cross:
+    name: macOS ${{ matrix.arch }} reproducible cross-build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 180
     strategy:
       fail-fast: false
       matrix:
         include:
-          - runner: macos-15-intel
-            arch: x86_64
+          - arch: x86_64
             host: x86_64-apple-darwin
-          - runner: macos-15
-            arch: arm64
+          - arch: arm64
             host: arm64-apple-darwin
-    runs-on: ${{ matrix.runner }}
-    timeout-minutes: 180
     env:
       HOST: ${{ matrix.host }}
+      SDK_URL: https://bitcoincore.org/depends-sources/sdks
+      XCODE_VERSION: 26.1.1
+      XCODE_BUILD_ID: 17B100
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Verify native runner architecture
+      - name: Install macOS cross-build prerequisites
         shell: bash
         run: |
           set -euxo pipefail
-          echo "Runner: ${{ matrix.runner }}"
-          echo "Host triplet: $HOST"
-          echo "uname -m: $(uname -m)"
-          case "${{ matrix.arch }}" in
-            x86_64) test "$(uname -m)" = "x86_64" ;;
-            arm64) test "$(uname -m)" = "arm64" ;;
-            *) echo "Unknown architecture"; exit 1 ;;
-          esac
+          sudo apt-get update
+          sudo apt-get install -y             autoconf             automake             autotools-dev             bison             build-essential             ca-certificates             clang             cmake             curl             file             git             libtool             lld             llvm             ninja-build             patch             pkg-config             python3             xz-utils
 
-      - name: Install macOS build prerequisites
+      - name: Fetch pinned macOS SDK
         shell: bash
         run: |
           set -euxo pipefail
-          brew install cmake make ninja
+          SDK_BASENAME="Xcode-$XCODE_VERSION-$XCODE_BUILD_ID-extracted-SDK-with-libcxx-headers"
+          mkdir -p depends/SDKs
+          curl --location --fail --retry 3             "$SDK_URL/$SDK_BASENAME.tar"             -o "$RUNNER_TEMP/$SDK_BASENAME.tar"
+          tar -C depends/SDKs -xf "$RUNNER_TEMP/$SDK_BASENAME.tar"
+          test -d "depends/SDKs/$SDK_BASENAME"
 
       - name: Build pinned macOS dependencies
         shell: bash
         run: |
           set -euxo pipefail
-          gmake -C depends -j2             HOST="$HOST"             NO_QT=1             NO_ZMQ=1
+          make -C depends -j2             HOST="$HOST"             NO_QT=1             NO_ZMQ=1
 
       - name: Configure macOS release build
         shell: bash
@@ -118,15 +118,86 @@ jobs:
           set -euxo pipefail
           cmake --build build-macos --parallel 2
 
-      - name: Verify packaged-program candidates
+      - name: Package macOS CI runtime
         shell: bash
         run: |
           set -euxo pipefail
+          MAJOR="$(sed -n 's/^set(CLIENT_VERSION_MAJOR \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
+          MINOR="$(sed -n 's/^set(CLIENT_VERSION_MINOR \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
+          BUILD="$(sed -n 's/^set(CLIENT_VERSION_BUILD \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
+          VERSION="$MAJOR.$MINOR.$BUILD"
+          PKG="VargaMesh-v$VERSION-macOS-${{ matrix.arch }}"
+          ROOT="dist/$PKG"
+          mkdir -p "$ROOT/bin"
+
           for name in vargameshd vargamesh-cli vargamesh-wallet vargamesh-tx vargamesh-util; do
-            exe="$(find build-macos -type f -name "$name" | head -n1 || true)"
-            test -n "$exe"
+            src="$(find build-macos -type f -name "$name" | head -n1 || true)"
+            test -n "$src" || { echo "Missing macOS binary: $name"; exit 1; }
+            file "$src"
+            file "$src" | grep -F "Mach-O 64-bit"
+            cp -a "$src" "$ROOT/bin/$name"
+          done
+
+          cp -a COPYING "$ROOT/"
+          tar -C dist -czf "dist/$PKG.tar.gz" "$PKG"
+          sha256sum "dist/$PKG.tar.gz" > "dist/$PKG.tar.gz.sha256"
+
+      - name: Upload macOS cross-build
+        uses: actions/upload-artifact@v6
+        with:
+          name: VargaMesh-macOS-${{ matrix.arch }}-CI
+          path: |
+            dist/VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz
+            dist/VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz.sha256
+          if-no-files-found: error
+          retention-days: 7
+
+  macos_smoke:
+    name: macOS ${{ matrix.arch }} execution + Mainnet/Testnet smoke
+    needs: [macos_cross]
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15-intel
+            arch: x86_64
+          - runner: macos-15
+            arch: arm64
+
+    steps:
+      - name: Download macOS cross-build
+        uses: actions/download-artifact@v4
+        with:
+          name: VargaMesh-macOS-${{ matrix.arch }}-CI
+          path: artifact
+
+      - name: Extract macOS package
+        shell: bash
+        run: |
+          set -euxo pipefail
+          archive="$(find artifact -maxdepth 1 -type f -name 'VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz' | head -n1)"
+          test -n "$archive"
+          mkdir -p extracted
+          tar -C extracted -xzf "$archive"
+          find extracted -maxdepth 3 -type f -print
+
+      - name: Execute all packaged macOS programs
+        shell: bash
+        run: |
+          set -euxo pipefail
+          BIN="$(find extracted -type d -name bin | head -n1)"
+          test -n "$BIN"
+          case "${{ matrix.arch }}" in
+            x86_64) test "$(uname -m)" = "x86_64" ;;
+            arm64) test "$(uname -m)" = "arm64" ;;
+            *) exit 1 ;;
+          esac
+
+          for name in vargameshd vargamesh-cli vargamesh-wallet vargamesh-tx vargamesh-util; do
+            exe="$BIN/$name"
             test -x "$exe"
-            echo "===== $name ====="
             file "$exe"
             "$exe" --version
           done
@@ -135,10 +206,9 @@ jobs:
         shell: bash
         run: |
           set -euxo pipefail
-          D="$(find build-macos -type f -name vargameshd | head -n1)"
-          C="$(find build-macos -type f -name vargamesh-cli | head -n1)"
-          test -x "$D"
-          test -x "$C"
+          BIN="$(find extracted -type d -name bin | head -n1)"
+          D="$BIN/vargameshd"
+          C="$BIN/vargamesh-cli"
 
           MAIN="$RUNNER_TEMP/vmesh-mainnet-smoke"
           mkdir -p "$MAIN"
@@ -171,37 +241,6 @@ jobs:
           echo "PASS: macOS ${{ matrix.arch }} Mainnet daemon/RPC + vm1 address"
           echo "PASS: macOS ${{ matrix.arch }} Testnet daemon/RPC + tvm1 address"
 
-      - name: Package macOS CI runtime
-        shell: bash
-        run: |
-          set -euxo pipefail
-          MAJOR="$(sed -n 's/^set(CLIENT_VERSION_MAJOR \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
-          MINOR="$(sed -n 's/^set(CLIENT_VERSION_MINOR \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
-          BUILD="$(sed -n 's/^set(CLIENT_VERSION_BUILD \([0-9][0-9]*\)).*/\1/p' CMakeLists.txt)"
-          VERSION="$MAJOR.$MINOR.$BUILD"
-          PKG="VargaMesh-v$VERSION-macOS-${{ matrix.arch }}"
-          ROOT="dist/$PKG"
-          mkdir -p "$ROOT"
-
-          for name in vargameshd vargamesh-cli vargamesh-wallet vargamesh-tx vargamesh-util; do
-            src="$(find build-macos -type f -name "$name" | head -n1 || true)"
-            test -n "$src"
-            cp -a "$src" "$ROOT/$name"
-          done
-
-          cp -a COPYING "$ROOT/"
-          tar -C dist -czf "dist/$PKG.tar.gz" "$PKG"
-          shasum -a 256 "dist/$PKG.tar.gz" > "dist/$PKG.tar.gz.sha256"
-
-      - name: Upload macOS CI package
-        uses: actions/upload-artifact@v6
-        with:
-          name: VargaMesh-macOS-${{ matrix.arch }}-CI
-          path: |
-            dist/VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz
-            dist/VargaMesh-*-macOS-${{ matrix.arch }}.tar.gz.sha256
-          if-no-files-found: error
-          retention-days: 7
 
   windows:
     name: Windows headless release build
