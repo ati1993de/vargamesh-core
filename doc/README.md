@@ -1,94 +1,127 @@
-Bitcoin Core
-=============
+# VargaMesh Core Documentation
 
-Setup
----------------------
-Bitcoin Core is the original Bitcoin client and it builds the backbone of the network. It downloads and, by default, stores the entire history of Bitcoin transactions, which requires several hundred gigabytes or more of disk space. Depending on the speed of your computer and network connection, the synchronization process can take anywhere from a few hours to several days or more.
+VargaMesh Core is the reference full-node implementation for the VargaMesh
+(VMESH) network.
 
-To download Bitcoin Core, visit [bitcoincore.org](https://bitcoincore.org/en/download/).
+The repository root [README](/README.md) contains the current project overview,
+network parameters, release status and ecosystem links.
 
-Running
----------------------
-The following are some helpful notes on how to run Bitcoin Core on your native platform.
+## Official Core release
 
-### Unix
+Current Core release: **v0.2.0**
 
-Unpack the files into a directory and run:
+Official binary packages are published for:
 
-- `bin/bitcoin-qt` (GUI) or
-- `bin/bitcoind` (headless)
-- `bin/bitcoin` (wrapper command)
+- Linux x86_64
+- Windows x86_64
+- macOS Intel x86_64
+- macOS Apple Silicon arm64
 
-The `bitcoin` command supports subcommands like `bitcoin gui`, `bitcoin node`, and `bitcoin rpc` exposing different functionality. Subcommands can be listed with `bitcoin help`.
+Release downloads:
 
-### Windows
+https://github.com/ati1993de/vargamesh-core/releases/tag/v0.2.0
 
-Unpack the files into a directory, and then run bitcoin-qt.exe.
+The macOS v0.2.0 archives contain the Core daemon and command-line utilities.
+They are not the graphical VargaMesh Desktop application.
 
-### macOS
+Published macOS archives:
 
-Drag Bitcoin Core to your applications folder, and then run Bitcoin Core.
+- `vargamesh-core-0.2.0-macos-x86_64.tar.gz`
+- `vargamesh-core-0.2.0-macos-arm64.tar.gz`
+- `SHA256SUMS-macOS`
 
-### Need Help?
+Always verify release checksums before replacing existing node binaries.
 
-* See the documentation at the [Bitcoin Wiki](https://en.bitcoin.it/wiki/Main_Page)
-for help and more information.
-* Ask for help on [Bitcoin StackExchange](https://bitcoin.stackexchange.com).
-* Ask for help on #bitcoin on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#bitcoin).
-* Ask for help on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Technical Support board](https://bitcointalk.org/index.php?board=4.0).
+## Running VargaMesh Core
 
-Building
----------------------
-The following are developer notes on how to build Bitcoin Core on your native platform. They are not complete guides, but include notes on the necessary libraries, compile flags, etc.
+The primary Core programs are:
+
+- `vargameshd` — full-node daemon
+- `vargamesh-cli` — JSON-RPC command-line client
+- `vargamesh-wallet` — wallet utility
+- `vargamesh-tx` — raw transaction utility
+- `vargamesh-util` — general utility commands
+- `vargamesh-qt` — graphical Core client when built with GUI support
+
+Mainnet is the default network.
+
+```bash
+vargameshd
+vargamesh-cli getblockchaininfo
+```
+
+VargaMesh Public Testnet v1:
+
+```bash
+vargameshd -testnet
+vargamesh-cli -testnet getblockchaininfo
+```
+
+On macOS the default data directory is:
+
+```text
+~/Library/Application Support/VargaMesh
+```
+
+## VargaMesh build guides
+
+Use the VargaMesh-specific build notes first:
+
+- [Linux](build-vargamesh-linux.md)
+- [Windows](build-vargamesh-windows.md)
+- [macOS Intel / Apple Silicon](build-vargamesh-macos.md)
+
+The repository also retains upstream-derived platform documentation for
+low-level build details:
 
 - [Dependencies](dependencies.md)
-- [macOS Build Notes](build-osx.md)
-- [Unix Build Notes](build-unix.md)
-- [Windows Build Notes](build-windows-msvc.md)
-- [FreeBSD Build Notes](build-freebsd.md)
-- [OpenBSD Build Notes](build-openbsd.md)
-- [NetBSD Build Notes](build-netbsd.md)
+- [macOS upstream-derived build notes](build-osx.md)
+- [Unix upstream-derived build notes](build-unix.md)
+- [Windows MSVC upstream-derived build notes](build-windows-msvc.md)
+- [FreeBSD](build-freebsd.md)
+- [OpenBSD](build-openbsd.md)
+- [NetBSD](build-netbsd.md)
 
-Development
----------------------
-The Bitcoin repo's [root README](/README.md) contains relevant information on the development process and automated testing.
+Do not assume upstream Bitcoin Core names, paths or defaults are identical to
+VargaMesh. VargaMesh-specific executable names, data directories, network
+parameters and release workflows take precedence.
 
-- [Developer Notes](developer-notes.md)
-- [Productivity Notes](productivity.md)
-- [Release Process](release-process.md)
-- [Source Code Documentation (External Link)](https://doxygen.bitcoincore.org/)
-- [Translation Process](translation_process.md)
-- [Translation Strings Policy](translation_strings_policy.md)
-- [JSON-RPC Interface](JSON-RPC-interface.md)
-- [Unauthenticated REST Interface](REST-interface.md)
-- [BIPS](bips.md)
-- [Dnsseed Policy](dnsseed-policy.md)
-- [Benchmarking](benchmarking.md)
-- [Internal Design Docs](design/)
+## VargaMesh-specific documentation
 
-### Resources
-* Discuss on the [BitcoinTalk](https://bitcointalk.org/) forums, in the [Development & Technical Discussion board](https://bitcointalk.org/index.php?board=6.0).
-* Discuss project-specific development on #bitcoin-core-dev on Libera Chat. If you don't have an IRC client, you can use [web.libera.chat](https://web.libera.chat/#bitcoin-core-dev).
-
-### Miscellaneous
-- [Assets Attribution](assets-attribution.md)
-- [bitcoin.conf Configuration File](bitcoin-conf.md)
-- [CJDNS Support](cjdns.md)
-- [Files](files.md)
-- [Fuzz-testing](fuzzing.md)
-- [I2P Support](i2p.md)
-- [Init Scripts (systemd/upstart/openrc)](init.md)
-- [Managing Wallets](managing-wallets.md)
-- [Multisig Tutorial](multisig-tutorial.md)
-- [Offline Signing Tutorial](offline-signing-tutorial.md)
-- [P2P bad ports definition and list](p2p-bad-ports.md)
-- [PSBT support](psbt.md)
-- [Reduce Memory](reduce-memory.md)
-- [Reduce Traffic](reduce-traffic.md)
-- [Tor Support](tor.md)
-- [Transaction Relay Policy](policy/README.md)
+- [Public Testnet v1](testnet.md)
+- [Exchange integration](exchange-integration.md)
+- [Release notes v0.2.0](release-notes/release-notes-v0.2.0.md)
+- [Files and data directories](files.md)
+- [Managing wallets](managing-wallets.md)
+- [JSON-RPC interface](JSON-RPC-interface.md)
+- [REST interface](REST-interface.md)
 - [ZMQ](zmq.md)
+- [Tor](tor.md)
+- [I2P](i2p.md)
+- [CJDNS](cjdns.md)
 
-License
----------------------
+## Development documentation
+
+- [Developer notes](developer-notes.md)
+- [Productivity notes](productivity.md)
+- [Release process](release-process.md)
+- [Translation process](translation_process.md)
+- [Translation strings policy](translation_strings_policy.md)
+- [Benchmarking](benchmarking.md)
+- [Fuzz testing](fuzzing.md)
+- [Internal design documentation](design/)
+
+## Support and security
+
+For VargaMesh project links and community channels, see the repository root
+[README](/README.md).
+
+Never publish private keys, WIFs, wallet passwords, Recovery Phrases, wallet
+backups or RPC credentials when requesting support.
+
+Do not expose unauthenticated VargaMesh Core RPC directly to the public
+Internet.
+
+## License
+
 Distributed under the [MIT software license](/COPYING).
