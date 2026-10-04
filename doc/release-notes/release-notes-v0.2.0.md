@@ -9,10 +9,21 @@ Official binary packages:
 
 - Linux x86_64
 - Windows x86_64
+- macOS Intel x86_64
+- macOS Apple Silicon arm64
 
 The Windows package is cross-compiled with the MinGW-w64 toolchain through the
 repository's pinned `depends` system and is then executed on a Windows runner
 before publication.
+
+The macOS packages are built through the repository's pinned `depends` system
+for `x86_64-apple-darwin` and `arm64-apple-darwin`. Each archive is executed
+on a native GitHub macOS runner for its architecture before it is attached to
+the release.
+
+The macOS archives were added after the original v0.2.0 Linux/Windows
+publication and are built from the exact existing `v0.2.0` tag commit. This
+does not introduce a new Core or consensus version.
 
 ## Included Core programs
 
@@ -70,8 +81,7 @@ https://github.com/ati1993de/vargamesh-core/blob/main/doc/exchange-integration.m
 
 ## Verification performed before publication
 
-The release workflow requires all of the following to succeed before creating
-the GitHub Release:
+The original v0.2.0 release creation required:
 
 1. Linux x86_64 build.
 2. Linux Mainnet daemon/RPC smoke test.
@@ -84,10 +94,22 @@ the GitHub Release:
 9. Windows VargaMesh Public Testnet v1 daemon/RPC smoke test.
 10. Windows Mainnet `vm1...` wallet-address check.
 11. Windows Testnet `tvm1...` wallet-address check.
-12. SHA-256 checksums for both release archives.
+12. SHA-256 checksums for the Linux and Windows release archives.
 
-The `v0.2.0` tag and GitHub Release are created only after all build and smoke
-test jobs pass.
+The later macOS publication additionally requires, for both Intel x86_64 and
+Apple Silicon arm64:
+
+1. Reproducible macOS cross-build from the exact v0.2.0 tag commit.
+2. Mach-O package validation.
+3. Execution of `vargameshd`, `vargamesh-cli`, `vargamesh-wallet`,
+   `vargamesh-tx` and `vargamesh-util` on a native runner.
+4. Mainnet daemon/RPC smoke test.
+5. Mainnet `vm1...` wallet-address check.
+6. VargaMesh Public Testnet v1 daemon/RPC smoke test.
+7. Testnet `tvm1...` wallet-address check.
+8. SHA-256 checksums published in `SHA256SUMS-macOS`.
+
+The existing `v0.2.0` tag is not moved when the macOS assets are attached.
 
 ## Security
 
