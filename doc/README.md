@@ -6,6 +6,10 @@ VargaMesh Core is the reference full-node implementation for the VargaMesh
 The repository root [README](/README.md) contains the current project overview,
 network parameters, release status and ecosystem links.
 
+For the latest Desktop/Android client releases, downloads, validation status
+and wallet security boundaries, see [Client release status](client-release-status.md).
+Client version numbers are independent of the Core release number.
+
 ## Official Core release
 
 Current Core release: **v0.2.0**

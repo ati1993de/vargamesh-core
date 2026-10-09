@@ -255,7 +255,7 @@ The network currently includes:
 * shared BIP39/BIP32 Recovery Wallet convention across Desktop, Android and WebWallet
 * browser-based WebWallet / PWA
 * VMT-1 fungible-token layer indexed from confirmed VargaMesh transactions
-* native VMT-1 support in Desktop `v0.5.2` and Android `v0.4.0`
+* native VMT-1 support in Desktop `v0.7.1` and Android `v0.5.0`
 * public VMT-1 token directory and token API
 * VargaMesh Name Service (VNS) with human-readable `.vmesh` names
 * blockchain explorer with VNS resolution and on-chain name history
@@ -266,8 +266,8 @@ The network currently includes:
 * VargaProof verification infrastructure
 * MeshProof public-node contribution infrastructure
 * public VargaMesh Ecosystem Treasury with on-chain transparency
-* Microsoft Store distribution for VargaMesh Desktop
-* APKPure distribution for VargaMesh Android
+* GitHub Windows/macOS Desktop releases; third-party storefront versions may lag
+* Android source pre-release and direct APK download; third-party listing may lag
 
 The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
@@ -275,14 +275,21 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
 ## Project Status
 
-Canonical release manifest: https://vargamesh.com/api/v1/releases
+For client release specifics, limitations and cross-platform distinctions, see
+[Client release status](doc/client-release-status.md). The Core release version
+remains **v0.2.0**.
+
+Public release manifest: https://vargamesh.com/api/v1/releases
+
+The website API may require a separate deployment to reflect newer clients.
+Check the GitHub Desktop release and Android source validation status directly.
 
 
 | Component                  |     Version | Status                                      |
 | -------------------------- | ----------: | ------------------------------------------- |
 | VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
-| VargaMesh Desktop          |    `v0.5.2` | 🟢 Released · GitHub · Windows x64          |
-| VargaMesh Android          |    `v0.4.0` | 🟢 Released · official direct APK           |
+| VargaMesh Desktop          |    `v0.7.1` | 🟢 GitHub · Windows/macOS Intel+ARM |
+| VargaMesh Android          |    `v0.5.0` | 🟡 Source pre-release · device validation pending |
 | VargaMesh WebWallet        |     Current | 🟢 Available                                |
 | VMT-1 Token Layer         |     Current | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     |     Current | 🟢 Available · WebWallet / Explorer / Mempool |
@@ -303,13 +310,14 @@ Canonical release manifest: https://vargamesh.com/api/v1/releases
 | Network                      | VargaMesh Mainnet                                    |
 | Currency                     | `VMESH`                                              |
 | Core version                 | `v0.2.0`                                             |
-| Desktop version              | `v0.5.2`                                             |
-| Android version              | `v0.4.0`                                             |
+| Desktop version              | `v0.7.1`                                             |
+| Android version              | `v0.5.0`                                             |
 | Website                      | https://vargamesh.com                                |
 | Project portal               | https://mesh.vargatech.net                           |
 | Core source code             | https://github.com/ati1993de/vargamesh-core          |
 | Core releases                | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop wallet               | https://github.com/ati1993de/vargamesh-desktop       |
+| Desktop v0.7.1 release        | https://github.com/ati1993de/vargamesh-desktop/releases/tag/v0.7.1 |
 | Desktop Microsoft Store      | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
 | Android information          | https://vargamesh.com/android.html                   |
 | Android APK                  | https://vargamesh.com/vmesh.apk                      |
@@ -417,9 +425,8 @@ Consensus-critical behavior is defined by the VargaMesh Core source code.
 
 ## VargaMesh Desktop
 
-**VargaMesh Desktop** is the graphical Windows x64 full-node wallet for users
-who prefer a desktop interface instead of operating VargaMesh Core entirely
-through the command line.
+**VargaMesh Desktop** is a graphical Windows x64 and macOS (Intel/Apple Silicon)
+self-custody full-node wallet built around VargaMesh Core.
 
 Repository:
 
@@ -427,11 +434,11 @@ https://github.com/ati1993de/vargamesh-desktop
 
 Current release:
 
-**VargaMesh Desktop v0.5.2**
+**VargaMesh Desktop v0.7.1**
 
 Release date:
 
-**2 October 2026**
+**9 October 2026**
 
 Status:
 
@@ -447,15 +454,29 @@ The current Desktop release bundles:
 
 ### Available packages
 
-* Windows x64 installer
-* Windows x64 portable ZIP
-* SHA256 checksums
-* Microsoft Store distribution channel
+* Windows x64 installer and portable ZIP
+* macOS x86_64 and Apple Silicon arm64 DMG and ZIP
+* Published SHA-256 checksums
+* Microsoft Store listing (may lag behind the official GitHub release)
 
-### v0.5.2 highlights
+### v0.7.1 highlights
 
-VargaMesh Desktop `v0.5.2` combines the existing full-node Recovery Wallet with
-native **VMT-1** token support and a complete four-language interface.
+Desktop `v0.7.1` retains its locally synchronized Core, BIP39/HD Recovery
+Wallet, VMESH sending/receiving, native VMT-1 portfolio and four languages.
+Version `v0.7.0` added, and `v0.7.1` preserves:
+
+* Local address book with VMESH addresses and `.vmesh` contacts
+* VNS name resolution, explicit address confirmation and fresh name/address
+  verification before broadcast (changes cancel the send)
+* Native notifications for incoming VMESH, first confirmation and completed
+  synchronization; notification amounts are hidden by default
+* Responsive wallet navigation and plaintext transaction CSV export
+* NestEx VMESH/USDT market quotes and wallet-value estimates
+
+**v0.7.1 startup hotfix:** The v0.7.0 selector error that blocked the
+automatic Core/wallet refresh until a manual Refresh click was fixed.
+The bundled Core version remains **v0.2.0**, with unchanged bootstrap peers.
+Fee amounts shown before sending are estimates, not final funded fees.
 
 Supported UI languages:
 
@@ -483,13 +504,12 @@ Current VMT-1 functionality includes:
 Private keys remain in VargaMesh Core. The renderer remains sandboxed and does
 not receive arbitrary Core RPC access or the RPC cookie.
 
-Approved VMT metadata is displayed in Desktop. Native metadata submission is not
-enabled in the `v0.5.x` line because the current issuer-proof format is not
-available through an approved Core wallet RPC without exporting private-key
-material.
+Approved VMT metadata is displayed in Desktop. Native metadata submission is
+not claimed as available in v0.7.1; issuer proof would need a secure Core-wallet
+RPC workflow without exporting private-key material.
 
-Version `v0.5.2` also includes the `v0.5.1` first-launch localization fix and
-regression coverage for localization collection selection.
+v0.7.1 also retains earlier localization fixes and includes regression checks
+for UI startup binding and automatic wallet refresh.
 
 ### Current wallet functionality
 
@@ -521,8 +541,8 @@ regression coverage for localization collection selection.
 
 ### Desktop Recovery Wallet interoperability
 
-VargaMesh Desktop `v0.5.2` uses the full VMESH HD descriptor wallet hierarchy.
-The current VargaMesh WebWallet and VargaMesh Android `v0.4.0` use the same first
+VargaMesh Desktop `v0.7.1` uses the full VMESH HD descriptor wallet hierarchy.
+The current VargaMesh WebWallet and VargaMesh Android `v0.5.0` use the same first
 Native SegWit external receive path for deterministic recovery.
 
 Mainnet Native SegWit receive path:
@@ -555,7 +575,7 @@ m/84'/22093'/0'/0/0
 ```
 
 Therefore the same valid Recovery Phrase restores the same first `vm1...`
-address in VargaMesh Desktop `v0.5.2`, VargaMesh Android `v0.4.0` and the
+address in VargaMesh Desktop `v0.7.1`, VargaMesh Android `v0.5.0` and the
 current WebWallet.
 
 The Desktop wallet can derive additional receive/change addresses and aggregate
@@ -564,7 +584,7 @@ focused on the active index-0 address unless explicitly expanded by a later
 client release.
 
 > [!IMPORTANT]
-> VargaMesh Desktop `v0.5.2` is pre-1.0 public-testing software.
+> VargaMesh Desktop `v0.7.1` is pre-1.0 public-testing software.
 >
 > Before using meaningful amounts, verify the Recovery Phrase or Core backup
 > with a recovery test and begin with a small transaction. For VMT-1 operations,
@@ -580,15 +600,15 @@ client release.
 
 Current release:
 
-**VargaMesh Android v0.4.0**
+**VargaMesh Android v0.5.0**
 
 Release date:
 
-**2 October 2026**
+**9 October 2026**
 
 Status:
 
-**Released / public testing / pre-release**
+**Source pre-release / build and physical-device validation required**
 
 Official information:
 
@@ -606,17 +626,43 @@ APKPure project page:
 
 https://apkpure.com/p/de.vargatech.vargamesh
 
-VargaMesh Android combines network, explorer and mining tools with a native
-self-custody VMESH wallet. Version `v0.4.0` adds native **VMT-1 token support**
-on top of the VargaMesh BIP39/BIP32 Recovery Wallet while preserving the
-existing `v0.2.x` legacy single-WIF compatibility model.
+VargaMesh Android combines explorer, mining and network tools with a native
+self-custody VMESH wallet. VMT-1 debuted in v0.4.0; v0.5.0 retains it,
+BIP39/BIP32 recovery and legacy v0.2.x single-WIF compatibility.
 
 ---
 
-## Android v0.4.0 Release Highlights
+## Android v0.5.0 — Professional Wallet Update
 
-Version `v0.4.0` extends the Android wallet from VMESH-only wallet operations to
-native VMESH + VMT-1 wallet functionality.
+Android v0.5.0 **retains VMT-1** introduced in v0.4.0 and adds:
+
+* Reorganized balances, Send/Receive, token navigation and expandable management
+* Local address book with labels, favorites and recipient selection; app-private
+  storage without Android Contacts/cloud permission
+* Optional `/api/vns/v1/resolve/{name}` lookup with explicit confirmation
+  of the resolved, checksummed mainnet address before signing
+* `vargamesh:<address>?amount=<decimal>` payment requests, QR regeneration
+  and Android share sheet
+* Offline encrypted-backup verification without overwriting an active wallet
+* Opt-in Android WorkManager activity notifications (online, approximately
+  every 15 minutes, **not real-time**); no historical first-run alert flood
+* Privacy-safe notifications without payment amounts or destinations
+* Exact decimal-to-satoshi parsing for display-only balances
+* Health indicator explicitly labelled **remote public API, not a local node**
+* Five languages: English, German, Hungarian, Russian, Simplified Chinese
+
+**Status: source pre-release; build and physical-device verification required.**
+The existence of an APK or checksum is not proof of a security audit or
+production release. Consult the Android project's `VALIDATION-REPORT.md`.
+
+**Security limitation:** Android v0.5.0 has no dedicated VNS ownership-anchor
+UTXO exclusion or management during spend construction. Do **not** use this
+build to manage VNS anchors or significant funds before security review.
+Its active HD address remains index 0: no multi-address gap-limit scanning
+or full coin control is guaranteed. UTXO checks are not a lifetime TX index,
+so WorkManager can miss outputs already spent between scans.
+
+### Retained v0.4.0 token and recovery capabilities
 
 Major changes include:
 
@@ -648,7 +694,7 @@ Major changes include:
 
 The Android HD wallet currently uses one active deterministic address at index
 `0`. Full HD gap-limit scanning and multi-address aggregation are not claimed
-for `v0.4.0`.
+for `v0.5.0`.
 
 ---
 
@@ -674,6 +720,7 @@ Current functionality includes:
 * VMESH QR scanning
 * German interface
 * English interface
+* Hungarian interface
 * Russian interface
 * Simplified Chinese interface
 * dark theme
@@ -690,7 +737,7 @@ vargamesh.com:3933
 
 ## Native Android VMESH Wallet
 
-VargaMesh Android `v0.4.0` provides a native self-custody wallet with both the
+VargaMesh Android `v0.5.0` provides a native self-custody wallet with both the
 HD Recovery Wallet model and the established legacy single-key/WIF model.
 
 ### Recovery Wallet functionality
@@ -744,7 +791,7 @@ they update the application.
 
 ### Native VMT-1 functionality
 
-VargaMesh Android `v0.4.0` can operate VMT-1 tokens without sending private
+VargaMesh Android `v0.5.0` can operate VMT-1 tokens without sending private
 keys to the public indexer/API.
 
 Current token functionality includes:
@@ -769,7 +816,7 @@ VMT-1 tokens.
 
 ## Android Recovery Wallet Interoperability
 
-Android `v0.4.0` follows the same first-address Mainnet Recovery Wallet
+Android `v0.5.0` follows the same first-address Mainnet Recovery Wallet
 convention documented for VargaMesh Desktop and the WebWallet.
 
 Active Native SegWit path:
@@ -785,9 +832,9 @@ is accepted by the upstream SLIP-0044 registry.
 A valid BIP39 Recovery Phrase therefore deterministically derives the same first
 Native SegWit `vm1...` address in:
 
-* VargaMesh Desktop `v0.5.2`
+* VargaMesh Desktop `v0.7.1`
 * the current VargaMesh WebWallet
-* VargaMesh Android `v0.4.0`
+* VargaMesh Android `v0.5.0`
 
 The interoperability guarantee concerns deterministic key/address derivation.
 It does **not** imply that every application's encrypted JSON backup container
@@ -873,7 +920,7 @@ application**.
 
 ## Android Wallet Parameters
 
-VargaMesh Android `v0.4.0` supports deterministic HD Recovery Wallets and legacy
+VargaMesh Android `v0.5.0` supports deterministic HD Recovery Wallets and legacy
 single-private-key/WIF wallets.
 
 | Parameter                         | Value                         |
@@ -906,7 +953,7 @@ Signing uses:
 
 ## Android Limitations
 
-VargaMesh Android `v0.4.0` currently does **not** claim:
+VargaMesh Android `v0.5.0` currently does **not** claim:
 
 * full HD gap-limit scanning
 * multiple HD receive/change addresses in the active wallet UI
@@ -916,7 +963,7 @@ VargaMesh Android `v0.4.0` currently does **not** claim:
 Android uses purpose-built public HTTPS APIs for blockchain/UTXO and VMT-1
 indexer data while keeping private-key operations local.
 
-VargaMesh Desktop `v0.5.2` remains the full-node wallet: it can operate
+VargaMesh Desktop `v0.7.1` remains the full-node wallet: it can operate
 VargaMesh Core locally and derive additional receive/change addresses.
 
 ---
@@ -939,7 +986,7 @@ Minimum supported Android version:
 ## Android Validation and Backup Notice
 
 > [!CAUTION]
-> VargaMesh Android `v0.4.0` can create, recover, hold and spend real VMESH and
+> VargaMesh Android `v0.5.0` can create, recover, hold and spend real VMESH and
 > operate supported VMT-1 token actions.
 >
 > It remains pre-1.0 public-testing software.
@@ -984,7 +1031,7 @@ operate a local full node.
 The current WebWallet supports:
 
 * the established single-private-key / WIF wallet model
-* BIP39/HD Recovery Wallets compatible with VargaMesh Desktop `v0.5.2` and Android `v0.4.0`
+* BIP39/HD Recovery Wallets compatible with VargaMesh Desktop `v0.7.1` and Android `v0.5.0`
 * local encrypted wallet storage
 * receive QR codes
 * VMESH send/receive
@@ -1035,7 +1082,7 @@ m/84'/22093'/0'/0/0
 ```
 
 This is the first external Native SegWit receive address of the same wallet tree
-used by VargaMesh Desktop `v0.5.2` and VargaMesh Android `v0.4.0`.
+used by VargaMesh Desktop `v0.7.1` and VargaMesh Android `v0.5.0`.
 
 ### WebWallet VNS integration
 
@@ -1119,7 +1166,7 @@ and compatibility where the client explicitly supports that format.
 
 | Client              | Model                                                   | Platform      |
 | ------------------- | ------------------------------------------------------- | ------------- |
-| VargaMesh Desktop   | Full-node HD / Core wallet + native VMT-1              | Windows x64   |
+| VargaMesh Desktop   | Full-node HD / Core wallet + native VMT-1              | Windows/macOS |
 | VargaMesh Android   | Native index-0 HD Recovery + legacy WIF + native VMT-1 | Android       |
 | VargaMesh WebWallet | Browser/PWA single-key + HD Recovery Wallet            | Browser / PWA |
 
@@ -1204,8 +1251,8 @@ Public read replicas can verify the authority's signed metadata manifest.
 
 | Client / service          | VMT-1 status |
 | ------------------------- | ------------ |
-| VargaMesh Desktop v0.5.2  | 🟢 Native portfolio + CREATE/TRANSFER/BURN/MINT |
-| VargaMesh Android v0.4.0  | 🟢 Native portfolio + token actions |
+| VargaMesh Desktop v0.7.1  | 🟢 Native portfolio + CREATE/TRANSFER/BURN/MINT |
+| VargaMesh Android v0.5.0  | 🟡 VMT-1 source support; build and device validation pending |
 | VargaMesh Token Directory | 🟢 Public read-only directory |
 | Public API                | 🟢 VMT-1 status, stats, balances, tokens, holders and events |
 | VargaMesh WebWallet       | 🟢 Public token-directory access / web integration surface |
@@ -1262,8 +1309,8 @@ Current implementation includes:
 | VargaMesh WebWallet             | 🟢 Integrated |
 | Public Explorer                 | 🟢 Integrated |
 | VargaMesh Mempool Explorer      | 🟢 Integrated / active development |
-| VargaMesh Desktop `v0.5.2`      | Planned client integration |
-| VargaMesh Android `v0.4.0`      | Planned client integration |
+| VargaMesh Desktop `v0.7.1`      | Address book + name resolution + recheck before send |
+| VargaMesh Android `v0.5.0`      | Optional name resolution + address confirmation (pre-release) |
 
 The Explorer can expose the current name status, resolved target address,
 registration/expiry height, owner reference and the available on-chain history.
@@ -1747,7 +1794,7 @@ Testnet BIP44/SLIP-0044 coin type.
 
 # HD Recovery Wallet Standard
 
-VargaMesh Desktop `v0.5.2`, VargaMesh Android `v0.4.0` and the current
+VargaMesh Desktop `v0.7.1`, VargaMesh Android `v0.5.0` and the current
 VargaMesh WebWallet implement the same first-address Mainnet
 BIP39/BIP32/BIP84 Recovery Wallet derivation.
 
@@ -1813,7 +1860,7 @@ implementations.
 
 ### Current interoperability scope
 
-| Capability                              | Desktop v0.5.2 | WebWallet | Android v0.4.0 |
+| Capability                              | Desktop v0.7.1 | WebWallet | Android v0.5.0 |
 | --------------------------------------- | :------------: | :-------: | :------------: |
 | BIP39 12/24 words                       |       Yes      |    Yes    |       Yes      |
 | BIP32 HD derivation                     |       Yes      |    Yes    |       Yes      |
@@ -1977,8 +2024,8 @@ VargaMesh is under active development.
 | Component                  | Status                                      |
 | -------------------------- | ------------------------------------------- |
 | VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
-| VargaMesh Desktop `v0.5.2` | 🟢 Released · GitHub · Windows x64          |
-| VargaMesh Android `v0.4.0` | 🟢 Released · official direct APK           |
+| VargaMesh Desktop `v0.7.1` | 🟢 GitHub · Windows/macOS |
+| VargaMesh Android `v0.5.0` | 🟡 Source pre-release · device tests outstanding |
 | VargaMesh WebWallet        | 🟢 Available                                |
 | VMT-1 Token Layer         | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     | 🟢 Available · WebWallet / Explorer / Mempool |
@@ -2012,20 +2059,20 @@ VargaMesh uses status-based development rather than guaranteed release dates.
 
 ### Desktop
 
-Current shipped line: **VargaMesh Desktop v0.5.2**
+Current GitHub release: **VargaMesh Desktop v0.7.1**
 
 Priorities include:
 
 * continued VMT-1 transaction and portfolio hardening
-* continued four-language UI review
+* continued four-language UI and notification testing
 * continued Recovery Wallet / descriptor interoperability testing
 * improved wallet UX and diagnostics
 * continued Core/WIF/watch-only compatibility testing
-* VNS client integration when ready
+* VNS recipient-resolution regression testing
 
 ### Android
 
-Current shipped line: **VargaMesh Android v0.4.0**
+Current source pre-release: **VargaMesh Android v0.5.0** (physical-device validation required)
 
 Priorities include:
 
@@ -2036,9 +2083,9 @@ Priorities include:
 * encrypted HD JSON backup/restore testing
 * legacy `v0.2.x` WIF/backup migration testing
 * transaction compatibility validation
-* wallet UX and QR improvements
-* future multi-address HD / gap-limit scanning evaluation
-* VNS client integration when ready
+* wallet UX, QR payment requests and offline backup verification testing
+* future multi-address HD / gap-limit scanning and WorkManager reliability testing
+* VNS ownership-anchor UTXO exclusions and physical-device tests
 
 ### VMT-1
 
