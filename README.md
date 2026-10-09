@@ -275,6 +275,10 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 
 ## Project Status
 
+For client release specifics, limitations and cross-platform distinctions, see
+[Client release status](doc/client-release-status.md). The Core release version
+remains **v0.2.0**.
+
 Public release manifest: https://vargamesh.com/api/v1/releases
 
 The website API may require a separate deployment to reflect newer clients.
@@ -313,6 +317,7 @@ Check the GitHub Desktop release and Android source validation status directly.
 | Core source code             | https://github.com/ati1993de/vargamesh-core          |
 | Core releases                | https://github.com/ati1993de/vargamesh-core/releases |
 | Desktop wallet               | https://github.com/ati1993de/vargamesh-desktop       |
+| Desktop v0.7.1 release        | https://github.com/ati1993de/vargamesh-desktop/releases/tag/v0.7.1 |
 | Desktop Microsoft Store      | https://apps.microsoft.com/detail/9NX9S7SJSW0S?hl=de-de&gl=DE&ocid=pdpshare |
 | Android information          | https://vargamesh.com/android.html                   |
 | Android APK                  | https://vargamesh.com/vmesh.apk                      |
@@ -499,10 +504,9 @@ Current VMT-1 functionality includes:
 Private keys remain in VargaMesh Core. The renderer remains sandboxed and does
 not receive arbitrary Core RPC access or the RPC cookie.
 
-Approved VMT metadata is displayed in Desktop. Native metadata submission is not
-enabled in the `v0.5.x` line because the current issuer-proof format is not
-available through an approved Core wallet RPC without exporting private-key
-material.
+Approved VMT metadata is displayed in Desktop. Native metadata submission is
+not claimed as available in v0.7.1; issuer proof would need a secure Core-wallet
+RPC workflow without exporting private-key material.
 
 v0.7.1 also retains earlier localization fixes and includes regression checks
 for UI startup binding and automatic wallet refresh.
@@ -716,6 +720,7 @@ Current functionality includes:
 * VMESH QR scanning
 * German interface
 * English interface
+* Hungarian interface
 * Russian interface
 * Simplified Chinese interface
 * dark theme
@@ -1161,7 +1166,7 @@ and compatibility where the client explicitly supports that format.
 
 | Client              | Model                                                   | Platform      |
 | ------------------- | ------------------------------------------------------- | ------------- |
-| VargaMesh Desktop   | Full-node HD / Core wallet + native VMT-1              | Windows x64   |
+| VargaMesh Desktop   | Full-node HD / Core wallet + native VMT-1              | Windows/macOS |
 | VargaMesh Android   | Native index-0 HD Recovery + legacy WIF + native VMT-1 | Android       |
 | VargaMesh WebWallet | Browser/PWA single-key + HD Recovery Wallet            | Browser / PWA |
 
@@ -1247,7 +1252,7 @@ Public read replicas can verify the authority's signed metadata manifest.
 | Client / service          | VMT-1 status |
 | ------------------------- | ------------ |
 | VargaMesh Desktop v0.7.1  | 🟢 Native portfolio + CREATE/TRANSFER/BURN/MINT |
-| VargaMesh Android v0.5.0  | 🟢 Native portfolio + token actions |
+| VargaMesh Android v0.5.0  | 🟡 VMT-1 source support; build and device validation pending |
 | VargaMesh Token Directory | 🟢 Public read-only directory |
 | Public API                | 🟢 VMT-1 status, stats, balances, tokens, holders and events |
 | VargaMesh WebWallet       | 🟢 Public token-directory access / web integration surface |
@@ -2078,7 +2083,7 @@ Priorities include:
 * encrypted HD JSON backup/restore testing
 * legacy `v0.2.x` WIF/backup migration testing
 * transaction compatibility validation
-* wallet UX and QR improvements
+* wallet UX, QR payment requests and offline backup verification testing
 * future multi-address HD / gap-limit scanning and WorkManager reliability testing
 * VNS ownership-anchor UTXO exclusions and physical-device tests
 
