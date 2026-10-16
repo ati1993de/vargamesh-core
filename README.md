@@ -14,6 +14,7 @@
   <img alt="Testnet" src="https://img.shields.io/badge/Testnet-v1-blue">
   <img alt="Consensus" src="https://img.shields.io/badge/Consensus-SHA--256d%20PoW-yellow">
   <img alt="macOS" src="https://img.shields.io/badge/macOS-Intel%20%2B%20Apple%20Silicon-black">
+  <a href="https://vargamesh.com/mobile-miner.html"><img alt="Mobile Miner" src="https://img.shields.io/badge/Android%20Mobile%20Miner-v1.5.0-3ddc84"></a>
 </p>
 
 <p align="center">
@@ -25,8 +26,21 @@
   ·
   <a href="https://vargamesh.com/explorer.html">Explorer</a>
   ·
+  <a href="https://vargamesh.com/mobile-miner.html">Android Mobile Miner</a>
+  ·
   <a href="https://discord.gg/AeC8sxt2aB">Discord</a>
 </p>
+
+> [!TIP]
+> **NEW — Mine real VMESH from an Android phone!** VargaMesh Mobile Miner
+> **v1.5.0** performs SHA-256d work locally and submits shares to the
+> **VMESH Home Mining PPLNS pool**. Requires Android 8.0 or later.
+> [Mobile Miner website](https://vargamesh.com/mobile-miner.html) ·
+> [Direct APK](https://vargamesh.com/downloads/VargaMesh-Mobile-Miner-v1.5.0.apk) ·
+> [APKPure](https://apkpure.com/p/com.vargamesh.mobileminer)
+>
+> Smartphone mining is educational and generally has a very low expected payout.
+> Accepted shares, block finds, income and profitability are **not guaranteed**.
 
 ---
 
@@ -252,6 +266,7 @@ The network currently includes:
 * VargaMesh-specific address formats
 * desktop full-node wallet
 * native Android self-custody wallet
+* separate Android Mobile Miner app with real SHA-256d CPU hashing and Home Mining PPLNS connection
 * shared BIP39/BIP32 Recovery Wallet convention across Desktop, Android and WebWallet
 * browser-based WebWallet / PWA
 * VMT-1 fungible-token layer indexed from confirmed VargaMesh transactions
@@ -263,6 +278,7 @@ The network currently includes:
 * public network statistics
 * public HTTPS API
 * public mining infrastructure
+* Android Mobile Miner `v1.5.0` with public-address-only payouts, local CPU work and live share statistics
 * VargaProof verification infrastructure
 * MeshProof public-node contribution infrastructure
 * public VargaMesh Ecosystem Treasury with on-chain transparency
@@ -289,7 +305,8 @@ Check the GitHub Desktop release and Android source validation status directly.
 | -------------------------- | ----------: | ------------------------------------------- |
 | VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
 | VargaMesh Desktop          |    `v0.7.1` | 🟢 GitHub · Windows/macOS Intel+ARM |
-| VargaMesh Android          |    `v0.5.0` | 🟡 Source pre-release · device validation pending |
+| VargaMesh Android Wallet   |    `v0.5.0` | 🟡 Source pre-release · device validation pending |
+| VargaMesh Mobile Miner     |    `v1.5.0` | 🟢 Android 8.0+ · SHA-256d Home Mining PPLNS |
 | VargaMesh WebWallet        |     Current | 🟢 Available                                |
 | VMT-1 Token Layer         |     Current | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     |     Current | 🟢 Available · WebWallet / Explorer / Mempool |
@@ -322,7 +339,11 @@ Check the GitHub Desktop release and Android source validation status directly.
 | Android information          | https://vargamesh.com/android.html                   |
 | Android APK                  | https://vargamesh.com/vmesh.apk                      |
 | Android APK SHA256           | https://vargamesh.com/vmesh.apk.sha256               |
-| Android APKPure              | https://apkpure.com/p/de.vargatech.vargamesh         |
+| Android APKPure (wallet)     | https://apkpure.com/p/de.vargatech.vargamesh         |
+| Android Mobile Miner info    | https://vargamesh.com/mobile-miner.html              |
+| Mobile Miner direct APK      | https://vargamesh.com/downloads/VargaMesh-Mobile-Miner-v1.5.0.apk |
+| Mobile Miner APKPure         | https://apkpure.com/p/com.vargamesh.mobileminer      |
+| Home Mining pool             | https://homemining.vargamesh.com                    |
 | WebWallet                    | https://vargamesh.com/wallet.html                    |
 | VMT-1 token directory        | https://vargamesh.com/tokens.html                    |
 | Release manifest               | https://vargamesh.com/api/v1/releases                |
@@ -1016,6 +1037,182 @@ Never share:
 
 ---
 
+# VargaMesh Mobile Miner for Android
+
+**Now available: mine real VargaMesh (VMESH) directly from an Android smartphone.**
+
+VargaMesh Mobile Miner is a **separate application** from the VargaMesh Android
+self-custody wallet. The miner performs actual **SHA-256d CPU hashing on the
+phone**, sends work shares to the existing VargaMesh **Mainnet Home Mining
+PPLNS pool**, and displays live mining activity. This is not simulated mining,
+cloud mining, a token faucet, or a claim of guaranteed earnings.
+
+Official page (installation instructions and device screenshots):
+
+https://vargamesh.com/mobile-miner.html
+
+## Mobile Miner release and download
+
+| Item | Details |
+| --- | --- |
+| Application | VargaMesh Mobile Miner |
+| Version advertised on official page | `v1.5.0` |
+| Platform | Android 8.0 (API 26) or newer |
+| Android package name | `com.vargamesh.mobileminer` |
+| Algorithm | `SHA-256d` (real on-device CPU Proof of Work) |
+| Blockchain | VargaMesh Mainnet (`VMESH`) |
+| Mining model | Home Mining pool, PPLNS |
+| Pool | `homemining.vargamesh.com:3940` (Stratum TCP) |
+| Pool fee advertised by the pool | `0%` |
+| Minimum automatic pool payout advertised by the pool | `10 VMESH` |
+| Wallet requirement | Your own public `vm1...` Mainnet receive address |
+| Account registration | Not required |
+| Languages advertised on official page | 4 (check app for available language options) |
+| APK size advertised on official page | 8.13 MiB |
+| Official screenshot date | 16 October 2026 |
+
+**Official download links:**
+
+* [Mobile Miner information, screenshots and setup](https://vargamesh.com/mobile-miner.html)
+* [Download Mobile Miner v1.5.0 APK directly](https://vargamesh.com/downloads/VargaMesh-Mobile-Miner-v1.5.0.apk)
+* [Mobile Miner on APKPure](https://apkpure.com/p/com.vargamesh.mobileminer)
+* [VMESH Home Mining pool / pool statistics](https://homemining.vargamesh.com/)
+* [Separate Android VMESH wallet](https://vargamesh.com/android.html)
+
+APKPure is a third-party distribution platform. Publication and availability on
+third-party app stores can change independently of the official project website.
+
+### Verify the APK before installation
+
+The official Mobile Miner page currently displays this **SHA-256** checksum for
+its `v1.5.0` APK:
+
+```text
+d3deea7ea634b3f7dda6b21e99cbc01fb902eead7cf01bd1b1587b6a04c358d0
+```
+
+After downloading the file, compute its actual SHA-256 hash and compare all 64
+hexadecimal characters with the checksum shown on the **current official
+Mobile Miner page**. A checksum mismatch means that the downloaded APK should
+not be installed.
+
+Linux:
+
+```bash
+sha256sum VargaMesh-Mobile-Miner-v1.5.0.apk
+```
+
+macOS:
+
+```bash
+shasum -a 256 VargaMesh-Mobile-Miner-v1.5.0.apk
+```
+
+Windows PowerShell:
+
+```powershell
+Get-FileHash .\VargaMesh-Mobile-Miner-v1.5.0.apk -Algorithm SHA256
+```
+
+The checksum above is reproduced from the official website, not a statement
+that this README independently audited or authenticated the binary. Version,
+filename, checksum and requirements may change with future releases; compare
+against the live official release page before installing.
+
+## How to start mining VMESH on Android
+
+1. Install the APK from the official download page (or its linked APKPure
+   listing). Android may require permission to install an APK from that source.
+2. Create or open your VargaMesh wallet and obtain **your own public Mainnet
+   receive address** beginning with `vm1`. Do not use a Testnet `tvm1` address.
+3. In the **Mobile Miner** app, enter the public payout address or scan its QR
+   code. A Recovery Phrase, private key, WIF and wallet password are not needed.
+4. Select an appropriate **CPU intensity / thread count** for the device, then
+   start mining using the app's interface.
+5. Observe the **local hashrate, accepted/rejected shares, active job and mining
+   uptime**. Shares demonstrate submitted work; they are not direct payments.
+6. Follow pool statistics and payments. A payout depends on real pool block
+   discoveries, your qualifying PPLNS shares and the pool's current payment
+   policy. The stated minimum automatic payout is **10 VMESH**.
+
+### Mining connection and rewards
+
+The app uses the existing independent community Home Mining pool:
+
+```text
+Stratum: stratum+tcp://homemining.vargamesh.com:3940
+Algorithm: SHA-256d
+Pool model: PPLNS
+Payout asset: VMESH Mainnet
+```
+
+The existing pool's generic miner configuration convention is:
+
+```text
+Username: vm1YOUR_VMESH_ADDRESS.WorkerName
+Password: x
+```
+
+Those username/password settings are for configuring **other compatible
+Stratum miners manually**; the Android app provides its own payout-address
+setup and does not require users to manage a standalone miner configuration.
+
+The Home Mining pool is intended for **CPU/GPU mining, including smartphone CPU
+mining**, not SHA-256d ASIC mining. Its accounting and payouts are separate from
+VMESH SOLO, Global PPLNS and BTC + VMESH Merged SOLO. The current public pool
+page advertises **0% pool fees**, **a 10 VMESH minimum payout**, and
+**automatic payouts**. Always check the current pool website for changes.
+
+### Mobile Miner features
+
+* Real on-device SHA-256d CPU mining and Stratum share submissions
+* Connection to the VargaMesh Mainnet Home Mining PPLNS pool
+* Adjustable CPU workload/intensity and thread count
+* Live local hashrate and accepted/rejected share counters
+* Mining session uptime and job status
+* Public VMESH payout-address entry and QR scanning
+* Battery and device-temperature awareness
+* No miner account registration and no cloud-mining balance simulation
+* Public wallet address only — no requirement to expose wallet secrets
+* Official page with screenshots captured on 16 October 2026
+
+The official Mobile Miner page advertises four application languages, but
+this README does not assume an exact language list without a published
+release-specific language matrix.
+
+### Practical limitations and safety
+
+> [!CAUTION]
+> **Smartphone mining is not an investment or a practical substitute for an
+> ASIC.** Phone CPU hashrates are typically tiny compared with dedicated
+> SHA-256d hardware. A mining session may produce no reward; electricity,
+> battery wear or hardware costs may exceed the market value of any VMESH
+> received.
+>
+> Monitor heat, battery health and power consumption. Reduce mining intensity
+> or stop if the device becomes hot, unstable or throttles. Do not leave an
+> overheating device mining unattended.
+
+* **PPLNS is probabilistic:** an accepted share by itself never guarantees a
+  payout; a pool must find blocks and the miner must qualify under pool rules.
+* **The miner is not a wallet:** use the separate Android Wallet, Desktop or
+  WebWallet to create and manage addresses, backups and transactions.
+* **No secret keys:** never enter a Recovery Phrase, wallet password, private
+  key or WIF into a mining app, mining website or pool dashboard.
+* **No Bitcoin earnings:** Android Mobile Miner performs **direct VMESH Home
+  Mining**. It does not mine Bitcoin and is **not** the BTC + VMESH merged-SOLO
+  ASIC service.
+* **No node required:** a mobile miner does not need to sync a local
+  blockchain or expose the VargaMesh Core RPC interface.
+* **No guarantees:** mining shares, pool blocks, payment timing, financial
+  returns and future market prices cannot be promised.
+
+The mobile miner does **not** change VargaMesh Core `v0.2.0`, Mainnet consensus,
+AuxPoW consensus, block rewards, wallet recovery standards or the separate
+Android wallet version `v0.5.0`.
+
+---
+
 # VargaMesh WebWallet
 
 The VargaMesh ecosystem includes a browser-based self-custody wallet and
@@ -1554,7 +1751,7 @@ Mode: Bitcoin SOLO + VMESH AuxPoW
 Current documented fee policy:
 
 ```text
-BTC side:   0% pool fee
+BTC side:   99.9% miner / 0.1% pool-development
 VMESH side: 99% miner / 1% pool-development
 ```
 
@@ -1579,7 +1776,16 @@ Algorithm: SHA-256d
 ```
 
 Home Mining is a separate PPLNS service with independent accounting. It does not
-share accounting with VMESH SOLO or BTC + VMESH Merged SOLO.
+share accounting with VMESH SOLO, Global PPLNS or BTC + VMESH Merged SOLO.
+It is designed for CPU/GPU miners (including smartphone CPUs), not ASICs.
+
+The current public pool page advertises **0% pool fee**, **10 VMESH minimum
+automatic payout**, and **automatic payouts**; check the live pool's terms.
+
+**New Android mining app:** [VargaMesh Mobile Miner v1.5.0](https://vargamesh.com/mobile-miner.html)
+connects to this Home Mining PPLNS pool and performs real SHA-256d CPU mining.
+See [VargaMesh Mobile Miner for Android](#vargamesh-mobile-miner-for-android)
+for installation, download and SHA-256 verification details.
 
 ### Consensus relationship
 
@@ -2025,7 +2231,8 @@ VargaMesh is under active development.
 | -------------------------- | ------------------------------------------- |
 | VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
 | VargaMesh Desktop `v0.7.1` | 🟢 GitHub · Windows/macOS |
-| VargaMesh Android `v0.5.0` | 🟡 Source pre-release · device tests outstanding |
+| VargaMesh Android Wallet `v0.5.0` | 🟡 Source pre-release · device tests outstanding |
+| VargaMesh Mobile Miner `v1.5.0` | 🟢 Android 8.0+ · Mainnet Home Mining PPLNS |
 | VargaMesh WebWallet        | 🟢 Available                                |
 | VMT-1 Token Layer         | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     | 🟢 Available · WebWallet / Explorer / Mempool |
@@ -2070,7 +2277,7 @@ Priorities include:
 * continued Core/WIF/watch-only compatibility testing
 * VNS recipient-resolution regression testing
 
-### Android
+### Android Wallet
 
 Current source pre-release: **VargaMesh Android v0.5.0** (physical-device validation required)
 
@@ -2086,6 +2293,18 @@ Priorities include:
 * wallet UX, QR payment requests and offline backup verification testing
 * future multi-address HD / gap-limit scanning and WorkManager reliability testing
 * VNS ownership-anchor UTXO exclusions and physical-device tests
+
+### Android Mobile Miner
+
+Current official website release: **VargaMesh Mobile Miner v1.5.0**.
+
+* continued Android device and power/thermal behavior testing
+* mining stability and Stratum reconnect robustness
+* share submission and PPLNS payout transparency
+* APK release version/hash verification and clear download documentation
+* accessible onboarding for new small independent miners
+
+See https://vargamesh.com/mobile-miner.html.
 
 ### VMT-1
 
@@ -2193,7 +2412,11 @@ of price, liquidity, availability or future support.
 | Android information   | https://vargamesh.com/android.html                   |
 | Android APK           | https://vargamesh.com/vmesh.apk                      |
 | Android APK SHA256    | https://vargamesh.com/vmesh.apk.sha256               |
-| Android APKPure       | https://apkpure.com/p/de.vargatech.vargamesh         |
+| Android APKPure (wallet) | https://apkpure.com/p/de.vargatech.vargamesh     |
+| Mobile Miner info    | https://vargamesh.com/mobile-miner.html               |
+| Mobile Miner APK     | https://vargamesh.com/downloads/VargaMesh-Mobile-Miner-v1.5.0.apk |
+| Mobile Miner APKPure | https://apkpure.com/p/com.vargamesh.mobileminer       |
+| Home Mining PPLNS    | https://homemining.vargamesh.com                     |
 | WebWallet / PWA       | https://vargamesh.com/wallet.html                    |
 | Token directory       | https://vargamesh.com/tokens.html                    |
 | Explorer              | https://vargamesh.com/explorer.html                  |
@@ -2226,6 +2449,7 @@ Useful contributions include:
 * Windows testing
 * macOS Intel / Apple Silicon testing
 * Android device testing
+* Android Mobile Miner CPU/thermal/Stratum and payout-flow testing
 * wallet interoperability and deterministic recovery testing
 * documentation improvements
 * node testing
@@ -2263,7 +2487,8 @@ software.
 
 Recommended precautions:
 
-* verify release checksums (including the published Android APK SHA256 file)
+* verify release checksums (including the published Android wallet APK checksum
+  and the distinct Mobile Miner APK SHA-256 displayed on its official page)
 * use official download sources
 * keep backups
 * test backups
