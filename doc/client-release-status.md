@@ -102,6 +102,8 @@ tests have been completed.
 address (`m/84'/22093'/0'/0/0`). Full HD gap-limit scanning, multiple
 active addresses and full coin control are not claimed.
 
+**SDK protective update (not an Android fix):** The standalone VargaMesh wallet SDK now has a proposed strict spendability/coin-control patch. Android remains a separate source tree. This documentation warning must remain until the actual Android send path, HD scanning and VNS metadata persistence have been fixed and independently device-tested.
+
 ## Interoperability
 
 Desktop and Android share the VargaMesh BIP39/BIP32 first-address
