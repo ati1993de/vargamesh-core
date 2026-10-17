@@ -58,7 +58,7 @@ jobs:
 
       - name: Multi-node regtest payout / reorg integration
         run: |
-          python3 build/test/functional/test_runner.py --jobs=1 vmesh_mining_regtest.py
+          python3 build/test/functional/test_runner.py --jobs=1 mining_vmesh_regtest.py
 
       - name: Verify VargaMesh binary identity
         run: |
