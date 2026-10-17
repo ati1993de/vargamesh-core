@@ -39,11 +39,11 @@ class VMeshMiningRegtest(BitcoinTestFramework):
         self.log.info("Split network, confirm payout, then reorganize it away")
         self.disconnect_nodes(0, 1)
         payment = miner.sendtoaddress(receiver_address, Decimal("1.0"))
-        self.generate(miner, 1)
+        self.generate(miner, 1, sync_fun=self.no_op)
         assert_equal(miner.gettransaction(payment)["confirmations"], 1)
 
         # Longer competing valid chain makes the payout block stale.
-        self.generate(receiver, 2)
+        self.generate(receiver, 2, sync_fun=self.no_op)
         self.connect_nodes(0, 1)
         self.sync_blocks()
         assert_equal(miner.getbestblockhash(), receiver.getbestblockhash())
