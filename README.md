@@ -15,6 +15,7 @@
   <img alt="Consensus" src="https://img.shields.io/badge/Consensus-SHA--256d%20PoW-yellow">
   <img alt="macOS" src="https://img.shields.io/badge/macOS-Intel%20%2B%20Apple%20Silicon-black">
   <a href="https://vargamesh.com/mobile-miner.html"><img alt="Mobile Miner" src="https://img.shields.io/badge/Android%20Mobile%20Miner-v1.5.0-3ddc84"></a>
+  <a href="https://github.com/ati1993de/vargamesh-minipool/releases/latest"><img alt="MiniPool" src="https://img.shields.io/badge/VMESH%20MiniPool-v0.3.1-16a085"></a>
 </p>
 
 <p align="center">
@@ -27,6 +28,8 @@
   <a href="https://vargamesh.com/explorer.html">Explorer</a>
   ·
   <a href="https://vargamesh.com/mobile-miner.html">Android Mobile Miner</a>
+  ·
+  <a href="https://github.com/ati1993de/vargamesh-minipool">MiniPool for Windows/Linux</a>
   ·
   <a href="https://discord.gg/AeC8sxt2aB">Discord</a>
 </p>
@@ -41,6 +44,26 @@
 >
 > Smartphone mining is educational and generally has a very low expected payout.
 > Accepted shares, block finds, income and profitability are **not guaranteed**.
+
+> [!TIP]
+> **NEW — VargaMesh MiniPool v0.3.1 for Windows and Linux beginners.**
+> Run your own VMESH-only SOLO mining pool with an integrated VargaMesh full
+> node, Bitaxe/ASIC Stratum V1 support, and a local monitoring dashboard.
+> **Windows 10/11 x64:** GUI with one-click verified Core installation and
+> automatic pool startup after blockchain synchronization.
+> **Linux x86_64:** Docker Compose with the official verified VMESH Core,
+> persistent blockchain volumes, and an optional Nginx Proxy Manager setup.
+> [MiniPool repository](https://github.com/ati1993de/vargamesh-minipool) ·
+> [Latest v0.3.1 release](https://github.com/ati1993de/vargamesh-minipool/releases/latest) ·
+> [English Linux/VPS guide](https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/PUBLIC-DEPLOYMENT.en.md)
+>
+> MiniPool uses **VMESH Mainnet only** and requires SHA-256d-compatible miners
+> such as Bitaxe. It does **not** mine Bitcoin or require Bitcoin Core.
+> The built-in SOLO payout rule is **99% to the winning VMESH miner and 1% to
+> the MiniPool developer**, encoded in the VMESH child coinbase. This is not
+> a network-wide mandatory fee. MiniPool is a developer preview: successfully
+> accepted mining shares have been observed, but an independently confirmed
+> real ASIC-mined and Mainnet-accepted VMESH block is still outstanding.
 
 ---
 
@@ -278,6 +301,7 @@ The network currently includes:
 * public network statistics
 * public HTTPS API
 * public mining infrastructure
+* self-hosted VargaMesh MiniPool `v0.3.1` for beginner-friendly Windows GUI and Linux Docker SOLO mining
 * Android Mobile Miner `v1.5.0` with public-address-only payouts, local CPU work and live share statistics
 * VargaProof verification infrastructure
 * MeshProof public-node contribution infrastructure
@@ -307,6 +331,7 @@ Check the GitHub Desktop release and Android source validation status directly.
 | VargaMesh Desktop          |    `v0.7.1` | 🟢 GitHub · Windows/macOS Intel+ARM |
 | VargaMesh Android Wallet   |    `v0.5.0` | 🟡 Source pre-release · device validation pending |
 | VargaMesh Mobile Miner     |    `v1.5.0` | 🟢 Android 8.0+ · SHA-256d Home Mining PPLNS |
+| VargaMesh MiniPool         |    `v0.3.1` | 🟡 Latest GitHub release · Windows GUI + Linux Docker · developer preview |
 | VargaMesh WebWallet        |     Current | 🟢 Available                                |
 | VMT-1 Token Layer         |     Current | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     |     Current | 🟢 Available · WebWallet / Explorer / Mempool |
@@ -344,6 +369,9 @@ Check the GitHub Desktop release and Android source validation status directly.
 | Mobile Miner direct APK      | https://vargamesh.com/downloads/VargaMesh-Mobile-Miner-v1.5.0.apk |
 | Mobile Miner APKPure         | https://apkpure.com/p/com.vargamesh.mobileminer      |
 | Home Mining pool             | https://homemining.vargamesh.com                    |
+| MiniPool (Windows + Linux)   | https://github.com/ati1993de/vargamesh-minipool     |
+| MiniPool latest release      | https://github.com/ati1993de/vargamesh-minipool/releases/latest |
+| MiniPool Linux Docker guide  | https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/DOCKER.de.md |
 | WebWallet                    | https://vargamesh.com/wallet.html                    |
 | VMT-1 token directory        | https://vargamesh.com/tokens.html                    |
 | Release manifest               | https://vargamesh.com/api/v1/releases                |
@@ -369,6 +397,12 @@ VargaMesh is developed as more than a command-line blockchain node.
 The ecosystem combines the consensus layer with wallet software, network
 monitoring, mining infrastructure, public APIs, explorer services, on-chain
 human-readable names and verification/contribution tools.
+
+For beginners who want to operate a small independent VMESH SOLO mining pool,
+[VargaMesh MiniPool](https://github.com/ati1993de/vargamesh-minipool)
+provides separate Windows GUI and Linux Docker deployment options. MiniPool is
+mining infrastructure, not a replacement for the VargaMesh Core consensus
+implementation or for a self-custody VMESH wallet.
 
 ```text
                         VargaMesh Mainnet
@@ -1706,6 +1740,141 @@ CkPool repository:
 
 https://github.com/ati1993de/vargamesh-ckpool
 
+### VargaMesh MiniPool — beginner-friendly VMESH SOLO mining (Windows and Linux)
+
+**VargaMesh MiniPool `v0.3.1`** is a separate open-source, self-hosted mining
+pool application for people who want to mine **VMESH Mainnet** with a Bitaxe,
+NerdAxe, Lucky Miner, or another compatible SHA-256d Stratum V1 ASIC without
+building and maintaining their own Stratum infrastructure from scratch.
+
+**Official links:**
+
+* Source repository: https://github.com/ati1993de/vargamesh-minipool
+* Latest regular GitHub release: https://github.com/ati1993de/vargamesh-minipool/releases/latest
+* Windows ZIP (latest version): download `VargaMesh-MiniPool-Windows-x64.zip` under GitHub Release assets
+* Windows ZIP checksum: `SHA256SUMS-MiniPool-Windows` (same GitHub release)
+* English setup and technical overview: https://github.com/ati1993de/vargamesh-minipool/blob/main/README.md
+* German Windows instructions: https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/README.de.md
+* German Linux/Docker guide: https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/DOCKER.de.md
+* English public VPS/Stratum/Web guide: https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/PUBLIC-DEPLOYMENT.en.md
+
+| Item | MiniPool v0.3.1 |
+| --- | --- |
+| Blockchain | VargaMesh Mainnet only (VMESH native coin) |
+| Algorithm | SHA-256d Proof of Work; synthetic AuxPoW parent work |
+| Mining model | Self-hosted SOLO (not PPLNS or shared-pool accounting) |
+| Suitable miners | Bitaxe/AxeOS, NerdAxe, Lucky Miner and compatible SHA-256d Stratum V1 ASICs |
+| Windows | Windows 10/11 x64, GUI and user-approved one-click VMESH Core download |
+| Linux | x86_64/amd64, Docker Engine + Docker Compose v2 |
+| Node requirement | Official VargaMesh Core v0.2.0, automatically installed or included in the setup |
+| Bitcoin node | Not required; there is no BTC mining or BTC payout |
+| Stratum V1 | TCP 3938 by default |
+| Read-only web dashboard | TCP 8686 by default |
+| Stratum worker format | `vm1YOUR_VALID_VMESH_ADDRESS.bitaxe01` |
+| Password | `x` (Stratum convention, not a secure authentication credential) |
+| Initial share difficulty | 1024 by default |
+| Successful VMESH child block reward | 99% to the winning miner address / 1% MiniPool developer fee |
+| Wallet secrets | Never required; use a public VMESH Mainnet receiving address only |
+| Project status | Latest GitHub release v0.3.1; unsigned Windows GUI and developer-preview validation status |
+
+#### Windows 10/11: beginner-friendly GUI installation
+
+1. Open https://github.com/ati1993de/vargamesh-minipool/releases/latest.
+2. Download `VargaMesh-MiniPool-Windows-x64.zip` and
+   `SHA256SUMS-MiniPool-Windows` from the release assets.
+3. Before extracting, verify the ZIP's SHA-256 with PowerShell:
+
+   ```powershell
+   Get-FileHash -Algorithm SHA256 .\VargaMesh-MiniPool-Windows-x64.zip
+   ```
+
+   Compare the complete hash against the official checksum file.
+4. Extract the ZIP into a new directory and launch `VargaMesh-MiniPool.exe`.
+   The executable is currently **unsigned** and may trigger SmartScreen.
+5. Click **ONE CLICK: Install VMESH Node & Start Pool**. The installer fetches
+   the **official VargaMesh Core v0.2.0 Windows x64** package from its pinned
+   release and verifies its SHA-256 checksums. No Bitcoin Core installation
+   is performed. The app starts a separate VMESH Mainnet node.
+6. Allow initial blockchain synchronization to complete. The SOLO pool only
+   begins issuing valid mining work after Core reports a synchronized Mainnet.
+7. Enter your **public `vm1...` receiving address** into the GUI and select
+   **Copy Bitaxe settings**. Enter the copied LAN host, port and worker into
+   your ASIC's Stratum V1 pool configuration.
+8. Monitor accepted/rejected shares and node sync in the GUI and local
+   dashboard. An accepted share is **not** proof that a network block was found.
+
+Typical default local connection values:
+
+```text
+Stratum:    stratum+tcp://YOUR_WINDOWS_PC_LAN_IP:3938
+Username:   vm1YOUR_VALID_VMESH_ADDRESS.bitaxe01
+Password:   x
+Dashboard:  http://127.0.0.1:8686
+```
+
+Use your own Windows PC's actual LAN address, not `0.0.0.0`. Allow inbound TCP
+3938 only from a trusted LAN and do not publish the VMESH Core RPC port.
+
+#### Linux x86_64: Docker Compose quick start
+
+Install **Docker Engine** and the **Docker Compose v2 plugin** first. MiniPool
+builds a container with the official VargaMesh Core binary, verified from its
+pinned Linux x86_64 release, and stores node/blockchain data in persistent
+Docker volumes. It does not require a separate Bitcoin node, npm, or Node.js.
+
+```bash
+git clone https://github.com/ati1993de/vargamesh-minipool.git
+cd vargamesh-minipool
+bash start-docker.sh
+docker compose logs -f --tail=80
+```
+
+Default local host endpoints:
+
+```text
+Dashboard: http://127.0.0.1:8686
+Stratum:   127.0.0.1:3938
+```
+
+To connect a Bitaxe from a trusted local network, follow the documented
+`compose.lan.yaml` setup and bind the Stratum port to the actual Linux host
+LAN IP. To expose public VPS mining TCP 3938 and web TCP 8686, the optional
+`MINIPOOL_STRATUM_BIND_IP=0.0.0.0` and
+`MINIPOOL_WEB_BIND_IP=0.0.0.0` settings are supported, with an explicit
+`MINIPOOL_DASHBOARD_ALLOWED_HOSTS` value matching the public IP or domain.
+
+**Public access is not recommended for an unaudited deployment:** direct
+HTTP has no login or TLS, and raw Stratum V1 is unencrypted and not hardened
+against abuse. The dashboard Host-header allowlist does not authenticate
+visitors. Prefer HTTPS with access controls via **Nginx Proxy Manager (NPM)**
+for the dashboard and firewall/VPN restrictions for Stratum. Keep Core RPC
+private. See the English public VPS guide linked above for the required
+firewall, Docker, NPM, and rollback details.
+
+#### SOLO payouts, fee model, and important limitations
+
+MiniPool sends SHA-256d work to connected miners and uses a synthetic AuxPoW
+parent commitment to produce VMESH-only block candidates. It does **not** mine
+Bitcoin, submit blocks to the Bitcoin network, or pay BTC rewards. The public
+VMESH address supplied by the winning miner is used for the miner's **99%**
+portion of a successfully accepted VMESH block's coinbase; **1%** is directed
+to the declared MiniPool developer address. The split is implemented at the
+pool level, **not** as a mandatory network-wide consensus fee. The actual
+VMESH child coinbase and Mainnet block acceptance are authoritative.
+
+On AxeOS, the synthetic parent coinbase can display `UNKNOWN:51` for an
+`OP_TRUE` output. That is **not** a normal BTC payout address; it does not
+represent an error in the VMESH child-chain reward allocation by itself.
+
+**Validation status:** the official Linux container build, Docker startup,
+dashboard checks, and Stratum compatibility tests have passed; actual Bitaxe
+Stratum shares have been observed as accepted. However, **an independently
+verified hardware-found VMESH Mainnet block accepted by consensus with the
+correct 99%/1% coinbase payout has not yet been demonstrated**. Keep this
+project labeled **Developer Preview** despite its `Latest` GitHub release
+status. Mining is probabilistic: accepted shares, a working dashboard, and
+hashrate do not guarantee network block finds, payouts, or profitability.
+
 ### Public VMESH SOLO
 
 Primary direct VMESH mining endpoint:
@@ -2233,6 +2402,7 @@ VargaMesh is under active development.
 | VargaMesh Desktop `v0.7.1` | 🟢 GitHub · Windows/macOS |
 | VargaMesh Android Wallet `v0.5.0` | 🟡 Source pre-release · device tests outstanding |
 | VargaMesh Mobile Miner `v1.5.0` | 🟢 Android 8.0+ · Mainnet Home Mining PPLNS |
+| VargaMesh MiniPool `v0.3.1` | 🟡 Latest release · Windows x64 GUI + Linux x86_64 Docker · developer preview |
 | VargaMesh WebWallet        | 🟢 Available                                |
 | VMT-1 Token Layer         | 🟢 Mainnet · directory/API · native clients |
 | VargaMesh Name Service     | 🟢 Available · WebWallet / Explorer / Mempool |
@@ -2305,6 +2475,22 @@ Current official website release: **VargaMesh Mobile Miner v1.5.0**.
 * accessible onboarding for new small independent miners
 
 See https://vargamesh.com/mobile-miner.html.
+
+### VargaMesh MiniPool for Windows and Linux
+
+Latest GitHub release: **VargaMesh MiniPool v0.3.1** (separate project;
+VargaMesh Core remains `v0.2.0`). The Windows one-click GUI and Linux Docker
+Compose are available. Continued priorities include:
+
+* user-friendly standalone SOLO mining for beginners with compatible SHA-256d ASICs
+* greater Bitaxe/AxeOS and other Stratum V1 miner interoperability
+* better Linux Docker and Windows GUI troubleshooting and documentation
+* authenticated HTTPS proxy guidance and safe public-pool deployment
+* public pool health, block-submission diagnostics, and developer-fee transparency
+* full end-to-end verification of a real ASIC-mined Mainnet block and 99/1 coinbase distribution
+* independent review and security hardening before any production-ready claim
+
+See https://github.com/ati1993de/vargamesh-minipool.
 
 ### VMT-1
 
@@ -2417,6 +2603,10 @@ of price, liquidity, availability or future support.
 | Mobile Miner APK     | https://vargamesh.com/downloads/VargaMesh-Mobile-Miner-v1.5.0.apk |
 | Mobile Miner APKPure | https://apkpure.com/p/com.vargamesh.mobileminer       |
 | Home Mining PPLNS    | https://homemining.vargamesh.com                     |
+| MiniPool repository  | https://github.com/ati1993de/vargamesh-minipool     |
+| MiniPool latest      | https://github.com/ati1993de/vargamesh-minipool/releases/latest |
+| MiniPool Linux/Docker| https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/DOCKER.de.md |
+| MiniPool public VPS  | https://github.com/ati1993de/vargamesh-minipool/blob/main/docs/PUBLIC-DEPLOYMENT.en.md |
 | WebWallet / PWA       | https://vargamesh.com/wallet.html                    |
 | Token directory       | https://vargamesh.com/tokens.html                    |
 | Explorer              | https://vargamesh.com/explorer.html                  |
@@ -2454,6 +2644,8 @@ Useful contributions include:
 * documentation improvements
 * node testing
 * mining testing
+* MiniPool Windows GUI and Linux Docker installation/Bitaxe compatibility testing
+* verified real VMESH Mainnet block submission and 99/1 payout audit testing
 * AuxPoW testing
 * explorer/indexer testing
 * VMT-1 indexer and wallet-operation testing
@@ -2498,6 +2690,9 @@ Recommended precautions:
 * protect Recovery Phrases / seed material
 * protect RPC credentials
 * never expose Core RPC publicly
+* treat public MiniPool Stratum V1 as unencrypted and its unauthenticated dashboard as public data
+* deploy an authenticated HTTPS reverse proxy for any public MiniPool dashboard
+* protect Docker blockchain volumes and avoid `docker compose down -v` without backups
 * verify destination addresses before sending
 * independently confirm important transactions in the blockchain
 * verify VMT token IDs, owner/issuer addresses and signed preflight results before token broadcasts
