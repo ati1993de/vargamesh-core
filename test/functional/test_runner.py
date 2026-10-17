@@ -85,7 +85,7 @@ TEST_EXIT_SKIPPED = 77
 TEST_FRAMEWORK_UNIT_TESTS = 'feature_framework_unit_tests.py'
 
 EXTENDED_SCRIPTS = [
-    'vmesh_mining_regtest.py',  # VMESH payout maturity and chain reorg regression
+    'mining_vmesh_regtest.py',  # VMESH payout maturity and chain reorg regression
     # These tests are not run by default.
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
