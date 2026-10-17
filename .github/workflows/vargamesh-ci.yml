@@ -53,6 +53,9 @@ jobs:
       - name: Unit tests
         run: ctest --test-dir build --output-on-failure
 
+      - name: Seed monitor unit tests
+        run: python3 -m unittest discover -s contrib/seeds -p 'test_vmesh_seed_health.py' -v
+
       - name: Multi-node regtest payout / reorg integration
         run: |
           python3 test/functional/test_runner.py --jobs=1 vmesh_mining_regtest.py
