@@ -26,6 +26,9 @@ integration testing.
 
 ## Testnet resources
 
+The addresses below are historical `vargacoin.com` endpoints and **must be checked for current availability** before integration. Do not assume a deprecated domain is an authoritative live endpoint. Verify Testnet genesis and chain identity with a local VMESH Core node.
+
+
 | Resource | Endpoint |
 | --- | --- |
 | Developer portal | https://testnet.vargacoin.com/ |

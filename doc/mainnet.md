@@ -11,7 +11,7 @@ The implementation in the source tree is authoritative for consensus.
 - P2P port: `29666`
 - RPC port: `29667`
 - Bech32 HRP: `vm`
-- P2P user agent: `/VargaMesh:0.1.0/`
+- P2P user agent: version-specific; inspect `getnetworkinfo` for the running release.
 
 ## Genesis block
 
@@ -46,7 +46,7 @@ Relevant implementation files include:
 
 ## Monetary parameters
 
-- Initial block subsidy: `50 VMESH`
+- Initial block subsidy: `25 VMESH`
 - Subsidy halving interval: `1051200 blocks`
 - Coinbase maturity: `100 blocks`
 - `MAX_MONEY` validation bound: `52,560,000 VMESH`
