@@ -195,8 +195,22 @@ public:
 
         bech32_hrp = "vm";
 
-        // No inherited Bitcoin fixed seeds. VargaMesh bootstrap is DNS-based initially.
-        vFixedSeeds.clear();
+        // VMESH-only bootstrap fallback nodes; these are NOT Bitcoin seeds.
+        // Historically confirmed public P2P endpoints, re-probe before release.
+        // BIP155: IPv4 network=1, addr length=4, IPv4 bytes, BE port 29666.
+        // Avoid residential/dynamic IP addresses in compiled fixed seeds.
+        vFixedSeeds = {
+            // VMESH mainnet VPS 217.154.93.20:29666
+            0x01, 0x04, 0xd9, 0x9a, 0x5d, 0x14, 0x73, 0xe2,
+            // VMESH Asia 217.217.78.186:29666
+            0x01, 0x04, 0xd9, 0xd9, 0x4e, 0xba, 0x73, 0xe2,
+            // Windrose VPS 31.70.81.5:29666
+            0x01, 0x04, 0x1f, 0x46, 0x51, 0x05, 0x73, 0xe2,
+            // VMESH HU VPS 37.221.211.210:29666
+            0x01, 0x04, 0x25, 0xdd, 0xd3, 0xd2, 0x73, 0xe2,
+            // VargaTech server 212.132.80.39:29666
+            0x01, 0x04, 0xd4, 0x84, 0x50, 0x27, 0x73, 0xe2,
+        };
 
         fDefaultConsistencyChecks = false;
         m_is_mockable_chain = false;
