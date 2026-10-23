@@ -292,6 +292,46 @@ BOOST_AUTO_TEST_CASE(asert_reference_and_vargamesh_math)
 }
 
 
+/**
+ * Mainnet ASERT arithmetic regression across abrupt hashrate swings.
+ * These assertions exercise the existing consensus function unchanged:
+ * increasing time at the same height must never increase difficulty.
+ */
+BOOST_AUTO_TEST_CASE(vargamesh_asert_hashrate_and_timestamp_stress)
+{
+    const auto params{CreateChainParams(*m_node.args, ChainType::MAIN)};
+    const auto& consensus{params->GetConsensus()};
+    BOOST_REQUIRE(consensus.fPowUseASERT);
+
+    const arith_uint256 limit{UintToArith256(consensus.powLimit)};
+    const arith_uint256 anchor{limit >> 12};
+    const int64_t spacing{consensus.nPowTargetSpacing};
+    const int64_t half_life{consensus.nASERTHalfLife};
+
+    // Cover early and mature chains, including long periods of very fast
+    // and very slow block production without relying on wall-clock time.
+    for (const int64_t height_diff : {0LL, 1LL, 16LL, 288LL, 2880LL, 10000LL}) {
+        const int64_t nominal_time{spacing * (height_diff + 1)};
+        const auto fast{CalculateASERT(anchor, spacing,
+            nominal_time - 4 * half_life, height_diff, limit, half_life)};
+        const auto expected{CalculateASERT(anchor, spacing,
+            nominal_time, height_diff, limit, half_life)};
+        const auto slow{CalculateASERT(anchor, spacing,
+            nominal_time + 4 * half_life, height_diff, limit, half_life)};
+
+        BOOST_CHECK(fast >= arith_uint256{1});
+        BOOST_CHECK(slow <= limit);
+        BOOST_CHECK(fast <= expected);
+        BOOST_CHECK(expected <= slow);
+        BOOST_CHECK_EQUAL(expected, anchor);
+    }
+
+    // Very large delays must clamp to powLimit rather than wrap around.
+    const auto stalled{CalculateASERT(anchor, spacing,
+        spacing + 40 * half_life, 0, limit, half_life)};
+    BOOST_CHECK_EQUAL(stalled, limit);
+}
+
 BOOST_AUTO_TEST_CASE(vargamesh_mainnet_asert_activation)
 {
     const auto chain_params{
