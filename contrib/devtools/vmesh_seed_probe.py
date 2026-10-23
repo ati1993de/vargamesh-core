@@ -14,7 +14,6 @@ Usage:
 
 import argparse
 import hashlib
-import ipaddress
 import json
 import secrets
 import socket
@@ -46,12 +45,12 @@ def message(command, payload=b""):
     command_bytes = command.encode("ascii")
     if len(command_bytes) > 12:
         raise ValueError("P2P command is too long")
-    return (MAGIC + command_bytes.ljust(12, b"\\x00") +
+    return (MAGIC + command_bytes.ljust(12, b"\x00") +
             struct.pack("<I", len(payload)) + checksum(payload) + payload)
 
 
 def network_address():
-    return struct.pack("<Q", 0) + b"\\x00" * 16 + struct.pack(">H", 0)
+    return struct.pack("<Q", 0) + b"\x00" * 16 + struct.pack(">H", 0)
 
 
 def version_payload():
@@ -59,7 +58,7 @@ def version_payload():
     return (struct.pack("<iQq", PROTOCOL_VERSION, 0, int(time.time())) +
             network_address() + network_address() +
             struct.pack("<Q", secrets.randbits(64)) +
-            bytes([len(agent)]) + agent + struct.pack("<i", 0) + b"\\x00")
+            bytes([len(agent)]) + agent + struct.pack("<i", 0) + b"\x00")
 
 
 def split_host(value):
@@ -87,7 +86,7 @@ def probe(candidate, timeout):
             header = read_exact(sock, 24)
             if header[:4] != MAGIC:
                 raise ValueError("Wrong network magic (not VMESH mainnet)")
-            command = header[4:16].split(b"\\x00", 1)[0].decode("ascii", "replace")
+            command = header[4:16].split(b"\x00", 1)[0].decode("ascii", "replace")
             size = struct.unpack("<I", header[16:20])[0]
             if size > MAX_PAYLOAD:
                 raise ValueError("Oversized P2P payload")
