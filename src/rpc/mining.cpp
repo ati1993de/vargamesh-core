@@ -35,6 +35,7 @@
 #include <script/script.h>
 #include <script/signingprovider.h>
 #include <txmempool.h>
+#include <tinyformat.h>
 #include <univalue.h>
 #include <util/signalinterrupt.h>
 #include <util/strencodings.h>
@@ -1329,11 +1330,138 @@ static RPCHelpMan submitheader()
     };
 }
 
+/**
+ * Read-only VMESH mining diagnostics.  No consensus, template or block
+ * submission behaviour is changed by this RPC.
+ */
+static RPCHelpMan getvmeshminingstatus()
+{
+    return RPCHelpMan{
+        "getvmeshminingstatus",
+        "Return VMESH-specific PoW, AuxPoW and bootstrap diagnostics.\\n"
+        "External merged-mining adapters can use this together with "
+        "getblocktemplate and submitblock.\\n",
+        {},
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "height", "Current active chain height"},
+                {RPCResult::Type::STR_HEX, "bestblockhash", "Active chain tip hash"},
+                {RPCResult::Type::BOOL, "asert_enabled", "Whether ASERT is enabled for this network"},
+                {RPCResult::Type::NUM, "target_spacing", "Target seconds per block"},
+                {RPCResult::Type::NUM, "asert_half_life", "ASERT half-life in seconds, zero if disabled"},
+                {RPCResult::Type::NUM, "auxpow_chainid", "AuxPoW chain ID; zero if disabled"},
+                {RPCResult::Type::NUM, "auxpow_activation_height", "First height requiring AuxPoW"},
+                {RPCResult::Type::BOOL, "auxpow_next_block", "Whether AuxPoW is required on the next block"},
+                {RPCResult::Type::STR_HEX, "auxpow_childnonce", "Required child nNonce, shown in hexadecimal"},
+                {RPCResult::Type::STR_HEX, "next_bits", "Expected target nBits for the next block"},
+                {RPCResult::Type::STR_HEX, "chainwork", "Accumulated chainwork"},
+                {RPCResult::Type::STR_HEX, "minimum_chainwork", "Configured minimum bootstrap chainwork"},
+            }
+        },
+        RPCExamples{HelpExampleCli("getvmeshminingstatus", "")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(cs_main);
+    const Consensus::Params& consensus = chainman.GetConsensus();
+    const CBlockIndex* tip = chainman.ActiveChain().Tip();
+    if (tip == nullptr) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "No active chain tip");
+    }
+
+    const int next_height = tip->nHeight + 1;
+    CBlockHeader candidate;
+    candidate.hashPrevBlock = tip->GetBlockHash();
+    candidate.nTime = static_cast<uint32_t>(
+        tip->GetBlockTime() + consensus.nPowTargetSpacing);
+    const unsigned int next_bits = GetNextWorkRequired(tip, &candidate, consensus);
+
+    UniValue result{UniValue::VOBJ};
+    result.pushKV("height", tip->nHeight);
+    result.pushKV("bestblockhash", tip->GetBlockHash().GetHex());
+    result.pushKV("asert_enabled", consensus.fPowUseASERT);
+    result.pushKV("target_spacing", consensus.nPowTargetSpacing);
+    result.pushKV("asert_half_life", consensus.nASERTHalfLife);
+    result.pushKV("auxpow_chainid", consensus.nAuxpowChainId);
+    result.pushKV("auxpow_activation_height", consensus.nAuxpowStartHeight);
+    result.pushKV("auxpow_next_block",
+        consensus.nAuxpowChainId != 0 && consensus.AuxPowActive(next_height));
+    result.pushKV("auxpow_childnonce",
+        strprintf("%08x", static_cast<uint32_t>(consensus.nAuxpowChainId)));
+    result.pushKV("next_bits", strprintf("%08x", next_bits));
+    result.pushKV("chainwork", ArithToUint256(tip->nChainWork).GetHex());
+    result.pushKV("minimum_chainwork", consensus.nMinimumChainWork.GetHex());
+    return result;
+},
+    };
+}
+
+/**
+ * Check the VMESH-specific AuxPoW rules on a block without submitting it.
+ * This is a diagnostic only, not full consensus validation of the block.
+ */
+static RPCHelpMan checkvmeshauxpow()
+{
+    return RPCHelpMan{
+        "checkvmeshauxpow",
+        "Check VMESH AuxPoW height rules and proof of work without submitting a block.\\n"
+        "This does NOT validate all block transactions, chainstate or UTXOs.\\n",
+        {
+            {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+                "Fully serialized VMESH block including its AuxPoW proof"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "height", "Candidate block height"},
+                {RPCResult::Type::BOOL, "auxpow_required", "AuxPoW required at this height"},
+                {RPCResult::Type::BOOL, "height_rules_valid", "AuxPoW version, presence and chain nonce rules"},
+                {RPCResult::Type::BOOL, "proof_valid", "Parent proof and child PoW target check"},
+                {RPCResult::Type::STR, "height_rules_error", "Height rule failure description"},
+                {RPCResult::Type::STR, "proof_error", "Proof failure description"},
+            },
+        },
+        RPCExamples{HelpExampleCli("checkvmeshauxpow", "\"blockhex\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(cs_main);
+    const CBlockIndex* prev = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
+    if (prev == nullptr) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "Previous block header unknown");
+    }
+    const Consensus::Params& consensus = chainman.GetConsensus();
+    const int height{prev->nHeight + 1};
+    std::string height_error;
+    std::string proof_error;
+    const bool height_valid{
+        CheckAuxPowHeightRules(block, height, consensus, &height_error)};
+    const bool proof_valid{
+        CheckAuxPowProofOfWork(block, consensus, &proof_error)};
+
+    UniValue result{UniValue::VOBJ};
+    result.pushKV("height", height);
+    result.pushKV("auxpow_required",
+        consensus.nAuxpowChainId != 0 && consensus.AuxPowActive(height));
+    result.pushKV("height_rules_valid", height_valid);
+    result.pushKV("proof_valid", proof_valid);
+    result.pushKV("height_rules_error", height_error);
+    result.pushKV("proof_error", proof_error);
+    return result;
+},
+    };
+}
+
 void RegisterMiningRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"mining", &getnetworkhashps},
         {"mining", &getmininginfo},
+        {"mining", &getvmeshminingstatus},
+        {"mining", &checkvmeshauxpow},
         {"mining", &prioritisetransaction},
         {"mining", &getprioritisedtransactions},
         {"mining", &getblocktemplate},

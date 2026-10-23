@@ -1,0 +1,61 @@
+name: VMESH Release Gates
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  seed-handshake:
+    name: Seed P2P handshakes (required for release)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate seed probe with negative and positive tests
+        run: python3 contrib/devtools/test_vmesh_seed_probe.py
+      - name: VMESH mainnet protocol handshakes on all five proposed fixed seeds
+        run: |
+          python3 contrib/devtools/vmesh_seed_probe.py --timeout 5 \
+            217.154.93.20:29666 217.217.78.186:29666 \
+            31.70.81.5:29666 37.221.211.210:29666 \
+            212.132.80.39:29666
+
+
+  auxpow-fuzz:
+    name: AuxPoW fuzz target build and deterministic smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build prerequisites
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            python3 libevent-dev libboost-dev libsqlite3-dev
+      - name: Configure standalone fuzz binary
+        run: |
+          cmake -S . -B build-fuzz -G Ninja \
+            -DBUILD_GUI=OFF -DBUILD_DAEMON=OFF -DBUILD_TESTS=OFF \
+            -DBUILD_BENCH=OFF -DBUILD_FOR_FUZZING=ON -DENABLE_IPC=OFF \
+            -DBUILD_BITCOIN_BIN=OFF -DBUILD_CLI=OFF -DBUILD_TX=OFF
+      - name: Build all fuzz targets including vmesh_auxpow
+        run: cmake --build build-fuzz --target fuzz --parallel 2
+      - name: Confirm VMESH AuxPoW fuzz target registered
+        run: |
+          PRINT_ALL_FUZZ_TARGETS_AND_ABORT=1 build-fuzz/bin/fuzz | grep -x vmesh_auxpow
+      - name: Run VMESH AuxPoW deterministic input smoke
+        run: |
+          mkdir -p /tmp/vmesh-auxpow-corpus
+          python3 - <<'PY'
+          import pathlib
+          import random
+          rng = random.Random(0x564D)
+          root = pathlib.Path("/tmp/vmesh-auxpow-corpus")
+          for i, nbytes in enumerate([0, 1, 7, 80, 200, 1024, 4096] * 4):
+              root.joinpath(f"proof-{i:02d}.bin").write_bytes(rng.randbytes(nbytes))
+          PY
+          FUZZ=vmesh_auxpow build-fuzz/bin/fuzz /tmp/vmesh-auxpow-corpus
