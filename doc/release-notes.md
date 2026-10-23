@@ -1,140 +1,35 @@
-v31.1 Release Notes
-===================
+# VargaMesh Core v0.3.0
 
-Bitcoin Core version 31.1 is now available from:
+Release date: 23 October 2026 (subject to successful automated release builds).
 
-  <https://bitcoincore.org/bin/bitcoin-core-31.1/>
+## Highlights
 
-This release includes new features, various bug fixes and performance
-improvements, as well as updated translations.
+- Adds five independently probed VMESH Mainnet IPv4 fixed P2P seeds (port 29666) as a fallback to the existing DNS bootstrap seed: 217.154.93.20, 217.217.78.186, 31.70.81.5, 37.221.211.210, and 212.132.80.39. Reachability was confirmed through VMESH network-magic/protocol handshakes; this does not independently prove each node's chain tip or long-term availability.
+- Adds the read-only `getvmeshminingstatus` RPC for current tip, ASERT configuration, AuxPoW chain identity, expected next bits, and chainwork.
+- Adds `checkvmeshauxpow <serialized_block_hex>` to diagnose VMESH height-specific AuxPoW rules and proof validation without submitting a block. This is **not** full block or UTXO validation.
+- Adds ASERT difficulty stress tests, AuxPoW fuzz coverage, a functional RPC smoke test, and network fixed-seed checks.
+- Provides operator tools to probe VMESH P2P seeds and compare independent nodes' block hash and chainwork.
 
-Please report bugs using the issue tracker at GitHub:
+## Network and mining compatibility
 
-  <https://github.com/bitcoin/bitcoin/issues>
+This is a non-consensus hardening release. It does **not** introduce a hard fork, change VMESH Mainnet genesis, SHA-256d, ASERT target spacing or half-life, subsidy, chain ID, AuxPoW activation, or address formats. Existing `getblocktemplate` / `submitblock` RPC behavior remains unchanged.
 
-To receive security and update notifications, please subscribe to:
+Native Namecoin-style `getauxblock` / `submitauxblock` compatibility is **not** included in v0.3.0; pool operators requiring those RPCs still need an external adapter.
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+## Upgrading
 
-How to Upgrade
-==============
+This is a recommended, **not mandatory**, node upgrade. For production nodes and exchanges:
 
-If you are running an older version, shut it down. Wait until it has completely
-shut down (which might take a few minutes in some cases), then run the installer
-(on Windows) or just copy over `/Applications/Bitcoin-Qt` (on macOS) or
-`bitcoind`/`bitcoin-qt` (on Linux).
+1. Back up wallet keys and configuration and record the current chain height/hash.
+2. Shut down the existing VMESH daemon cleanly; preserve the existing chainstate and wallet data directories.
+3. Verify the downloaded archive against the release `SHA256SUMS`; install the binary for the correct operating system and architecture.
+4. Start the upgraded daemon; confirm `getblockchaininfo`, `getnetworkinfo`, and `getvmeshminingstatus` from the local CLI.
+5. Roll out gradually, one independently operated node at a time, and ensure peer connections and chain synchronization remain healthy.
 
-Upgrading directly from a version of Bitcoin Core that has reached its EOL is
-possible, but it might take some time if the data directory needs to be
-migrated. Old wallet versions of Bitcoin Core are generally supported.
+Existing exchanges, including NestEx, do not need an emergency upgrade for this release. Send a routine compatibility notice after release assets are available.
 
-Compatibility
-==============
+## Validation and provenance
 
-Bitcoin Core is supported and tested on the following operating systems or
-newer: Linux Kernel 3.17, macOS 14, and Windows 10 (version 1903). Bitcoin Core
-should also work on most other Unix-like systems but is not as frequently tested
-on them. It is not recommended to use Bitcoin Core on unsupported systems.
+PR #9 (https://github.com/ati1993de/vargamesh-core/pull/9) passed Linux unit/functional tests; Windows headless packaging checks; macOS Intel/Apple Silicon cross-builds and execution/mainnet+testnet smokes; seed-protocol checks of 5/5 proposed seeds; and deterministic AuxPoW fuzz smokes. v0.3.0 archive publication is independently gated on release-workflow success.
 
-Notable changes
-===============
-
-### PrivateBroadcast
-
-This release fixes an ip address leak when using the -privatebroadcast feature.
-Under certain circumstances connections were being made over clearnet rather than
-the enabled privacy network.
-
-
-### Validation
-
-- #35209 validation: correct lifetime of precomputed tx data
-- #35465 coins: compact chainstate regularly
-
-### Leveldb
-
-- #61(bitcoin-core/leveldb): Disable seek compaction
-
-### P2P
-
-- #35032 net_processing: don't modify addrman for private broadcast connections
-- #35410 net: use the proxy if overriden when doing v2->v1 reconnections
-
-### Wallet
-
-- #35227 wallet: check the final BDB page LSN during migration
-- #35228 wallet: use outpoint when estimating input size
-
-### Musig
-
-- #35316 musig: Reject empty pubkey list in GetMuSig2KeyAggCache
-
-### Build
-
-- #34228 depends: Unset SOURCE_DATE_EPOCH in gen_id script
-
-### Test
-
-- #34425 test: Fix all races after a socket is closed gracefully
-- #34863 test: Clean shutdown in Socks5Server
-- #34991 test: fix feature_index_prune.py bug when using --usecli
-- #35080 test: Add missing self.options.timeout_factor scale in tool_bitcoin_chainstate.py
-- #35218 test: fix P2SH script in coins cache fuzz target
-- #35279 psbt, test: remove address type restrictions in test
-
-### Fuzz
-
-- #35289 fuzz: Fix timeout in txorphan
-
-### Util
-
-- #35384 util: Check write failures before renaming settings.json
-
-### Docs
-
-- #35283 doc: mention -DWITH_ZMQ=ON in BSD build guides
-
-### CI
-
-- #35202 ci: restore sockets in i686, no IPC job
-- #35230 ci: Move --usecli --extended from i386 task to alpine task
-- #35348 ci: switch to GitHub cache for all runners
-- #35378 ci: switch runners from cirrus to warpbuild
-- #35408 ci: 35378 followups
-- #35430 ci: use warp caching on warp runners
-- #35447 ci: use warpbuild cache for docker buildkit cache
-
-### Misc
-
-- #35044 contrib: Fix NameError in signet miner gbt()
-- #35175 multi_index: fix compilation failure with boost >= 1.91
-- #34953 crypto: disable ASan instrumentation of SSE4 SHA256 for GCC
-
-Credits
-=======
-
-Thanks to everyone who directly contributed to this release:
-
-- andrewtoth
-- Cory Fields
-- Crypt-iQ
-- darosior
-- deadmanoz
-- fanquake
-- Greg Sanders
-- Hennadii Stepanov
-- junbyjun1238
-- Lőrinc
-- MarcoFalke
-- marcofleon
-- nervana21
-- optout21
-- Pol Espinasa
-- rkrux
-- Shrey
-- Torkel Rogstad
-- Vasil Dimov
-- willcl-ark
-
-As well as to everyone that helped with translations on
-[Transifex](https://explore.transifex.com/bitcoin/bitcoin/).
+The release builds are headless node and CLI packages, not desktop GUI installers. Do not assume binaries are code-signed unless a separately verified signature is supplied.
