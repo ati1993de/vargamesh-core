@@ -1,0 +1,25 @@
+name: VMESH Release Gates
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  seed-handshake:
+    name: Seed P2P handshakes (required for release)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate seed probe with negative and positive tests
+        run: python3 contrib/devtools/test_vmesh_seed_probe.py
+      - name: VMESH mainnet protocol handshakes on all five proposed fixed seeds
+        run: |
+          python3 contrib/devtools/vmesh_seed_probe.py --timeout 5 \
+            217.154.93.20:29666 217.217.78.186:29666 \
+            31.70.81.5:29666 37.221.211.210:29666 \
+            212.132.80.39:29666
