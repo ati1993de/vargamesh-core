@@ -1396,12 +1396,72 @@ static RPCHelpMan getvmeshminingstatus()
     };
 }
 
+/**
+ * Check the VMESH-specific AuxPoW rules on a block without submitting it.
+ * This is a diagnostic only, not full consensus validation of the block.
+ */
+static RPCHelpMan checkvmeshauxpow()
+{
+    return RPCHelpMan{
+        "checkvmeshauxpow",
+        "Check VMESH AuxPoW height rules and proof of work without submitting a block.\\n"
+        "This does NOT validate all block transactions, chainstate or UTXOs.\\n",
+        {
+            {"hexdata", RPCArg::Type::STR_HEX, RPCArg::Optional::NO,
+                "Fully serialized VMESH block including its AuxPoW proof"},
+        },
+        RPCResult{
+            RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::NUM, "height", "Candidate block height"},
+                {RPCResult::Type::BOOL, "auxpow_required", "AuxPoW required at this height"},
+                {RPCResult::Type::BOOL, "height_rules_valid", "AuxPoW version, presence and chain nonce rules"},
+                {RPCResult::Type::BOOL, "proof_valid", "Parent proof and child PoW target check"},
+                {RPCResult::Type::STR, "height_rules_error", "Height rule failure description"},
+                {RPCResult::Type::STR, "proof_error", "Proof failure description"},
+            },
+        },
+        RPCExamples{HelpExampleCli("checkvmeshauxpow", "\"blockhex\"")},
+        [&](const RPCHelpMan& self, const JSONRPCRequest& request) -> UniValue
+{
+    CBlock block;
+    if (!DecodeHexBlk(block, request.params[0].get_str())) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Block decode failed");
+    }
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    LOCK(cs_main);
+    const CBlockIndex* prev = chainman.m_blockman.LookupBlockIndex(block.hashPrevBlock);
+    if (prev == nullptr) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "Previous block header unknown");
+    }
+    const Consensus::Params& consensus = chainman.GetConsensus();
+    const int height{prev->nHeight + 1};
+    std::string height_error;
+    std::string proof_error;
+    const bool height_valid{
+        CheckAuxPowHeightRules(block, height, consensus, &height_error)};
+    const bool proof_valid{
+        CheckAuxPowProofOfWork(block, consensus, &proof_error)};
+
+    UniValue result{UniValue::VOBJ};
+    result.pushKV("height", height);
+    result.pushKV("auxpow_required",
+        consensus.nAuxpowChainId != 0 && consensus.AuxPowActive(height));
+    result.pushKV("height_rules_valid", height_valid);
+    result.pushKV("proof_valid", proof_valid);
+    result.pushKV("height_rules_error", height_error);
+    result.pushKV("proof_error", proof_error);
+    return result;
+},
+    };
+}
+
 void RegisterMiningRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
         {"mining", &getnetworkhashps},
         {"mining", &getmininginfo},
         {"mining", &getvmeshminingstatus},
+        {"mining", &checkvmeshauxpow},
         {"mining", &prioritisetransaction},
         {"mining", &getprioritisedtransactions},
         {"mining", &getblocktemplate},
