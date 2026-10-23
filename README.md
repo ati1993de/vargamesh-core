@@ -508,7 +508,7 @@ https://github.com/ati1993de/vargamesh-desktop/releases/latest
 
 The current Desktop release bundles:
 
-**VargaMesh Core v0.3.0**
+**VargaMesh Core v0.2.0** (Desktop has a separately pinned Core binary and is not upgraded by the Core v0.3.0 release).
 
 ### Available packages
 
