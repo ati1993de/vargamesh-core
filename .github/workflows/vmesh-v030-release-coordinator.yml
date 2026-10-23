@@ -1,0 +1,95 @@
+name: VargaMesh Core v0.3.0 release coordinator
+
+on:
+  workflow_run:
+    workflows:
+      - "VargaMesh CI"
+      - "VMESH Release Gates"
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: write
+
+concurrency:
+  group: vmesh-core-v0.3.0-release-dispatch
+  cancel-in-progress: false
+
+jobs:
+  dispatch-verified-release:
+    if: ${{ github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ github.token }}
+      COMMIT: ${{ github.event.workflow_run.head_sha }}
+    steps:
+      - name: Checkout current main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: false
+
+      - name: Dispatch release only when BOTH exact-SHA main checks passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "ati1993de/vargamesh-core"
+          if [ "$(git rev-parse HEAD)" != "$COMMIT" ]; then
+            echo "Main has moved; do not release a previous commit."
+            exit 0
+          fi
+          grep -qx 'set(CLIENT_VERSION_MAJOR 0)' CMakeLists.txt
+          grep -qx 'set(CLIENT_VERSION_MINOR 3)' CMakeLists.txt
+          grep -qx 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt
+          grep -qx 'set(CLIENT_VERSION_IS_RELEASE "true")' CMakeLists.txt
+
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/vargamesh-ci.yml/runs?branch=main&per_page=50" > ci.json
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/vmesh-release-gates.yml/runs?branch=main&per_page=50" > gates.json
+
+          if ! python3 - "$COMMIT" <<'PY'
+          import json
+          import sys
+          sha = sys.argv[1]
+          for label, filename in (("VargaMesh CI", "ci.json"), ("VMESH Release Gates", "gates.json")):
+              runs = json.load(open(filename, encoding="utf-8"))["workflow_runs"]
+              matching = [r for r in runs if r["head_sha"] == sha and r["event"] == "push"]
+              if not any(r["status"] == "completed" and r["conclusion"] == "success" for r in matching):
+                  print(f"{label}: not yet successfully completed for exact commit {sha}")
+                  sys.exit(1)
+              print(f"{label}: SUCCESS for {sha}")
+          PY
+          then
+            echo "Release gates not both complete. Other workflow completion will retry."
+            exit 0
+          fi
+
+          if gh release view v0.3.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v0.3.0 is already published."
+            exit 0
+          fi
+          if git ls-remote --exit-code "https://github.com/$GITHUB_REPOSITORY.git" refs/tags/v0.3.0 >/dev/null; then
+            echo "v0.3.0 tag exists. Do not overwrite it."
+            exit 0
+          fi
+
+          gh api "repos/$GITHUB_REPOSITORY/actions/workflows/release-binaries.yml/runs?per_page=50" > releases.json
+          if python3 - "$COMMIT" <<'PY'
+          import json
+          import sys
+          sha = sys.argv[1]
+          runs = json.load(open("releases.json", encoding="utf-8"))["workflow_runs"]
+          sys.exit(0 if any(r["head_sha"] == sha and r["event"] == "workflow_dispatch" for r in runs) else 1)
+          PY
+          then
+            echo "Release workflow already dispatched for this commit."
+            exit 0
+          fi
+
+          gh workflow run release-binaries.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            --field tag=v0.3.0 \
+            --field commit="$COMMIT"
+          echo "Dispatched gated v0.3.0 release binaries for $COMMIT"

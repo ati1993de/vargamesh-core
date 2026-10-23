@@ -1,4 +1,4 @@
-# VargaMesh Core v0.2.0
+# VargaMesh Core
 
 <p align="center">
   <strong>Official Mainnet + Public Testnet v1 Core release for the VargaMesh (VMESH) network.</strong>
@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <img alt="Core" src="https://img.shields.io/badge/Core-v0.2.0-2ea44f">
+  <a href="https://github.com/ati1993de/vargamesh-core/releases/latest"><img alt="Latest Core release" src="https://img.shields.io/github/v/release/ati1993de/vargamesh-core?label=Core&color=2ea44f"></a>
   <img alt="Mainnet" src="https://img.shields.io/badge/Network-Mainnet-orange">
   <img alt="Testnet" src="https://img.shields.io/badge/Testnet-v1-blue">
   <img alt="Consensus" src="https://img.shields.io/badge/Consensus-SHA--256d%20PoW-yellow">
@@ -68,7 +68,7 @@
 ---
 
 > [!IMPORTANT]
-> **VargaMesh Core `v0.2.0` is the current official Mainnet/Testnet Core release.**
+> **VargaMesh Core `v0.3.0` adds VMESH mining diagnostics, fixed Mainnet seeds, and hardening tests.** Check the [latest published GitHub release](https://github.com/ati1993de/vargamesh-core/releases/latest) and verify its binary assets and checksums before upgrading.
 >
 > Official binary packages are published for:
 >
@@ -80,20 +80,23 @@
 > The macOS Core archives contain the daemon and command-line utilities.
 > They are separate from the graphical **VargaMesh Desktop** application.
 >
-> The macOS assets were produced from the existing, unchanged `v0.2.0` tag
-> commit and were verified on native Intel and Apple Silicon GitHub runners.
-> Adding macOS packages did **not** create a new Core version and did **not**
-> change VargaMesh consensus rules.
+> The macOS v0.3.0 packages are published separately after native Intel and
+> Apple Silicon smoke tests, using the same tagged Core source commit.
+> This update does **not** change VargaMesh consensus rules.
 
 ---
 
 ## Official release files
 
+**What is new in v0.3.0:** five verified VMESH Mainnet P2P fixed seeds, `getvmeshminingstatus` and `checkvmeshauxpow` diagnostic RPCs, ASERT/AuxPoW regression and fuzz tests. No hard fork or change to the existing Mainnet consensus parameters. See [v0.3.0 release notes](doc/release-notes/release-notes-v0.3.0.md). This Core release does not automatically update the separately shipped Desktop, MiniPool or Android binaries.
+
+Expected v0.3.0 archive names **once published** (check the [latest release](https://github.com/ati1993de/vargamesh-core/releases/latest) for actual available downloads):
+
 ```text
-vargamesh-core-0.2.0-linux-x86_64.tar.gz
-vargamesh-core-0.2.0-windows-x86_64.zip
-vargamesh-core-0.2.0-macos-x86_64.tar.gz
-vargamesh-core-0.2.0-macos-arm64.tar.gz
+vargamesh-core-0.3.0-linux-x86_64.tar.gz
+vargamesh-core-0.3.0-windows-x86_64.zip
+vargamesh-core-0.3.0-macos-x86_64.tar.gz
+vargamesh-core-0.3.0-macos-arm64.tar.gz
 
 SHA256SUMS
 SHA256SUMS-macOS
@@ -110,8 +113,8 @@ uname -m
 Use:
 
 ```text
-x86_64 -> vargamesh-core-0.2.0-macos-x86_64.tar.gz
-arm64  -> vargamesh-core-0.2.0-macos-arm64.tar.gz
+x86_64 -> vargamesh-core-0.3.0-macos-x86_64.tar.gz
+arm64  -> vargamesh-core-0.3.0-macos-arm64.tar.gz
 ```
 
 ### Verify macOS checksums
@@ -316,8 +319,8 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 ## Project Status
 
 For client release specifics, limitations and cross-platform distinctions, see
-[Client release status](doc/client-release-status.md). The Core release version
-remains **v0.2.0**.
+[Client release status](doc/client-release-status.md). The next Core release source version is **v0.3.0**; the published version
+and downloadable assets are maintained on [GitHub Releases](https://github.com/ati1993de/vargamesh-core/releases/latest).
 
 Public release manifest: https://vargamesh.com/api/v1/releases
 
@@ -327,7 +330,7 @@ Check the GitHub Desktop release and Android source validation status directly.
 
 | Component                  |     Version | Status                                      |
 | -------------------------- | ----------: | ------------------------------------------- |
-| VargaMesh Core             |    `v0.2.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
+| VargaMesh Core             |    `v0.3.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
 | VargaMesh Desktop          |    `v0.7.1` | 🟢 GitHub · Windows/macOS Intel+ARM |
 | VargaMesh Android Wallet   |    `v0.5.0` | 🟡 Source pre-release · device validation pending |
 | VargaMesh Mobile Miner     |    `v1.5.0` | 🟢 Android 8.0+ · SHA-256d Home Mining PPLNS |
@@ -351,7 +354,7 @@ Check the GitHub Desktop release and Android source validation status directly.
 | ---------------------------- | ---------------------------------------------------- |
 | Network                      | VargaMesh Mainnet                                    |
 | Currency                     | `VMESH`                                              |
-| Core version                 | `v0.2.0`                                             |
+| Core version                 | `v0.3.0`                                             |
 | Desktop version              | `v0.7.1`                                             |
 | Android version              | `v0.5.0`                                             |
 | Website                      | https://vargamesh.com                                |
@@ -441,9 +444,9 @@ https://github.com/ati1993de/vargamesh-core
 
 Current version:
 
-**VargaMesh Core v0.2.0**
+**VargaMesh Core v0.3.0**
 
-Official v0.2.0 binary packages:
+v0.3.0 binary packages (check the GitHub Release for publication status):
 
 * Linux x86_64
 * Windows x86_64
@@ -452,7 +455,7 @@ Official v0.2.0 binary packages:
 
 Release downloads and SHA-256 checksum files:
 
-https://github.com/ati1993de/vargamesh-core/releases/tag/v0.2.0
+https://github.com/ati1993de/vargamesh-core/releases/latest
 
 The macOS packages contain `vargameshd`, `vargamesh-cli`, `vargamesh-wallet`,
 `vargamesh-tx` and `vargamesh-util`. They are Core command-line packages, not
@@ -505,7 +508,7 @@ https://github.com/ati1993de/vargamesh-desktop/releases/latest
 
 The current Desktop release bundles:
 
-**VargaMesh Core v0.2.0**
+**VargaMesh Core v0.2.0** (Desktop has a separately pinned Core binary and is not upgraded by the Core v0.3.0 release).
 
 ### Available packages
 
@@ -1241,7 +1244,7 @@ release-specific language matrix.
 * **No guarantees:** mining shares, pool blocks, payment timing, financial
   returns and future market prices cannot be promised.
 
-The mobile miner does **not** change VargaMesh Core `v0.2.0`, Mainnet consensus,
+The mobile miner does **not** change VargaMesh Core Mainnet consensus,
 AuxPoW consensus, block rewards, wallet recovery standards or the separate
 Android wallet version `v0.5.0`.
 
@@ -2300,8 +2303,9 @@ git clone https://github.com/ati1993de/vargamesh-core.git
 cd vargamesh-core
 ```
 
-Official v0.2.0 release archives are available for Linux x86_64, Windows
-x86_64, macOS x86_64 and macOS arm64. Verify the published SHA-256 checksum
+v0.3.0 release archives are prepared for Linux x86_64, Windows
+x86_64, macOS x86_64 and macOS arm64. Confirm that the binaries are published
+on GitHub before installing. Verify the published SHA-256 checksum
 files before replacing an existing node binary.
 
 Follow the platform-specific build documentation for dependencies and
@@ -2398,7 +2402,7 @@ VargaMesh is under active development.
 
 | Component                  | Status                                      |
 | -------------------------- | ------------------------------------------- |
-| VargaMesh Core `v0.2.0`    | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
+| VargaMesh Core `v0.3.0`    | 🟢 Mainnet + Testnet · Linux/Windows/macOS release builds |
 | VargaMesh Desktop `v0.7.1` | 🟢 GitHub · Windows/macOS |
 | VargaMesh Android Wallet `v0.5.0` | 🟡 Source pre-release · device tests outstanding |
 | VargaMesh Mobile Miner `v1.5.0` | 🟢 Android 8.0+ · Mainnet Home Mining PPLNS |
@@ -2428,7 +2432,7 @@ VargaMesh uses status-based development rather than guaranteed release dates.
 
 ### Core
 
-* continued VargaMesh Core `v0.2.x` testing and hardening
+* continued VargaMesh Core `v0.3.x` testing and hardening
 * consensus and AuxPoW validation review
 * broader independent-node testing
 * easier node deployment
