@@ -6,7 +6,7 @@ on:
       tag:
         description: Release tag to create after all builds pass
         required: true
-        default: v0.2.0
+        default: v0.3.0
         type: string
       commit:
         description: Exact release commit SHA to build
@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: vargamesh-core-release-${{ inputs.tag }}
@@ -43,9 +44,12 @@ jobs:
         run: |
           set -euxo pipefail
           test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          test "$RELEASE_TAG" = "v0.3.0"
+          git fetch --no-tags origin main
+          test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_COMMIT"
 
           grep -q 'set(CLIENT_VERSION_MAJOR 0)' CMakeLists.txt
-          grep -q 'set(CLIENT_VERSION_MINOR 2)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_MINOR 3)' CMakeLists.txt
           grep -q 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt
           grep -q 'set(CLIENT_VERSION_IS_RELEASE "true")' CMakeLists.txt
 
@@ -150,7 +154,7 @@ jobs:
           cp -a README.md "$ROOT/" 2>/dev/null || cp -a README "$ROOT/" 2>/dev/null || true
           cp -a doc/testnet.md "$ROOT/TESTNET.md"
           cp -a doc/exchange-integration.md "$ROOT/EXCHANGE-INTEGRATION.md"
-          cp -a doc/release-notes/release-notes-v0.2.0.md "$ROOT/RELEASE-NOTES.md"
+          cp -a doc/release-notes/release-notes-v0.3.0.md "$ROOT/RELEASE-NOTES.md"
 
           for exe in "$ROOT"/bin/*; do
             "$exe" --version
@@ -262,9 +266,12 @@ jobs:
         run: |
           set -euxo pipefail
           test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+          test "$RELEASE_TAG" = "v0.3.0"
+          git fetch --no-tags origin main
+          test "$(git rev-parse FETCH_HEAD)" = "$RELEASE_COMMIT"
 
           grep -q 'set(CLIENT_VERSION_MAJOR 0)' CMakeLists.txt
-          grep -q 'set(CLIENT_VERSION_MINOR 2)' CMakeLists.txt
+          grep -q 'set(CLIENT_VERSION_MINOR 3)' CMakeLists.txt
           grep -q 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt
           grep -q 'set(CLIENT_VERSION_IS_RELEASE "true")' CMakeLists.txt
           test -f doc/testnet.md
@@ -423,7 +430,7 @@ jobs:
           cp -a README.md "$ROOT/" 2>/dev/null || cp -a README "$ROOT/" 2>/dev/null || true
           cp -a doc/testnet.md "$ROOT/TESTNET.md"
           cp -a doc/exchange-integration.md "$ROOT/EXCHANGE-INTEGRATION.md"
-          cp -a doc/release-notes/release-notes-v0.2.0.md "$ROOT/RELEASE-NOTES.md"
+          cp -a doc/release-notes/release-notes-v0.3.0.md "$ROOT/RELEASE-NOTES.md"
 
           echo "===== WINDOWS PE FILES ====="
           file "$ROOT"/bin/*.exe
@@ -672,7 +679,7 @@ jobs:
 
 
   publish:
-    name: Publish v0.2.0 only after every test passed
+    name: Publish v0.3.0 only after every test passed
     needs: [linux, windows_build, windows_smoke]
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -760,8 +767,21 @@ jobs:
             --repo "$GITHUB_REPOSITORY" \
             --target "$RELEASE_COMMIT" \
             --title "VargaMesh Core ${RELEASE_TAG}" \
-            --notes-file doc/release-notes/release-notes-v0.2.0.md \
+            --notes-file doc/release-notes/release-notes-v0.3.0.md \
             --latest
+
+      - name: Queue macOS Intel and Apple Silicon release builds
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euxo pipefail
+          gh workflow run macos-binaries.yml \
+            --repo "$GITHUB_REPOSITORY" \
+            --ref main \
+            --field tag="$RELEASE_TAG" \
+            --field commit="$RELEASE_COMMIT" \
+            --field publish=true
 
       - name: Final release verification
         shell: bash
