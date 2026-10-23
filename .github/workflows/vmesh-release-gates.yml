@@ -40,7 +40,7 @@ jobs:
         run: |
           cmake -S . -B build-fuzz -G Ninja \
             -DBUILD_GUI=OFF -DBUILD_DAEMON=OFF -DBUILD_TESTS=OFF \
-            -DBUILD_BENCH=OFF -DBUILD_FUZZ_BINARY=ON -DENABLE_IPC=OFF \
+            -DBUILD_BENCH=OFF -DBUILD_FOR_FUZZING=ON -DENABLE_IPC=OFF \
             -DBUILD_BITCOIN_BIN=OFF -DBUILD_CLI=OFF -DBUILD_TX=OFF
       - name: Build all fuzz targets including vmesh_auxpow
         run: cmake --build build-fuzz --target fuzz --parallel 2
