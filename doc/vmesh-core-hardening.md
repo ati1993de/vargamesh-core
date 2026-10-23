@@ -21,19 +21,25 @@ parent coinbase, parent header, parent Merkle path and chain Merkle path.
 
 ## Mainnet bootstrap candidates
 
-The default compiled Mainnet DNS seed remains
-`seed.mesh.vargatech.net`. New addresses MUST pass VMESH P2P protocol
-handshake and sustain real Full Node service before becoming default seeds.
+The compiled Mainnet DNS seed remains `seed.mesh.vargatech.net`. This draft
+also proposes five fallback IPv4 **fixed seeds**, all previously supplied
+or observed in VMESH node administration. Before release, every endpoint
+MUST be freshly verified with VMESH P2P protocol handshake and operator
+review. A failed/stale fixed seed should be removed before merge.
 
-| Operator | Candidate public host | Status |
+| Operator | Endpoint | Evidence / release status |
 | --- | --- | --- |
-| Main project node | `vargamesh.com:29666` | **Unverified** until probed |
-| Asia VMESH node | `asia.vargamesh.com:29666` | **Unverified** until probed |
-| Community-offered independent node | `rodb2008.com:29666` | **Unverified** until probed |
-| Windrose VPS | Public node address required | Not added |
-| Varga-Tech home server | Public routable P2P endpoint required | Not added |
-| Additional Mainnet VPS | Stable public P2P host/IP required | Not added |
-| HU VPS | Stable public P2P host/IP required | Not added |
+| Mainnet VPS | `217.154.93.20:29666` | Previous P2P service, **live recheck required** |
+| Asia VMESH VPS | `217.217.78.186:29666` | Previous external connection success, **recheck** |
+| Windrose VPS | `31.70.81.5:29666` | Known VMESH peers and configured server, **recheck inbound** |
+| HU VPS | `37.221.211.210:29666` | Previous bidirectional connection success, **recheck** |
+| VargaTech server | `212.132.80.39:29666` | Previous VMESH full-node endpoint, **recheck** |
+| Varga-Tech HomeServer | `77.22.47.104:29666` (historical) | Residential/dynamic public IP: **not compiled** |
+| Community-offered node | `rodb2008.com:29666` | Previous connection attempt reported disconnected, **not compiled** |
+
+The draft fixed seed data is encoded in BIP155 records for IPv4, port 29666.
+Several fixed IPs are on infrastructure operated by the same team, so they
+provide geographic/hosting redundancy but not full operator independence.
 
 Websites, reverse proxies, pool stratum ports, local daemon RPC ports, and
 NAT-only home servers are NOT valid P2P seeds by themselves. The Asia service
@@ -43,7 +49,8 @@ Run on a host with public DNS and port 29666 access:
 
 ```sh
 python3 contrib/devtools/vmesh_seed_probe.py \
-  vargamesh.com:29666 asia.vargamesh.com:29666 rodb2008.com:29666
+  217.154.93.20:29666 217.217.78.186:29666 31.70.81.5:29666 \
+  37.221.211.210:29666 212.132.80.39:29666
 ```
 
 The script validates VMESH Mainnet message magic (`4638b879`), checksum,
@@ -53,7 +60,7 @@ does not establish independence, uptime, quality, or honest chain selection.
 For VERIFIED peers, an operator may test manually:
 
 ```sh
-vargamesh-cli addnode "asia.vargamesh.com:29666" "onetry"
+vargamesh-cli addnode "217.217.78.186:29666" "onetry"
 vargamesh-cli getpeerinfo
 ```
 
@@ -89,13 +96,13 @@ checkpoint is applied by this PR.
 VMESH Mainnet (native `vm1`, P2P `29666`) and VMESH Public Testnet v1
 (native `tvm1`, P2P `39666`) are the supported VMESH networks.
 
-The repository also inherits Bitcoin-like `testnet4` and `signet`
-network definitions as well as a legacy Bitcoin-like `regtest`. Those
-modes are **not replacements for VMESH Public Testnet**. Avoid deploying
-them as public VMESH services or assuming their consensus/test vectors
-represent VMESH ASERT/AuxPoW. Their removal or migration must be a
-separately planned change, with test coverage and user-facing migration
-notes.
+The repository retains inherited Bitcoin-like `testnet4` and `signet`
+parameter definitions for compatibility, but VargaMesh's node startup
+policy **already blocks** those two modes via
+`IsVargaMeshNodeChainAllowed` and has an existing unit test. Legacy
+Bitcoin-like `regtest` remains usable for isolated tests, yet does not
+mirror VMESH Mainnet ASERT/AuxPoW. Their internal definitions should not
+be removed without checking regression and migration impact.
 
 A VMESH-specific isolated regtest mode exercising mandatory AuxPoW and ASERT
 is a prerequisite before changing these inherited networks.
