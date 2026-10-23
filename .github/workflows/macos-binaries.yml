@@ -6,7 +6,7 @@ on:
       tag:
         description: Existing or planned VargaMesh Core release tag
         required: true
-        default: v0.2.0
+        default: v0.3.0
         type: string
       commit:
         description: Exact commit SHA to build
