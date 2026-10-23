@@ -53,6 +53,9 @@ jobs:
       - name: Unit tests
         run: ctest --test-dir build --output-on-failure
 
+      - name: VMESH mining diagnostics functional smoke test
+        run: python3 build/test/functional/test_runner.py --jobs=1 feature_vmesh_mining_status.py
+
       - name: Verify VargaMesh binary identity
         run: |
           build/bin/vargameshd --version
