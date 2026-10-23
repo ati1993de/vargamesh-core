@@ -331,7 +331,7 @@ jobs:
             throw "Wrong daemon identity"
           }
 
-          if (($version -join "`n") -notmatch "v0\.2\.0") {
+          if (($version -join "`n") -notmatch "v0\.3\.0") {
             throw "Wrong VargaMesh version"
           }
 
@@ -463,7 +463,7 @@ jobs:
               throw "Wrong daemon identity"
             }
 
-            if (($daemonVersion -join "`n") -notmatch "v0\.2\.0") {
+            if (($daemonVersion -join "`n") -notmatch "v0\.3\.0") {
               throw "Wrong daemon version"
             }
 
