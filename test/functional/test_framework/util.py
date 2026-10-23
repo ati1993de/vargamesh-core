@@ -328,13 +328,22 @@ def get_binary_paths(config):
         "bitcoin-chainstate": "BITCOINCHAINSTATE",
         "bitcoin-wallet": "BITCOINWALLET",
     }
-    # Set paths to bitcoin core binaries allowing overrides with environment
-    # variables.
+    # The CMake target names retain their Bitcoin Core ancestry, but VMESH
+    # installs renamed executables via OUTPUT_NAME. Keep upstream environment
+    # variable overrides (BITCOIND, BITCOINCLI, etc.) for compatibility.
+    output_names = {
+        "bitcoin": "vargamesh",
+        "bitcoind": "vargameshd",
+        "bitcoin-cli": "vargamesh-cli",
+        "bitcoin-util": "vargamesh-util",
+        "bitcoin-tx": "vargamesh-tx",
+        "bitcoin-wallet": "vargamesh-wallet",
+    }
     for binary, env_variable_name in binaries.items():
         default_filename = os.path.join(
             config["environment"]["BUILDDIR"],
             "bin",
-            binary + config["environment"]["EXEEXT"],
+            output_names.get(binary, binary) + config["environment"]["EXEEXT"],
         )
         setattr(paths, env_variable_name.lower(), os.getenv(env_variable_name, default=default_filename))
     # BITCOIN_CMD environment variable can be specified to invoke bitcoin
