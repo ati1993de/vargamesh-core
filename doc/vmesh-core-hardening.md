@@ -12,6 +12,11 @@ consensus upgrade. Never apply test-chain or unverified checkpoints to Mainnet.
 - AuxPoW chain ID, activation height, required child nonce and next-block status;
 - accumulated tip chainwork and configured minimum chainwork.
 
+`checkvmeshauxpow <serialized-block-hex>` checks VMESH height/chain identity
+and parent proof-of-work conditions without submission and reports precise
+errors. It does not perform full transaction or UTXO validation and must not
+be used as the sole block acceptance decision.
+
 This is useful for pool troubleshooting and exchange-node setup. Current
 production merged miners still use `getblocktemplate` and `submitblock`.
 **The new RPC is not a drop-in implementation of Namecoin's
