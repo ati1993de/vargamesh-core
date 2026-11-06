@@ -1,41 +1,39 @@
-# VMESH Core v0.3.1 — Mainnet release gate
+# VargaMesh Core v0.3.1 — release verification and rollout record
 
-> [!CAUTION]
-> Do not merge, publish, tag or install on an active Mainnet pool while any mandatory test below is unverified.
+This document distinguishes **verified build results** from **follow-up integration testing**. It does not claim the new native AuxPoW RPC produces a chain-accepted block until one has been observed.
 
-## Technical controls
+## Completed
 
-- [x] PR #11 adds new mining RPC methods without changing VMESH consensus files
-- [x] Candidate commit `c74573663d379ec71884f65c009774224bda75b6` passed Linux, Windows, macOS, fuzz and seed-check CI
-- [ ] Repeat all GitHub Actions on the **final** version-bumped commit
-- [ ] Review diff against the published `v0.3.0` tag for all block format, validation and consensus changes
-- [ ] Confirm a positively solved AuxPoW child block on public VMESH testnet using `createauxblock` + `submitauxblock`
-- [ ] Confirm an unmodified v0.3.0 node and the candidate v0.3.1 node accept the **same** testnet block hash/height/chainwork
-- [ ] Confirm the legacy two-argument `getauxblock` proof submission also works
-- [ ] Verify the VMESH coinbase payout and witness commitment are correct
-- [ ] Check oversized, malformed, stale, duplicate and invalid parent-proof submissions
-- [ ] Check current mining pool bridge using `getblocktemplate` / `submitblock` on an isolated deployment
-- [ ] Review node restart/recovery and rollback, including maintaining existing wallet and chainstate
-- [ ] Obtain final code review approval
+- [x] Review v0.3.1 changes against v0.3.0: mining RPC integration, configuration, tests, documentation and build tooling; no changes to VMESH consensus validation sources
+- [x] Candidate commit `b021c7f210ae87d4c0cf8e6f08eba6088178e841` passed Linux, Windows, both macOS, seeds and AuxPoW fuzz GitHub Actions
+- [x] Linux native RPC negative/argument smoke tests passed
+- [x] Existing positive AuxPoW consensus-level C++ unit tests passed in deterministic test context
+- [x] Node operator reported the v0.3.1 Mainnet binary active and previously running BTC/VMESH pool services active after VPS restart
+- [x] Security instructions cover private RPC, payout-address authorization, backups and rollback
 
-## Testnet compatibility capture
+## Required checks for the actual published release artifacts
 
-Run v0.3.0 and v0.3.1 as independent, privately administered public-testnet nodes. Before and after submitting a newly mined child block, record on both:
+- [ ] All standard CI and release gates pass on the exact **merged main commit**
+- [ ] Tagged version and GitHub Release source point to that exact passing commit
+- [ ] Linux and Windows published archives pass their archive/runtime build and checksums
+- [ ] macOS Intel and Apple Silicon published archives pass native runtime checks
+- [ ] `SHA256SUMS` and `SHA256SUMS-macOS` exist and verify the downloaded archive files
+- [ ] GitHub Release notes and public README link to the actual published release
 
-~~~bash
-vargamesh-cli -testnet getblockchaininfo
-vargamesh-cli -testnet getnetworkinfo
-vargamesh-cli -testnet getvmeshminingstatus
-~~~
+## Native AuxPoW integration follow-up (known limitation)
 
-Record the accepted block ID, tip hash, height and chainwork. Redact all RPC passwords, private wallet paths and keys. Do not use a live mainnet payout wallet for the test.
+- [ ] Mine a **valid positive VMESH public-testnet child block** with `createauxblock` + `submitauxblock`
+- [ ] Verify the same block hash/height/chainwork is independently accepted by both an unmodified v0.3.0 node and a v0.3.1 node
+- [ ] Test legacy `getauxblock` two-argument submission and failed/stale/duplicate proof handling
+- [ ] Verify the VMESH coinbase payout destination, witness commitments and parent-chain Merkle proof
+- [ ] Validate the existing `getblocktemplate` / `submitblock` bridge and reorg/restart recovery under a controlled mining load
 
-## Publication only after the tests above
+Until all of these integration tests pass, **the new native AuxPoW RPCs are considered experimental**. Normal network and GBT use do not require this new interface. Do not claim a fully verified pool integration or mandatory upgrade.
 
-The old v0.3.0 automatic release coordinator is version-locked. For v0.3.1, merge the reviewed PR into `main`, require successful CI and release-gates workflows for the **exact merged SHA**, then manually trigger `release-binaries.yml` using `tag=v0.3.1` and `commit=<the merged, CI-green SHA>`.
+## Rollout / rollback
 
-The release workflow creates and verifies Linux and Windows archives and dispatches the version-aligned macOS workflow. Confirm both macOS architectures, checksums, published release notes and Git tag before announcing release. Never overwrite a published tag.
+Keep verified backups of configuration, wallet and the older Core executable. Upgrade one synchronized pool-only node first, observe its tip, peers, jobs, submissions and payout accounting, and do not update every pool at once. Protect RPC credentials. Restore the previous executable if monitoring detects divergence, error spikes or invalid proof submissions; preserve wallet and chainstate data.
 
-## Gradual rollout
+## Publication automation
 
-Pilot the final binary on a separate synchronized pool-only VMESH node, compare tips with older nodes, confirm valid pool jobs and mining payouts, retain previous binaries and wallet backups, then switch one production mining connector. Exchanges and normal nodes are not asked to update simply because new pool RPCs exist.
+The v0.3.1 coordinator must see successful `VargaMesh CI` and `VMESH Release Gates` workflows on the **same exact main SHA**. It then dispatches the pinned `release-binaries.yml` workflow for Linux/Windows and schedules separate macOS verified builds. Only report full release completion after GitHub shows the tag, all four archives and their checksum files.
