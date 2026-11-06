@@ -102,6 +102,7 @@ BASE_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     # vv Tests less than 5m vv
     'feature_vmesh_mining_status.py',
+    'feature_vmesh_auxpow_rpc.py',
     'feature_fee_estimation.py',
     'feature_taproot.py',
     'feature_block.py',
