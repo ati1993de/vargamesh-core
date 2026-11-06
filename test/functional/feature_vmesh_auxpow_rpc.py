@@ -7,6 +7,7 @@ Regtest intentionally has no VMESH AuxPoW chain ID. Valid positive proofs must
 be tested on the dedicated VMESH testnet, per doc/native-auxpow-rpc.md.
 """
 
+from test_framework.address import key_to_p2wpkh
 from test_framework.test_framework import BitcoinTestFramework
 from test_framework.util import assert_raises_rpc_error
 
@@ -29,7 +30,10 @@ class VMeshAuxpowRpcTest(BitcoinTestFramework):
             -5, "Invalid VMESH payout address", node.createauxblock, "not-a-vmesh-address",
         )
 
-        payout = node.getnewaddress()
+        # Fixed regtest address: this RPC test must work in wallet-free builds.
+        payout = key_to_p2wpkh(bytes.fromhex(
+            "0279be667ef9dcbbac55a06295ce870b07029bfcdb2dce28d959f2815b16f81798"
+        ))
 
         self.log.info("AuxPoW templates are rejected when the algorithm is not enabled")
         assert_raises_rpc_error(
