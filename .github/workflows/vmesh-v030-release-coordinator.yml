@@ -40,6 +40,12 @@ jobs:
             echo "Main has moved; do not release a previous commit."
             exit 0
           fi
+          # This historical coordinator belongs only to the published v0.3.0 line.
+          # Keep it green and inactive on v0.3.1+ rather than erroring on BUILD=1.
+          if ! grep -qx 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt; then
+            echo "Skipping legacy v0.3.0 coordinator on a newer Core version."
+            exit 0
+          fi
           grep -qx 'set(CLIENT_VERSION_MAJOR 0)' CMakeLists.txt
           grep -qx 'set(CLIENT_VERSION_MINOR 3)' CMakeLists.txt
           grep -qx 'set(CLIENT_VERSION_BUILD 0)' CMakeLists.txt
