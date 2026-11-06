@@ -46,7 +46,7 @@ Relevant implementation files include:
 
 ## Monetary parameters
 
-- Initial block subsidy: `50 VMESH`
+- Initial block subsidy: `25 VMESH` (defined by `consensus.nInitialSubsidy = 25 * COIN` in the mainnet source)
 - Subsidy halving interval: `1051200 blocks`
 - Coinbase maturity: `100 blocks`
 - `MAX_MONEY` validation bound: `52,560,000 VMESH`

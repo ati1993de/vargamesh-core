@@ -9,6 +9,7 @@
 #include <chain.h>
 #include <chainparams.h>
 #include <chainparamsbase.h>
+#include <common/args.h>
 #include <common/system.h>
 #include <consensus/amount.h>
 #include <consensus/consensus.h>
@@ -34,6 +35,9 @@
 #include <script/descriptor.h>
 #include <script/script.h>
 #include <script/signingprovider.h>
+#include <streams.h>
+#include <mutex>
+#include <map>
 #include <txmempool.h>
 #include <tinyformat.h>
 #include <univalue.h>
@@ -1455,6 +1459,307 @@ static RPCHelpMan checkvmeshauxpow()
     };
 }
 
+
+/**
+ * Native VMESH merged-mining RPCs.
+ *
+ * RPC-only integration: no changes to AuxPoW serialization or consensus.
+ * Cached candidate blocks include their complete validated coinbase and
+ * witness commitment. Miners only supply the parent-chain CAuxPow proof.
+ */
+namespace {
+constexpr int64_t AUXPOW_TEMPLATE_LIFETIME{15 * 60};
+constexpr size_t AUXPOW_TEMPLATE_LIMIT{128};
+constexpr size_t AUXPOW_PROOF_MAX_BYTES{128 * 1024};
+
+struct CachedAuxpowTemplate {
+    CBlock block;
+    int64_t created;
+};
+
+std::mutex g_auxpow_template_mutex;
+std::map<uint256, CachedAuxpowTemplate> g_auxpow_templates;
+
+void PruneAuxpowTemplates(const uint256& active_tip, int64_t now)
+{
+    for (auto it = g_auxpow_templates.begin(); it != g_auxpow_templates.end();) {
+        if (it->second.block.hashPrevBlock != active_tip ||
+            now - it->second.created >= AUXPOW_TEMPLATE_LIFETIME) {
+            it = g_auxpow_templates.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    while (g_auxpow_templates.size() >= AUXPOW_TEMPLATE_LIMIT) {
+        auto oldest = g_auxpow_templates.begin();
+        for (auto it = g_auxpow_templates.begin(); it != g_auxpow_templates.end(); ++it) {
+            if (it->second.created < oldest->second.created) oldest = it;
+        }
+        g_auxpow_templates.erase(oldest);
+    }
+}
+
+void CheckAuxpowMiningReady(const JSONRPCRequest& request)
+{
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    Mining& miner = EnsureMining(node);
+    if (!miner.isTestChain()) {
+        if (EnsureConnman(node).GetNodeCount(ConnectionDirection::Both) == 0) {
+            throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, CLIENT_NAME " is not connected!");
+        }
+        if (miner.isInitialBlockDownload()) {
+            throw JSONRPCError(RPC_CLIENT_IN_INITIAL_DOWNLOAD, CLIENT_NAME " is in initial sync");
+        }
+    }
+}
+
+UniValue CreateAuxpowJob(const JSONRPCRequest& request, const std::string& address)
+{
+    CheckAuxpowMiningReady(request);
+    if (address.empty()) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER,
+            "Missing VMESH payout address. Use createauxblock \"address\" or configure -auxpowaddress.");
+    }
+    const CTxDestination dest{DecodeDestination(address)};
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid VMESH payout address");
+    }
+
+    NodeContext& node = EnsureAnyNodeContext(request.context);
+    ChainstateManager& chainman = EnsureChainman(node);
+    Mining& miner = EnsureMining(node);
+    const Consensus::Params& consensus = chainman.GetConsensus();
+
+    CBlock block;
+    int height{0};
+    uint256 tip_hash;
+    bool constructed{false};
+
+    // Block construction can race with a newly accepted block. Try again
+    // without retaining cs_main while building the candidate.
+    for (int attempt = 0; attempt < 3 && !constructed; ++attempt) {
+        auto tmpl = miner.createNewBlock({
+            .coinbase_output_script = GetScriptForDestination(dest),
+            .include_dummy_extranonce = true
+        }, /*cooldown=*/false);
+        if (!tmpl) throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Mining interrupted");
+        block = tmpl->getBlock();
+        // BlockAssembler intentionally leaves the Merkle root unset for GBT
+        // clients to construct. Native AuxPoW returns a final child hash:
+        // commit the actual coinbase and all selected transactions first.
+        // Rebuild the placeholder proof after the child hash changes.
+        if (block.IsAuxpow() && block.auxpow) {
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+            block.SetAuxpow(CAuxPow::CreateMinimal(block));
+        }
+
+        LOCK(cs_main);
+        const CBlockIndex* tip = chainman.ActiveChain().Tip();
+        if (!tip || block.hashPrevBlock != tip->GetBlockHash()) continue;
+        height = tip->nHeight + 1;
+        tip_hash = tip->GetBlockHash();
+        if (!consensus.nAuxpowChainId || !consensus.AuxPowActive(height)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, "AuxPoW is not active on this network or at this height");
+        }
+        if (!block.IsAuxpow() || !block.auxpow ||
+            block.nNonce != static_cast<uint32_t>(consensus.nAuxpowChainId)) {
+            throw JSONRPCError(RPC_VERIFY_ERROR, "Block assembler did not produce a VMESH AuxPoW candidate");
+        }
+        // The miner assembles the coinbase including the payout and witness
+        // commitment, before the immutable child hash is advertised.
+        constructed = true;
+    }
+
+    if (!constructed) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "Chain tip changed during template creation; retry");
+    }
+
+    std::string height_error;
+    if (!CheckAuxPowHeightRules(block, height, consensus, &height_error)) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "Invalid AuxPoW template: " + height_error);
+    }
+
+    const uint256 child_hash{block.GetHash()};
+    {
+        std::lock_guard<std::mutex> lock(g_auxpow_template_mutex);
+        PruneAuxpowTemplates(tip_hash, GetTime());
+        g_auxpow_templates.insert_or_assign(
+            child_hash, CachedAuxpowTemplate{block, GetTime()});
+    }
+
+    const arith_uint256 target = arith_uint256().SetCompact(block.nBits);
+    const uint256 target_bytes{ArithToUint256(target)};
+    // Namecoin/Dogecoin pool APIs use target in little-endian byte order.
+    const std::string legacy_target{HexStr(target_bytes)};
+
+    UniValue result{UniValue::VOBJ};
+    result.pushKV("hash", child_hash.GetHex());
+    result.pushKV("chainid", consensus.nAuxpowChainId);
+    result.pushKV("previousblockhash", block.hashPrevBlock.GetHex());
+    result.pushKV("coinbasevalue", block.vtx.at(0)->vout.at(0).nValue);
+    result.pushKV("bits", strprintf("%08x", block.nBits));
+    result.pushKV("height", height);
+    result.pushKV("target", legacy_target);
+    result.pushKV("_target", legacy_target);
+    return result;
+}
+
+UniValue SubmitAuxpowJob(const JSONRPCRequest& request,
+                         const UniValue& hash_arg,
+                         const UniValue& proof_arg)
+{
+    const uint256 child_hash{ParseHashV(hash_arg, "hash")};
+    const std::string proof_hex{proof_arg.get_str()};
+    if (proof_hex.size() > 2 * AUXPOW_PROOF_MAX_BYTES) {
+        throw JSONRPCError(RPC_INVALID_PARAMETER, "AuxPoW proof exceeds the RPC size limit");
+    }
+
+    CAuxPow parsed_proof;
+    try {
+        const auto bytes{ParseHexV(proof_arg, "auxpow")};
+        SpanReader reader{bytes};
+        reader >> parsed_proof;
+        if (!reader.empty()) {
+            throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "AuxPoW proof contains trailing bytes");
+        }
+    } catch (const std::ios_base::failure&) {
+        throw JSONRPCError(RPC_DESERIALIZATION_ERROR, "Invalid/truncated AuxPoW proof");
+    }
+
+    ChainstateManager& chainman = EnsureAnyChainman(request.context);
+    CBlock block;
+    {
+        LOCK(cs_main);
+        const CBlockIndex* tip = chainman.ActiveChain().Tip();
+        if (!tip) throw JSONRPCError(RPC_VERIFY_ERROR, "No active chain tip");
+        std::lock_guard<std::mutex> cache_lock(g_auxpow_template_mutex);
+        PruneAuxpowTemplates(tip->GetBlockHash(), GetTime());
+        const auto it{g_auxpow_templates.find(child_hash)};
+        if (it == g_auxpow_templates.end()) {
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Unknown or stale AuxPoW template hash");
+        }
+        block = it->second.block;
+    }
+
+    block.SetAuxpow(std::make_unique<CAuxPow>(std::move(parsed_proof)));
+    if (block.GetHash() != child_hash) {
+        throw JSONRPCError(RPC_VERIFY_ERROR, "AuxPoW child hash changed unexpectedly");
+    }
+
+    const auto& consensus{chainman.GetConsensus()};
+    std::string proof_error;
+    if (!CheckAuxPowProofOfWork(block, consensus, &proof_error)) {
+        return false;
+    }
+
+    auto blockptr{std::make_shared<CBlock>(std::move(block))};
+    {
+        LOCK(cs_main);
+        const CBlockIndex* prev = chainman.m_blockman.LookupBlockIndex(blockptr->hashPrevBlock);
+        if (!prev || chainman.ActiveChain().Tip() != prev) return false;
+        chainman.UpdateUncommittedBlockStructures(*blockptr, prev);
+    }
+
+    bool new_block{false};
+    auto sc{std::make_shared<submitblock_StateCatcher>(child_hash)};
+    CHECK_NONFATAL(chainman.m_options.signals)->RegisterSharedValidationInterface(sc);
+    const bool accepted{chainman.ProcessNewBlock(
+        blockptr, /*force_processing=*/true, /*min_pow_checked=*/true,
+        /*new_block=*/&new_block)};
+    CHECK_NONFATAL(chainman.m_options.signals)->UnregisterSharedValidationInterface(sc);
+
+    const bool valid{accepted && sc->found && sc->state.IsValid()};
+    if (valid) {
+        std::lock_guard<std::mutex> lock(g_auxpow_template_mutex);
+        g_auxpow_templates.erase(child_hash);
+    }
+    return valid;
+}
+} // namespace
+
+static RPCHelpMan createauxblock()
+{
+    return RPCHelpMan{
+        "createauxblock",
+        "Create a cached VMESH AuxPoW candidate paying to the given address.\n"
+        "The returned hash is committed to by a Bitcoin parent coinbase.\n",
+        {
+            {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "VMESH block reward payout address"},
+        },
+        RPCResult{RPCResult::Type::OBJ, "", "AuxPoW job", {
+            {RPCResult::Type::STR_HEX, "hash", "The 80-byte child-header hash"},
+            {RPCResult::Type::NUM, "chainid", "VMESH AuxPoW chain ID"},
+            {RPCResult::Type::STR_HEX, "previousblockhash", "Previous VMESH block"},
+            {RPCResult::Type::NUM, "coinbasevalue", "VMESH reward plus fees in satoshis"},
+            {RPCResult::Type::STR_HEX, "bits", "Compressed target"},
+            {RPCResult::Type::NUM, "height", "Candidate height"},
+            {RPCResult::Type::STR_HEX, "target", "Little-endian 256-bit target for pool compatibility"},
+            {RPCResult::Type::STR_HEX, "_target", "Legacy alias for target"}
+        }},
+        RPCExamples{HelpExampleCli("createauxblock", "\"vm1...\"")},
+        [&](const RPCHelpMan&, const JSONRPCRequest& request) -> UniValue {
+            return CreateAuxpowJob(request, request.params[0].get_str());
+        }
+    };
+}
+
+static RPCHelpMan submitauxblock()
+{
+    return RPCHelpMan{
+        "submitauxblock",
+        "Submit a serialized Namecoin-style CAuxPow proof for a cached VMESH candidate.\n",
+        {
+            {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Child block hash returned by createauxblock or getauxblock"},
+            {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Serialized CAuxPow proof, not a full VMESH block"},
+        },
+        RPCResult{RPCResult::Type::BOOL, "", "True if this block was accepted"},
+        RPCExamples{HelpExampleCli("submitauxblock", "\"blockhash\" \"auxpowhex\"")},
+        [&](const RPCHelpMan&, const JSONRPCRequest& request) -> UniValue {
+            return SubmitAuxpowJob(request, request.params[0], request.params[1]);
+        }
+    };
+}
+
+static RPCHelpMan getauxblock()
+{
+    return RPCHelpMan{
+        "getauxblock",
+        "Legacy Namecoin-style VMESH merged-mining RPC. With no parameters, "
+        "create an AuxPoW job using the configured -auxpowaddress. "
+        "With hash and auxpow, submit a proof. Alternatively use createauxblock "
+        "and submitauxblock with an explicit payout address.\n",
+        {
+            {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional child block hash (with proof only)"},
+            {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED, "Optional serialized AuxPoW proof"},
+        },
+        {
+            RPCResult{"Without arguments", RPCResult::Type::OBJ, "", "", {
+                {RPCResult::Type::STR_HEX, "hash", "The child header hash"},
+                {RPCResult::Type::NUM, "chainid", "AuxPoW chain ID"},
+                {RPCResult::Type::STR_HEX, "previousblockhash", "Previous block"},
+                {RPCResult::Type::NUM, "coinbasevalue", "Reward plus fees in satoshis"},
+                {RPCResult::Type::STR_HEX, "bits", "Compressed target"},
+                {RPCResult::Type::NUM, "height", "Candidate height"},
+                {RPCResult::Type::STR_HEX, "target", "Little-endian target"},
+                {RPCResult::Type::STR_HEX, "_target", "Legacy alias"},
+            }},
+            RPCResult{"With hash and auxpow", RPCResult::Type::BOOL, "", "Proof accepted"},
+        },
+        RPCExamples{HelpExampleCli("getauxblock", "") +
+                    HelpExampleCli("getauxblock", "\"blockhash\" \"auxpowhex\"")},
+        [&](const RPCHelpMan&, const JSONRPCRequest& request) -> UniValue {
+            const bool has_hash{request.params.size() > 0 && !request.params[0].isNull()};
+            const bool has_proof{request.params.size() > 1 && !request.params[1].isNull()};
+            if (has_hash != has_proof) {
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Provide both hash and auxpow, or neither");
+            }
+            if (has_hash) return SubmitAuxpowJob(request, request.params[0], request.params[1]);
+            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+            return CreateAuxpowJob(request, node.args->GetArg("-auxpowaddress", ""));
+        }
+    };
+}
+
 void RegisterMiningRPCCommands(CRPCTable& t)
 {
     static const CRPCCommand commands[]{
@@ -1462,6 +1767,9 @@ void RegisterMiningRPCCommands(CRPCTable& t)
         {"mining", &getmininginfo},
         {"mining", &getvmeshminingstatus},
         {"mining", &checkvmeshauxpow},
+        {"mining", &getauxblock},
+        {"mining", &createauxblock},
+        {"mining", &submitauxblock},
         {"mining", &prioritisetransaction},
         {"mining", &getprioritisedtransactions},
         {"mining", &getblocktemplate},
