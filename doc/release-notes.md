@@ -1,35 +1,41 @@
-# VargaMesh Core v0.3.0
+# Upcoming VargaMesh Core v0.3.1
 
-Release date: 23 October 2026 (subject to successful automated release builds).
+**Status:** Release candidate; not yet an officially published Mainnet binary release.  
+**Planned version:** 0.3.1.  
+**Scope:** Additional mining RPC interfaces; no changes to VMESH consensus rules.
 
-## Highlights
+## What's new
 
-- Adds five independently probed VMESH Mainnet IPv4 fixed P2P seeds (port 29666) as a fallback to the existing DNS bootstrap seed: 217.154.93.20, 217.217.78.186, 31.70.81.5, 37.221.211.210, and 212.132.80.39. Reachability was confirmed through VMESH network-magic/protocol handshakes; this does not independently prove each node's chain tip or long-term availability.
-- Adds the read-only `getvmeshminingstatus` RPC for current tip, ASERT configuration, AuxPoW chain identity, expected next bits, and chainwork.
-- Adds `checkvmeshauxpow <serialized_block_hex>` to diagnose VMESH height-specific AuxPoW rules and proof validation without submitting a block. This is **not** full block or UTXO validation.
-- Adds ASERT difficulty stress tests, AuxPoW fuzz coverage, a functional RPC smoke test, and network fixed-seed checks.
-- Provides operator tools to probe VMESH P2P seeds and compare independent nodes' block hash and chainwork.
+- `createauxblock <vm1-address>` produces a finalized child-block job with a coinbase paying the specified VMESH address.
+- `getauxblock` supports legacy Namecoin-style job retrieval using the `-auxpowaddress` setting.
+- `submitauxblock <child-hash> <proof-hex>` and two-argument `getauxblock` accept a serialized `CAuxPow` parent proof.
+- The new API exposes a child hash, previous block hash, chain ID, bits, target, height and coinbase reward.
+- Bounded, thread-safe work cache: up to 128 candidates, 15-minute expiry, stale-tip cleanup and proof-size limit.
+- The child header Merkle root is finalized before its block hash is advertised to the Bitcoin parent miner.
+- Wallet-independent RPC smoke tests supplement the existing AuxPoW fuzz and consensus test coverage.
 
-## Network and mining compatibility
+**Existing pool integration is preserved.** `getblocktemplate` and `submitblock` are not removed or redefined. Pool coordinators that use the existing bridge may continue without the new methods. Pools adopting the native interface must ensure their Bitcoin-parent coinbase and Merkle commitment match VMESH's specific consensus encoding. Namecoin-style API does **not** imply automatic pool compatibility.
 
-This is a non-consensus hardening release. It does **not** introduce a hard fork, change VMESH Mainnet genesis, SHA-256d, ASERT target spacing or half-life, subsidy, chain ID, AuxPoW activation, or address formats. Existing `getblocktemplate` / `submitblock` RPC behavior remains unchanged.
+## Consensus neutrality
 
-Native Namecoin-style `getauxblock` / `submitauxblock` compatibility is **not** included in v0.3.0; pool operators requiring those RPCs still need an external adapter.
+No edits are made to core AuxPoW proof validation, SHA-256d hashing, ASERT adjustment, 120-second spacing, genesis, block subsidy, activation height, chain ID, address formats or P2P block representation. The new functions are intended to be strictly RPC-only. Other full nodes, exchange nodes and existing pool software should not require an urgent update once mixed-version block validation is independently demonstrated.
 
-## Upgrading
+## Build and test record
 
-This is a recommended, **not mandatory**, node upgrade. For production nodes and exchanges:
+The preceding PR source commit `c74573663d379ec71884f65c009774224bda75b6` passed both GitHub Actions workflows: Linux build/unit/RPC smoke, Windows headless builds, macOS Intel and Apple Silicon cross-build and native execution smokes, mainnet seed handshakes and AuxPoW fuzz-target smoke.
 
-1. Back up wallet keys and configuration and record the current chain height/hash.
-2. Shut down the existing VMESH daemon cleanly; preserve the existing chainstate and wallet data directories.
-3. Verify the downloaded archive against the release `SHA256SUMS`; install the binary for the correct operating system and architecture.
-4. Start the upgraded daemon; confirm `getblockchaininfo`, `getnetworkinfo`, and `getvmeshminingstatus` from the local CLI.
-5. Roll out gradually, one independently operated node at a time, and ensure peer connections and chain synchronization remain healthy.
+**These checks must be repeated on the final v0.3.1 source commit.** They do not themselves prove that a complete merged-mining proof is accepted across old and new nodes.
 
-Existing exchanges, including NestEx, do not need an emergency upgrade for this release. Send a routine compatibility notice after release assets are available.
+## Remaining release prerequisites
 
-## Validation and provenance
+1. Produce a valid VMESH public-testnet block via `createauxblock` / `submitauxblock` with a Bitcoin parent coinbase.
+2. Confirm the same block hash, height and cumulative chainwork are accepted on both candidate v0.3.1 and unmodified v0.3.0 nodes. Also test the two-argument `getauxblock` path.
+3. Verify reward payout destination, child Merkle root, witness commitment, malformed/stale/oversized proof rejection and duplicate submissions.
+4. Smoke-test the existing pool bridge using `getblocktemplate` / `submitblock` before replacing any production binary.
+5. Inspect the final commit diff, rerun all CI gates on exact merged SHA, run the version-specific release workflow, verify all SHA256SUMS and archive contents.
 
-PR #9 (https://github.com/ati1993de/vargamesh-core/pull/9) passed Linux unit/functional tests; Windows headless packaging checks; macOS Intel/Apple Silicon cross-builds and execution/mainnet+testnet smokes; seed-protocol checks of 5/5 proposed seeds; and deterministic AuxPoW fuzz smokes. v0.3.0 archive publication is independently gated on release-workflow success.
+## Upgrade and security notes
 
-The release builds are headless node and CLI packages, not desktop GUI installers. Do not assume binaries are code-signed unless a separately verified signature is supplied.
+Keep the mining RPC authenticated and private; `createauxblock` takes an explicit destination, so do not grant it to untrusted users. Back up wallet state and configuration, preserve the blockchain data directory, note the current chain tip and keep old binaries available for rollback. Deploy first to an isolated pool-only synchronized node and observe both new and existing peers before a production cutover.
+
+Read [the native AuxPoW documentation](../native-auxpow-rpc.md) and [the release checklist](../release-checklist-v0.3.1.md). This source branch is not a binary release or a hard fork announcement.

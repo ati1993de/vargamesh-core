@@ -1,7 +1,7 @@
 # VargaMesh Core
 
 <p align="center">
-  <strong>Official Mainnet + Public Testnet v1 Core release for the VargaMesh (VMESH) network.</strong>
+  <strong>Open-source SHA-256d / AuxPoW full-node implementation for VargaMesh Mainnet and Public Testnet v1.</strong>
 </p>
 
 <p align="center">
@@ -67,8 +67,53 @@
 
 ---
 
+## Core v0.3.1 — Native Bitcoin merged-mining RPC (release candidate)
+
+> [!NOTE]
+> **v0.3.1 is under review in [PR #11](https://github.com/ati1993de/vargamesh-core/pull/11).** The currently published production version remains [v0.3.0](https://github.com/ati1993de/vargamesh-core/releases/tag/v0.3.0). GitHub CI passed for the previous candidate commit; final publication requires a public-testnet merged block accepted by both old and new nodes.
+
+VargaMesh Core v0.3.1 introduces **Namecoin-style AuxPoW mining RPCs** for Bitcoin mining pools, while retaining the established `getblocktemplate` / `submitblock` integration. Only pool operators choosing the new interface need a matching Core version.
+
+| RPC | Use |
+| --- | --- |
+| `createauxblock "vm1..."` | New child-block job with an explicit VMESH payout address |
+| `getauxblock` | Legacy job request using `-auxpowaddress` |
+| `submitauxblock "child_hash" "proof_hex"` | Submit a serialized Bitcoin-parent AuxPoW solution |
+| `getauxblock "child_hash" "proof_hex"` | Legacy two-argument solution submission |
+| `getvmeshminingstatus` | Inspect chain height, difficulty and merged-mining state |
+| `checkvmeshauxpow "block_hex"` | Inspect AuxPoW proof/height diagnostics without submitting |
+
+**Private pool-node configuration:**
+
+~~~ini
+server=1
+auxpowaddress=vm1REPLACE_WITH_REAL_VMESH_POOL_PAYOUT_ADDRESS
+rpcbind=127.0.0.1
+~~~
+
+~~~bash
+vargamesh-cli getvmeshminingstatus
+vargamesh-cli getauxblock
+vargamesh-cli createauxblock "vm1REPLACE_WITH_REAL_VMESH_POOL_PAYOUT_ADDRESS"
+# Supply a complete, valid serialized CAuxPow proof from the parent miner:
+vargamesh-cli submitauxblock "CHILD_HASH" "SERIALIZED_AUXPOW_HEX"
+~~~
+
+RPC jobs are retained for up to 15 minutes (maximum 128 entries); unknown or stale-tip child hashes are rejected. The Bitcoin coinbase must include the **VMESH-specific AuxPoW commitment**: compatible RPC names alone do not guarantee out-of-the-box integration with every third-party pool.
+
+**No fork intended:** The change adds RPC methods; SHA-256d, ASERT, block rewards, existing validation, child-header serialization, Mainnet network parameters and address formats are unchanged. Previously deployed nodes and exchanges such as NestEx are not required to adopt these APIs. **Mixed-version acceptance on a real mined block remains a release gate.**
+
+For developers and pool operators:
+
+- [Native AuxPoW API, proof encoding, configuration and security](doc/native-auxpow-rpc.md)
+- [v0.3.1 release notes](doc/release-notes/release-notes-v0.3.1.md)
+- [v0.3.1 release checklist](doc/release-checklist-v0.3.1.md)
+- [Mainnet consensus parameters](doc/mainnet.md)
+
+---
+
 > [!IMPORTANT]
-> **VargaMesh Core `v0.3.0` adds VMESH mining diagnostics, fixed Mainnet seeds, and hardening tests.** Check the [latest published GitHub release](https://github.com/ati1993de/vargamesh-core/releases/latest) and verify its binary assets and checksums before upgrading.
+> **Published stable release — VargaMesh Core `v0.3.0` adds VMESH mining diagnostics, fixed Mainnet seeds, and hardening tests.** Check the [latest published GitHub release](https://github.com/ati1993de/vargamesh-core/releases/latest) and verify its binary assets and checksums before upgrading.
 >
 > Official binary packages are published for:
 >
@@ -319,7 +364,7 @@ The **VargaMesh Core source tree is authoritative for consensus behavior**.
 ## Project Status
 
 For client release specifics, limitations and cross-platform distinctions, see
-[Client release status](doc/client-release-status.md). The next Core release source version is **v0.3.0**; the published version
+[Client release status](doc/client-release-status.md). The current published Core version is **v0.3.0**; the upcoming candidate is **v0.3.1**. The published version
 and downloadable assets are maintained on [GitHub Releases](https://github.com/ati1993de/vargamesh-core/releases/latest).
 
 Public release manifest: https://vargamesh.com/api/v1/releases
@@ -330,7 +375,8 @@ Check the GitHub Desktop release and Android source validation status directly.
 
 | Component                  |     Version | Status                                      |
 | -------------------------- | ----------: | ------------------------------------------- |
-| VargaMesh Core             |    `v0.3.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
+| VargaMesh Core (published) |    `v0.3.0` | 🟢 Mainnet + Testnet · Linux/Windows/macOS |
+| VargaMesh Core (candidate) |    `v0.3.1` | 🟡 Native AuxPoW RPC · pre-release |
 | VargaMesh Desktop          |    `v0.7.1` | 🟢 GitHub · Windows/macOS Intel+ARM |
 | VargaMesh Android Wallet   |    `v0.5.0` | 🟡 Source pre-release · device validation pending |
 | VargaMesh Mobile Miner     |    `v1.5.0` | 🟢 Android 8.0+ · SHA-256d Home Mining PPLNS |
@@ -354,7 +400,7 @@ Check the GitHub Desktop release and Android source validation status directly.
 | ---------------------------- | ---------------------------------------------------- |
 | Network                      | VargaMesh Mainnet                                    |
 | Currency                     | `VMESH`                                              |
-| Core version                 | `v0.3.0`                                             |
+| Core version                 | `v0.3.0` published · `v0.3.1` candidate                                             |
 | Desktop version              | `v0.7.1`                                             |
 | Android version              | `v0.5.0`                                             |
 | Website                      | https://vargamesh.com                                |
@@ -442,9 +488,11 @@ Repository:
 
 https://github.com/ati1993de/vargamesh-core
 
-Current version:
+Published version:
 
 **VargaMesh Core v0.3.0**
+
+Upcoming candidate: **v0.3.1 — native AuxPoW RPC**, with [release checklist](doc/release-checklist-v0.3.1.md).
 
 v0.3.0 binary packages (check the GitHub Release for publication status):
 
