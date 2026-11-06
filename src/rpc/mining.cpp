@@ -1543,6 +1543,14 @@ UniValue CreateAuxpowJob(const JSONRPCRequest& request, const std::string& addre
         }, /*cooldown=*/false);
         if (!tmpl) throw JSONRPCError(RPC_CLIENT_NOT_CONNECTED, "Mining interrupted");
         block = tmpl->getBlock();
+        // BlockAssembler intentionally leaves the Merkle root unset for GBT
+        // clients to construct. Native AuxPoW returns a final child hash:
+        // commit the actual coinbase and all selected transactions first.
+        // Rebuild the placeholder proof after the child hash changes.
+        if (block.IsAuxpow() && block.auxpow) {
+            block.hashMerkleRoot = BlockMerkleRoot(block);
+            block.SetAuxpow(CAuxPow::CreateMinimal(block));
+        }
 
         LOCK(cs_main);
         const CBlockIndex* tip = chainman.ActiveChain().Tip();
