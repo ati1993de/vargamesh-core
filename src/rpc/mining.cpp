@@ -1745,7 +1745,8 @@ static RPCHelpMan getauxblock()
                 throw JSONRPCError(RPC_INVALID_PARAMETER, "Provide both hash and auxpow, or neither");
             }
             if (has_hash) return SubmitAuxpowJob(request, request.params[0], request.params[1]);
-            return CreateAuxpowJob(request, gArgs.GetArg("-auxpowaddress", ""));
+            const NodeContext& node{EnsureAnyNodeContext(request.context)};
+            return CreateAuxpowJob(request, node.args->GetArg("-auxpowaddress", ""));
         }
     };
 }
